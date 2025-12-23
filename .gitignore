@@ -1,0 +1,86 @@
+# .gitignore for a .NET / ASP.NET Core project
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+*.sln.iml
+
+# Build outputs
+bin/
+obj/
+out/
+publish/
+artifacts/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# NuGet
+*.nupkg
+packages/
+# NuGet package restore
+project.lock.json
+project.fragment.lock.json
+
+# EF Core Migrations and db files (local DB)
+*.db
+*.sqlite
+*.sqlite3
+FutureReady.db
+
+# User secrets
+appsettings.Development.json
+secrets.json
+.secrets/
+
+# Logs
+logs/
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE configs
+.vscode/
+
+# Node
+node_modules/
+
+# Test results and coverage
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# Temporary files
+tmp/
+temp/
+
+# Publish output
+*.Publish.xml
+
+# Certificates
+*.pfx
+*.key
+
+# Environment files
+.env
+.env.local
+
+# Ignore compiled runtime files (if present)
+*.dll
+*.exe
+*.pdb
+
+# Avoid committing sensitive files
+*.pem
+
+# End of .gitignore
+
