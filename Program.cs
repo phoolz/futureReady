@@ -12,9 +12,9 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserProvider, HttpContextUserProvider>();
 builder.Services.AddScoped<ITenantProvider, HttpContextTenantProvider>();
 
-// Add EF Core DbContext (SQLite) for multi-tenant data (Schools)
+// Add EF Core DbContext (SQL Server)
 builder.Services.AddDbContext<FutureReady.Data.ApplicationDbContext>((serviceProvider, options) =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 

@@ -4,7 +4,9 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
+using FutureReady.Services;
+using FutureReady.Models.School;
+    
 namespace FutureReady.Data
 {
     public class ApplicationDbContext : DbContext
