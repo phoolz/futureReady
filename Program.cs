@@ -1,11 +1,22 @@
 using Microsoft.EntityFrameworkCore;
 using FutureReady.Data;
 using FutureReady.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Add authentication (cookie)
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Authentication/Login";
+        options.LogoutPath = "/Authentication/Logout";
+        options.Cookie.Name = "FutureReadyAuth";
+        options.ExpireTimeSpan = TimeSpan.FromDays(7);
+    });
 
 // Register IHttpContextAccessor so UserProvider can read the current user
 builder.Services.AddHttpContextAccessor();
@@ -29,6 +40,8 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
+// Authentication must come before Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();

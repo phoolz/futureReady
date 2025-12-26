@@ -29,16 +29,16 @@ namespace FutureReady.Controllers
         // a development machine. Change this policy if you prefer strict denial by default.
         private bool IsAdmin()
         {
-            // var username = _userProvider?.GetCurrentUsername();
-            // // If no username, deny
-            // if (string.IsNullOrWhiteSpace(username)) return false;
-            //
-            // // Read configured admin users (array at Admin:Users)
-            // var admins = _configuration.GetSection("Admin:Users").Get<string[]>();
-            // if (admins != null && admins.Length > 0)
-            // {
-            //     return admins.Any(a => string.Equals(a?.Trim(), username, StringComparison.OrdinalIgnoreCase));
-            // }
+            var username = _userProvider?.GetCurrentUsername();
+            // If no username, deny
+            if (string.IsNullOrWhiteSpace(username)) return false;
+            
+            // Read configured admin users (array at Admin:Users)
+            var admins = _configuration.GetSection("Admin:Users").Get<string[]>();
+            if (admins != null && admins.Length > 0)
+            {
+                return admins.Any(a => string.Equals(a?.Trim(), username, StringComparison.OrdinalIgnoreCase));
+            }
 
             // No explicit admin list configured — allow by default (development convenience).
             return true;
@@ -83,6 +83,16 @@ namespace FutureReady.Controllers
 
             if (ModelState.IsValid)
             {
+                // Hash the provided plaintext password before storing. If no password provided, leave null.
+                if (!string.IsNullOrWhiteSpace(user.PasswordHash))
+                {
+                    user.PasswordHash = FutureReady.Services.PasswordHasher.HashPassword(user.PasswordHash);
+                }
+                else
+                {
+                    user.PasswordHash = null;
+                }
+
                 _context.Add(user);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -122,7 +132,13 @@ namespace FutureReady.Controllers
                 existing.UserName = user.UserName;
                 existing.DisplayName = user.DisplayName;
                 existing.Email = user.Email;
-                existing.PasswordHash = user.PasswordHash;
+
+                // If a new plaintext password was provided, hash it and update; otherwise keep existing hash
+                if (!string.IsNullOrWhiteSpace(user.PasswordHash))
+                {
+                    existing.PasswordHash = FutureReady.Services.PasswordHasher.HashPassword(user.PasswordHash);
+                }
+
                 existing.IsActive = user.IsActive;
                 existing.ExternalId = user.ExternalId;
 
