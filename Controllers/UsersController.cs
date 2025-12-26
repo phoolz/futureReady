@@ -1,53 +1,26 @@
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FutureReady.Data;
 using FutureReady.Models;
 using FutureReady.Services;
-using Microsoft.Extensions.Configuration;
-using System.Linq;
-using System;
 
 namespace FutureReady.Controllers
 {
     public class UsersController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IUserProvider? _userProvider;
-        private readonly IConfiguration _configuration;
+        private readonly IAdminCheckService _adminCheck;
 
-        public UsersController(ApplicationDbContext context, IUserProvider? userProvider = null, IConfiguration? configuration = null)
+        public UsersController(ApplicationDbContext context, IAdminCheckService adminCheck)
         {
             _context = context;
-            _userProvider = userProvider;
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        }
-
-        // Helper: determine if current user is an admin.
-        // Behavior: if configuration key "Admin:Users" exists and has entries, only those usernames are considered admin.
-        // If no configuration is provided (empty list), we treat the environment as permissive (returns true) to avoid locking out
-        // a development machine. Change this policy if you prefer strict denial by default.
-        private bool IsAdmin()
-        {
-            var username = _userProvider?.GetCurrentUsername();
-            // If no username, deny
-            if (string.IsNullOrWhiteSpace(username)) return false;
-            
-            // Read configured admin users (array at Admin:Users)
-            var admins = _configuration.GetSection("Admin:Users").Get<string[]>();
-            if (admins != null && admins.Length > 0)
-            {
-                return admins.Any(a => string.Equals(a?.Trim(), username, StringComparison.OrdinalIgnoreCase));
-            }
-
-            // No explicit admin list configured — allow by default (development convenience).
-            return true;
+            _adminCheck = adminCheck;
         }
 
         // GET: Users
         public async Task<IActionResult> Index()
         {
-            if (!IsAdmin()) return Forbid();
+            if (!await _adminCheck.IsCurrentUserAdminAsync()) return Forbid();
 
             var users = await _context.Users.AsNoTracking().ToListAsync();
             return View(users);
@@ -68,9 +41,9 @@ namespace FutureReady.Controllers
         }
 
         // GET: Users/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            if (!IsAdmin()) return Forbid();
+            if (!await _adminCheck.IsCurrentUserAdminAsync()) return Forbid();
             return View();
         }
 
@@ -79,7 +52,7 @@ namespace FutureReady.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("UserName,DisplayName,Email,PasswordHash,IsActive,ExternalId")] User user)
         {
-            if (!IsAdmin()) return Forbid();
+            if (!await _adminCheck.IsCurrentUserAdminAsync()) return Forbid();
 
             if (ModelState.IsValid)
             {
@@ -103,7 +76,7 @@ namespace FutureReady.Controllers
         // GET: Users/Edit/5
         public async Task<IActionResult> Edit(Guid? id)
         {
-            if (!IsAdmin()) return Forbid();
+            if (!await _adminCheck.IsCurrentUserAdminAsync()) return Forbid();
 
             if (id == null) return NotFound();
 
@@ -117,7 +90,7 @@ namespace FutureReady.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Guid id, [Bind("Id,UserName,DisplayName,Email,PasswordHash,IsActive,ExternalId,RowVersion")] User user)
         {
-            if (!IsAdmin()) return Forbid();
+            if (!await _adminCheck.IsCurrentUserAdminAsync()) return Forbid();
 
             if (id != user.Id) return NotFound();
 
@@ -161,7 +134,7 @@ namespace FutureReady.Controllers
         // GET: Users/Delete/5
         public async Task<IActionResult> Delete(Guid? id)
         {
-            if (!IsAdmin()) return Forbid();
+            if (!await _adminCheck.IsCurrentUserAdminAsync()) return Forbid();
 
             if (id == null) return NotFound();
 
@@ -178,7 +151,7 @@ namespace FutureReady.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            if (!IsAdmin()) return Forbid();
+            if (!await _adminCheck.IsCurrentUserAdminAsync()) return Forbid();
 
             var user = await _context.Users.FindAsync(id);
             if (user != null)

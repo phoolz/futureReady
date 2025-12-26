@@ -23,11 +23,39 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserProvider, HttpContextUserProvider>();
 builder.Services.AddScoped<ITenantProvider, HttpContextTenantProvider>();
 
+// Register role service (replaces AdminService)
+builder.Services.AddScoped<FutureReady.Services.IRoleService, FutureReady.Services.RoleService>();
+
+// Register admin-check service
+builder.Services.AddScoped<FutureReady.Services.IAdminCheckService, FutureReady.Services.AdminCheckService>();
+
 // Add EF Core DbContext (SQL Server)
 builder.Services.AddDbContext<FutureReady.Data.ApplicationDbContext>((serviceProvider, options) =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
+
+// Seed database (run only if Schools table is empty)
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var db = services.GetRequiredService<FutureReady.Data.ApplicationDbContext>();
+        // If the Schools table exists and has any rows, skip seeding.
+        // If the table doesn't exist (first run), the AnyAsync call will throw — fall through to run the seeder.
+        var hasAny = await db.Schools.AnyAsync();
+        if (!hasAny)
+        {
+            await FutureReady.Data.DatabaseSeeder.SeedAsync(services);
+        }
+    }
+    catch (Exception)
+    {
+        // Likely the database/tables don't exist yet — run the seeder which will apply migrations and create the Admin school.
+        await FutureReady.Data.DatabaseSeeder.SeedAsync(services);
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
