@@ -4,6 +4,7 @@ using FutureReady.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FutureReady.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260101091014_AddTeacherAndCohortTeacher")]
+    partial class AddTeacherAndCohortTeacher
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,67 +25,10 @@ namespace FutureReady.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("FutureReady.Models.School.Cohort", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("DeletedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<int>("GraduationMonth")
-                        .HasColumnType("int");
-
-                    b.Property<int>("GraduationYear")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<Guid>("SchoolId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SchoolId");
-
-                    b.ToTable("SchoolCohorts", (string)null);
-                });
-
             modelBuilder.Entity("FutureReady.Models.School.CohortTeacher", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CohortId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -114,6 +60,9 @@ namespace FutureReady.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<Guid>("SchoolCohortId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("TeacherId")
                         .HasColumnType("uniqueidentifier");
 
@@ -132,7 +81,7 @@ namespace FutureReady.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CohortId");
+                    b.HasIndex("SchoolCohortId");
 
                     b.HasIndex("TeacherId");
 
@@ -197,13 +146,10 @@ namespace FutureReady.Migrations
                     b.ToTable("Schools");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.Student", b =>
+            modelBuilder.Entity("FutureReady.Models.School.SchoolCohort", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CohortId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -220,23 +166,22 @@ namespace FutureReady.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<int>("GraduationMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GraduationYear")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
-
-                    b.Property<string>("MedicareNumber")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.Property<string>("StudentType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<Guid>("SchoolId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uniqueidentifier");
@@ -250,9 +195,9 @@ namespace FutureReady.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CohortId");
+                    b.HasIndex("SchoolId");
 
-                    b.ToTable("Students");
+                    b.ToTable("SchoolCohorts");
                 });
 
             modelBuilder.Entity("FutureReady.Models.Teacher", b =>
@@ -396,22 +341,11 @@ namespace FutureReady.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.Cohort", b =>
-                {
-                    b.HasOne("FutureReady.Models.School.School", "School")
-                        .WithMany()
-                        .HasForeignKey("SchoolId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("School");
-                });
-
             modelBuilder.Entity("FutureReady.Models.School.CohortTeacher", b =>
                 {
-                    b.HasOne("FutureReady.Models.School.Cohort", "Cohort")
+                    b.HasOne("FutureReady.Models.School.SchoolCohort", "SchoolCohort")
                         .WithMany()
-                        .HasForeignKey("CohortId")
+                        .HasForeignKey("SchoolCohortId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -421,20 +355,20 @@ namespace FutureReady.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Cohort");
+                    b.Navigation("SchoolCohort");
 
                     b.Navigation("Teacher");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.Student", b =>
+            modelBuilder.Entity("FutureReady.Models.School.SchoolCohort", b =>
                 {
-                    b.HasOne("FutureReady.Models.School.Cohort", "Cohort")
+                    b.HasOne("FutureReady.Models.School.School", "School")
                         .WithMany()
-                        .HasForeignKey("CohortId")
+                        .HasForeignKey("SchoolId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Cohort");
+                    b.Navigation("School");
                 });
 
             modelBuilder.Entity("FutureReady.Models.Teacher", b =>

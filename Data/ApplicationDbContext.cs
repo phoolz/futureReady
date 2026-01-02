@@ -22,6 +22,10 @@ namespace FutureReady.Data
 
         public DbSet<School> Schools { get; set; } = null!;
         public DbSet<User> Users { get; set; } = null!;
+        public DbSet<Cohort> Cohorts { get; set; } = null!;
+        public DbSet<Student> Students { get; set; } = null!;
+        public DbSet<Teacher> Teachers { get; set; } = null!;
+        public DbSet<CohortTeacher> CohortTeachers { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -60,6 +64,44 @@ namespace FutureReady.Data
                 entity.Property(e => e.Timezone).IsRequired().HasMaxLength(100);
                 entity.HasIndex(e => e.TenantKey).IsUnique();
             });
+
+            modelBuilder.Entity<Cohort>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.GraduationYear).IsRequired();
+                entity.Property(e => e.GraduationMonth).IsRequired();
+                entity.HasOne(e => e.School).WithMany().HasForeignKey(e => e.SchoolId).OnDelete(DeleteBehavior.Cascade);
+                // Keep table name matching the existing migration (was SchoolCohorts)
+                entity.ToTable("SchoolCohorts");
+            });
+
+            modelBuilder.Entity<Teacher>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.UserId).IsRequired();
+                entity.Property(e => e.IsActive).IsRequired();
+                entity.HasIndex(e => e.UserId).IsUnique(); // enforce one-to-one user->teacher
+                entity.HasOne(e => e.User).WithOne().HasForeignKey<Teacher>(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.School).WithMany().HasForeignKey(e => e.SchoolId).OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<CohortTeacher>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.TeacherId).IsRequired();
+                entity.Property(e => e.CohortId).IsRequired();
+                entity.Property(e => e.IsSubstitute).IsRequired();
+                entity.HasOne(e => e.Teacher).WithMany().HasForeignKey(e => e.TeacherId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Cohort).WithMany().HasForeignKey(e => e.CohortId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Student>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.MedicareNumber).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.StudentType).IsRequired().HasMaxLength(100);
+                entity.HasOne(e => e.Cohort).WithMany().HasForeignKey(e => e.CohortId).OnDelete(DeleteBehavior.Cascade);
+            });
         }
 
         private static void SetSoftDeleteFilter<TEntity>(ModelBuilder builder) where TEntity : BaseEntity
@@ -94,7 +136,7 @@ namespace FutureReady.Data
                         entity.CreatedAt = now;
                         entity.CreatedBy = entity.CreatedBy ?? user;
 
-                        // If the entity is tenant-aware and we have a tenant, set it
+                        // If the entity is tenant-aware, and we have a tenant, set it
                         if (entity is TenantEntity te && te.TenantId == Guid.Empty && tenantId.HasValue)
                         {
                             te.TenantId = tenantId.Value;

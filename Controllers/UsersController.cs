@@ -3,26 +3,26 @@ using Microsoft.EntityFrameworkCore;
 using FutureReady.Data;
 using FutureReady.Models;
 using FutureReady.Services;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using FutureReady.Services.Users;
 
 namespace FutureReady.Controllers
 {
     public class UsersController : Controller
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IAdminCheckService _adminCheck;
+        private readonly ApplicationDbContext _context; // kept for view helpers like School select list
+        private readonly IUserService _userService;
 
-        public UsersController(ApplicationDbContext context, IAdminCheckService adminCheck)
+        public UsersController(ApplicationDbContext context, IUserService userService)
         {
             _context = context;
-            _adminCheck = adminCheck;
+            _userService = userService;
         }
 
         // GET: Users
         public async Task<IActionResult> Index()
         {
-            if (!await _adminCheck.IsCurrentUserAdminAsync()) return Forbid();
-
-            var users = await _context.Users.AsNoTracking().ToListAsync();
+            var users = await _userService.GetAllAsync();
             return View(users);
         }
 
@@ -31,56 +31,40 @@ namespace FutureReady.Controllers
         {
             if (id == null) return NotFound();
 
-            var user = await _context.Users
-                .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.Id == id.Value);
+            var user = await _userService.GetByIdAsync(id.Value);
 
             if (user == null) return NotFound();
 
             return View(user);
         }
-
+        
         // GET: Users/Create
-        public async Task<IActionResult> Create()
+        public IActionResult Create()
         {
-            if (!await _adminCheck.IsCurrentUserAdminAsync()) return Forbid();
+            ViewData["SchoolId"] = new SelectList(_context.Schools.AsNoTracking(), "Id", "Name");
             return View();
         }
 
         // POST: Users/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("UserName,DisplayName,Email,PasswordHash,IsActive,ExternalId")] User user)
+        public async Task<IActionResult> Create([Bind("UserName,DisplayName,Email,PasswordHash,IsActive,ExternalId,TenantId")] User user)
         {
-            if (!await _adminCheck.IsCurrentUserAdminAsync()) return Forbid();
-
             if (ModelState.IsValid)
             {
-                // Hash the provided plaintext password before storing. If no password provided, leave null.
-                if (!string.IsNullOrWhiteSpace(user.PasswordHash))
-                {
-                    user.PasswordHash = FutureReady.Services.PasswordHasher.HashPassword(user.PasswordHash);
-                }
-                else
-                {
-                    user.PasswordHash = null;
-                }
-
-                _context.Add(user);
-                await _context.SaveChangesAsync();
+                await _userService.CreateAsync(user);
                 return RedirectToAction(nameof(Index));
             }
+            ViewData["SchoolId"] = new SelectList(_context.Schools.AsNoTracking(), "Id", "Name", user.TenantId);
             return View(user);
         }
 
         // GET: Users/Edit/5
         public async Task<IActionResult> Edit(Guid? id)
         {
-            if (!await _adminCheck.IsCurrentUserAdminAsync()) return Forbid();
-
             if (id == null) return NotFound();
 
-            var user = await _context.Users.FindAsync(id.Value);
+            var user = await _userService.GetByIdAsync(id.Value);
             if (user == null) return NotFound();
             return View(user);
         }
@@ -89,37 +73,14 @@ namespace FutureReady.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Guid id, [Bind("Id,UserName,DisplayName,Email,PasswordHash,IsActive,ExternalId,RowVersion")] User user)
-        {
-            if (!await _adminCheck.IsCurrentUserAdminAsync()) return Forbid();
-
+        { 
             if (id != user.Id) return NotFound();
 
             if (!ModelState.IsValid) return View(user);
 
             try
             {
-                // Attach then mark modified specific fields to avoid overwriting audit/tenant fields
-                var existing = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
-                if (existing == null) return NotFound();
-
-                existing.UserName = user.UserName;
-                existing.DisplayName = user.DisplayName;
-                existing.Email = user.Email;
-
-                // If a new plaintext password was provided, hash it and update; otherwise keep existing hash
-                if (!string.IsNullOrWhiteSpace(user.PasswordHash))
-                {
-                    existing.PasswordHash = FutureReady.Services.PasswordHasher.HashPassword(user.PasswordHash);
-                }
-
-                existing.IsActive = user.IsActive;
-                existing.ExternalId = user.ExternalId;
-
-                // copy RowVersion if provided for concurrency
-                if (user.RowVersion != null)
-                    _context.Entry(existing).Property("RowVersion").OriginalValue = user.RowVersion;
-
-                await _context.SaveChangesAsync();
+                await _userService.UpdateAsync(user, user.RowVersion);
                 return RedirectToAction(nameof(Index));
             }
             catch (DbUpdateConcurrencyException)
@@ -134,13 +95,9 @@ namespace FutureReady.Controllers
         // GET: Users/Delete/5
         public async Task<IActionResult> Delete(Guid? id)
         {
-            if (!await _adminCheck.IsCurrentUserAdminAsync()) return Forbid();
-
             if (id == null) return NotFound();
 
-            var user = await _context.Users
-                .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.Id == id.Value);
+            var user = await _userService.GetByIdAsync(id.Value);
             if (user == null) return NotFound();
 
             return View(user);
@@ -151,14 +108,7 @@ namespace FutureReady.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            if (!await _adminCheck.IsCurrentUserAdminAsync()) return Forbid();
-
-            var user = await _context.Users.FindAsync(id);
-            if (user != null)
-            {
-                _context.Users.Remove(user); // will be converted to soft-delete by DbContext
-                await _context.SaveChangesAsync();
-            }
+            await _userService.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
         }
     }

@@ -1,0 +1,28 @@
+@model FutureReady.Models.School.Cohort
+
+@{
+    ViewData["Title"] = "Delete Cohort";
+}
+
+<h1>Delete Cohort</h1>
+
+<div>
+    <h4>Cohort</h4>
+    <dl class="row">
+        <dt class="col-sm-2">School</dt>
+        <dd class="col-sm-10">@Model.School?.Name</dd>
+
+        <dt class="col-sm-2">Graduation Year</dt>
+        <dd class="col-sm-10">@Model.GraduationYear</dd>
+
+        <dt class="col-sm-2">Graduation Month</dt>
+        <dd class="col-sm-10">@Model.GraduationMonth</dd>
+    </dl>
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
+

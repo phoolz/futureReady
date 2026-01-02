@@ -1,0 +1,36 @@
+@model FutureReady.Models.School.Cohort
+
+@{
+    ViewData["Title"] = "Create Cohort";
+}
+
+<h1>Create Cohort</h1>
+
+<form asp-action="Create" method="post">
+    <div class="form-group">
+        <label>School</label>
+        <p class="form-control-plaintext">@ViewData["SchoolName"]</p>
+        <input type="hidden" name="SchoolId" value="@(ViewData["SchoolId"]?.ToString() ?? String.Empty)" />
+        <span asp-validation-for="SchoolId" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="GraduationYear"></label>
+        <input asp-for="GraduationYear" class="form-control" />
+        <span asp-validation-for="GraduationYear" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="GraduationMonth"></label>
+        <input asp-for="GraduationMonth" class="form-control" />
+        <span asp-validation-for="GraduationMonth" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+

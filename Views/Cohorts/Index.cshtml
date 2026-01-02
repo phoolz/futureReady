@@ -1,0 +1,38 @@
+@model IEnumerable<FutureReady.Models.School.Cohort>
+
+@{
+    ViewData["Title"] = "Cohorts";
+}
+
+<h1>Cohorts</h1>
+
+<p>
+    <a class="btn btn-primary" asp-action="Create">Create New Cohort</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>School</th>
+            <th>Graduation Year</th>
+            <th>Graduation Month</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var c in Model)
+    {
+        <tr>
+            <td>@c.School?.Name</td>
+            <td>@c.GraduationYear</td>
+            <td>@c.GraduationMonth</td>
+            <td>
+                <a class="btn btn-sm btn-secondary" asp-action="Edit" asp-route-id="@c.Id">Edit</a>
+                <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@c.Id">Details</a>
+                <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@c.Id">Delete</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+

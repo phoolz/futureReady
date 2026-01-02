@@ -1,4 +1,3 @@
-
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -6,16 +5,21 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FutureReady.Data;
 using FutureReady.Services;
+// avoid ambiguous IAuthenticationService name (Microsoft.AspNetCore.Authentication.IAuthenticationService)
+// use fully-qualified name in the controller fields/ctor
+using FutureReady.Services.Authentication;
 
 namespace FutureReady.Controllers
 {
     public class AuthenticationController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context; // keep for view needs if any
+        private readonly FutureReady.Services.Authentication.IAuthenticationService _authService;
 
-        public AuthenticationController(ApplicationDbContext context)
+        public AuthenticationController(ApplicationDbContext context, FutureReady.Services.Authentication.IAuthenticationService authService)
         {
             _context = context;
+            _authService = authService;
         }
 
         // GET: /Authentication/Login
@@ -33,35 +37,13 @@ namespace FutureReady.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
-            // Look up user by username or email
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName == model.Username || u.Email == model.Username);
-            if (user == null || string.IsNullOrEmpty(user.PasswordHash))
+            var (success, error) = await _authService.SignInAsync(model.Username ?? string.Empty, model.Password ?? string.Empty, model.RememberMe);
+
+            if (!success)
             {
-                ModelState.AddModelError(string.Empty, "Invalid username or password");
+                ModelState.AddModelError(string.Empty, error ?? "Invalid username or password");
                 return View(model);
             }
-
-            if (!PasswordHasher.VerifyPassword(model.Password, user.PasswordHash))
-            {
-                ModelState.AddModelError(string.Empty, "Invalid username or password");
-                return View(model);
-            }
-
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, user.UserName ?? user.Email ?? "user"),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim("DisplayName", user.DisplayName ?? string.Empty)
-            };
-
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var authProperties = new AuthenticationProperties
-            {
-                IsPersistent = model.RememberMe
-            };
-
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(claimsIdentity), authProperties);
 
             if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
             {
@@ -76,7 +58,7 @@ namespace FutureReady.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await _authService.SignOutAsync();
             return RedirectToAction("Index", "Home");
         }
     }
@@ -89,4 +71,3 @@ namespace FutureReady.Controllers
         public string? ReturnUrl { get; set; }
     }
 }
-

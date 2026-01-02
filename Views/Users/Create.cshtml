@@ -23,6 +23,11 @@
         <span asp-validation-for="Email" class="text-danger"></span>
     </div>
     <div class="form-group">
+        <label asp-for="TenantId">School</label>
+        <select asp-for="TenantId" class="form-control" asp-items="@(ViewData["SchoolId"] as SelectList)"></select>
+        <span asp-validation-for="TenantId" class="text-danger"></span>
+    </div>
+    <div class="form-group">
         <label asp-for="PasswordHash">Password</label>
         <input asp-for="PasswordHash" type="password" class="form-control" />
         <small class="form-text text-muted">Enter a password to store it (will be hashed). Leave blank to create a user without a password.</small>

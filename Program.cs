@@ -23,15 +23,16 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserProvider, HttpContextUserProvider>();
 builder.Services.AddScoped<ITenantProvider, HttpContextTenantProvider>();
 
-// Register role service (replaces AdminService)
-builder.Services.AddScoped<FutureReady.Services.IRoleService, FutureReady.Services.RoleService>();
-
-// Register admin-check service
-builder.Services.AddScoped<FutureReady.Services.IAdminCheckService, FutureReady.Services.AdminCheckService>();
-
 // Add EF Core DbContext (SQL Server)
 builder.Services.AddDbContext<FutureReady.Data.ApplicationDbContext>((serviceProvider, options) =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Register application services
+builder.Services.AddScoped<FutureReady.Services.Users.IUserService, FutureReady.Services.Users.UserService>();
+builder.Services.AddScoped<FutureReady.Services.Schools.ISchoolService, FutureReady.Services.Schools.SchoolService>();
+builder.Services.AddScoped<FutureReady.Services.Cohorts.ICohortService, FutureReady.Services.Cohorts.CohortService>();
+builder.Services.AddScoped<FutureReady.Services.Authentication.IAuthenticationService, FutureReady.Services.Authentication.AuthenticationService>();
+builder.Services.AddScoped<FutureReady.Services.Students.IStudentService, FutureReady.Services.Students.StudentService>();
 
 var app = builder.Build();
 

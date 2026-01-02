@@ -1,0 +1,35 @@
+    @model FutureReady.Models.School.School
+
+@{
+    ViewData["Title"] = "Create School";
+}
+
+<h1>Create School</h1>
+
+<form asp-action="Create" method="post">
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="TenantKey"></label>
+        <input asp-for="TenantKey" class="form-control" />
+        <span asp-validation-for="TenantKey" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Timezone"></label>
+        <input asp-for="Timezone" class="form-control" />
+        <span asp-validation-for="Timezone" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
