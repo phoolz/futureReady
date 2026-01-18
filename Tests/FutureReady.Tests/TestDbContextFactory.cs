@@ -15,7 +15,7 @@ namespace FutureReady.Tests
             connection.Open();
 
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseSqlServer(connection)
+                .UseSqlite(connection)
                 .Options;
 
             var context = new ApplicationDbContext(options, user, tenant);
@@ -28,7 +28,7 @@ namespace FutureReady.Tests
         public static ApplicationDbContext CreateSqliteContextFromOpenConnection(SqliteConnection connection, IUserProvider? user = null, ITenantProvider? tenant = null)
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseSqlServer(connection)
+                .UseSqlite(connection)
                 .Options;
 
             var context = new ApplicationDbContext(options, user, tenant);
