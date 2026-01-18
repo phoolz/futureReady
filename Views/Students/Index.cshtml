@@ -1,0 +1,73 @@
+@model IEnumerable<FutureReady.Models.School.Student>
+
+@{
+    ViewData["Title"] = "Students";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Students</h1>
+    <p class="page-subtitle">Manage student records</p>
+</div>
+
+<div class="table-container">
+    <div class="table-header">
+        <h2 class="table-title">All Students</h2>
+        <div class="table-actions">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="form-control" id="searchInput" placeholder="Search students..." onkeyup="filterTable()">
+            </div>
+            <a asp-action="Create" class="btn btn-primary">+ Add Student</a>
+        </div>
+    </div>
+    <table class="table" id="studentsTable">
+        <thead>
+            <tr>
+                <th>Medicare Number</th>
+                <th>Student Type</th>
+                <th>Cohort</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var student in Model)
+        {
+            <tr>
+                <td>@student.MedicareNumber</td>
+                <td>@student.StudentType</td>
+                <td>@student.Cohort?.GraduationYear @(student.Cohort != null ? $"/ {student.Cohort.GraduationMonth}" : "")</td>
+                <td>
+                    <div class="action-buttons">
+                        <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@student.Id">Edit</a>
+                        <a class="btn btn-sm btn-outline-info" asp-action="Details" asp-route-id="@student.Id">Details</a>
+                        <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@student.Id">Delete</a>
+                    </div>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+    function filterTable() {
+        var input = document.getElementById("searchInput");
+        var filter = input.value.toLowerCase();
+        var table = document.getElementById("studentsTable");
+        var rows = table.getElementsByTagName("tr");
+
+        for (var i = 1; i < rows.length; i++) {
+            var cells = rows[i].getElementsByTagName("td");
+            var match = false;
+            for (var j = 0; j < cells.length - 1; j++) {
+                if (cells[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                    match = true;
+                    break;
+                }
+            }
+            rows[i].style.display = match ? "" : "none";
+        }
+    }
+</script>
+}

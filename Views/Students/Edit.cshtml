@@ -1,0 +1,46 @@
+@model FutureReady.Models.School.Student
+
+@{
+    ViewData["Title"] = "Edit Student";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Edit Student</h1>
+    <p class="page-subtitle">Update student information</p>
+</div>
+
+<div class="form-container">
+    <form asp-action="Edit">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="RowVersion" />
+
+        <div class="mb-3">
+            <label asp-for="MedicareNumber" class="form-label"></label>
+            <input asp-for="MedicareNumber" class="form-control" />
+            <span asp-validation-for="MedicareNumber" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="StudentType" class="form-label"></label>
+            <input asp-for="StudentType" class="form-control" />
+            <span asp-validation-for="StudentType" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="CohortId" class="form-label">Cohort</label>
+            <select asp-for="CohortId" class="form-select" asp-items="ViewBag.CohortId"></select>
+            <span asp-validation-for="CohortId" class="text-danger"></span>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

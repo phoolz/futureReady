@@ -4,24 +4,25 @@
     ViewData["Title"] = "Cohort Details";
 }
 
-<h1>Cohort Details</h1>
-
-<div>
-    <h4>Cohort</h4>
-    <dl class="row">
-        <dt class="col-sm-2">School</dt>
-        <dd class="col-sm-10">@Model.School?.Name</dd>
-
-        <dt class="col-sm-2">Graduation Year</dt>
-        <dd class="col-sm-10">@Model.GraduationYear</dd>
-
-        <dt class="col-sm-2">Graduation Month</dt>
-        <dd class="col-sm-10">@Model.GraduationMonth</dd>
-    </dl>
+<div class="page-header">
+    <h1 class="page-title">Cohort Details</h1>
+    <p class="page-subtitle">View cohort information</p>
 </div>
 
-<p>
-    <a class="btn btn-secondary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
-    <a class="btn btn-secondary" asp-action="Index">Back to List</a>
-</p>
+<div class="details-container">
+    <dl>
+        <dt>School</dt>
+        <dd>@Model.School?.Name</dd>
 
+        <dt>Graduation Year</dt>
+        <dd>@Model.GraduationYear</dd>
+
+        <dt>Graduation Month</dt>
+        <dd>@Model.GraduationMonth</dd>
+    </dl>
+
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+        <a asp-action="Index" class="btn btn-outline-secondary">Back to List</a>
+    </div>
+</div>

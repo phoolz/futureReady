@@ -1,0 +1,80 @@
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+}
+
+<nav id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+        <a asp-controller="Home" asp-action="Index" class="sidebar-brand">
+            <span class="brand-icon">🎓</span>
+            <span class="brand-text">FutureReady</span>
+        </a>
+        <button class="sidebar-toggle d-lg-none" type="button" onclick="toggleSidebar()">
+            <span>&times;</span>
+        </button>
+    </div>
+
+    <ul class="sidebar-nav">
+        <li class="nav-item">
+            <a class="nav-link @(currentController == "Home" && currentAction == "Index" ? "active" : "")"
+               asp-controller="Home" asp-action="Index">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">Dashboard</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(currentController == "Students" ? "active" : "")"
+               asp-controller="Students" asp-action="Index">
+                <span class="nav-icon">👥</span>
+                <span class="nav-text">Students</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(currentController == "Cohorts" ? "active" : "")"
+               asp-controller="Cohorts" asp-action="Index">
+                <span class="nav-icon">📚</span>
+                <span class="nav-text">Cohorts</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-footer">
+        <ul class="sidebar-nav">
+            <li class="nav-item">
+                <a class="nav-link @(currentController == "Users" && currentAction == "Profile" ? "active" : "")"
+                   asp-controller="Users" asp-action="Profile">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-text">Settings</span>
+                </a>
+            </li>
+            @if (User?.Identity?.IsAuthenticated ?? false)
+            {
+                <li class="nav-item user-info">
+                    <span class="nav-link">
+                        <span class="nav-icon">👤</span>
+                        <span class="nav-text">@User.Identity.Name</span>
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <form asp-controller="Authentication" asp-action="Logout" method="post">
+                        <button type="submit" class="nav-link logout-btn">
+                            <span class="nav-icon">🚪</span>
+                            <span class="nav-text">Logout</span>
+                        </button>
+                    </form>
+                </li>
+            }
+            else
+            {
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Authentication" asp-action="Login">
+                        <span class="nav-icon">🔑</span>
+                        <span class="nav-text">Login</span>
+                    </a>
+                </li>
+            }
+        </ul>
+    </div>
+</nav>
+
+<div class="sidebar-overlay d-lg-none" onclick="toggleSidebar()"></div>

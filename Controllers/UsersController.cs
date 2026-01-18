@@ -12,11 +12,13 @@ namespace FutureReady.Controllers
     {
         private readonly ApplicationDbContext _context; // kept for view helpers like School select list
         private readonly IUserService _userService;
+        private readonly IUserProvider _userProvider;
 
-        public UsersController(ApplicationDbContext context, IUserService userService)
+        public UsersController(ApplicationDbContext context, IUserService userService, IUserProvider userProvider)
         {
             _context = context;
             _userService = userService;
+            _userProvider = userProvider;
         }
 
         // GET: Users
@@ -110,6 +112,68 @@ namespace FutureReady.Controllers
         {
             await _userService.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
+        }
+
+        // GET: Users/Profile
+        public async Task<IActionResult> Profile()
+        {
+            var username = _userProvider.GetCurrentUsername();
+            if (string.IsNullOrEmpty(username))
+            {
+                return RedirectToAction("Login", "Authentication");
+            }
+
+            var user = await _context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.UserName == username || u.Email == username);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return View(user);
+        }
+
+        // POST: Users/Profile
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Profile([Bind("Id,UserName,DisplayName,Email,RowVersion")] User user)
+        {
+            var username = _userProvider.GetCurrentUsername();
+            if (string.IsNullOrEmpty(username))
+            {
+                return RedirectToAction("Login", "Authentication");
+            }
+
+            var existingUser = await _context.Users
+                .FirstOrDefaultAsync(u => u.UserName == username || u.Email == username);
+
+            if (existingUser == null || existingUser.Id != user.Id)
+            {
+                return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(user);
+            }
+
+            try
+            {
+                existingUser.DisplayName = user.DisplayName;
+                existingUser.Email = user.Email;
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Profile updated successfully.";
+                return RedirectToAction(nameof(Profile));
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await _context.Users.AnyAsync(e => e.Id == user.Id))
+                    return NotFound();
+                else
+                    throw;
+            }
         }
     }
 }

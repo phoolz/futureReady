@@ -1,0 +1,28 @@
+@model FutureReady.Models.School.Student
+
+@{
+    ViewData["Title"] = "Student Details";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Student Details</h1>
+    <p class="page-subtitle">View student information</p>
+</div>
+
+<div class="details-container">
+    <dl>
+        <dt>Medicare Number</dt>
+        <dd>@Model.MedicareNumber</dd>
+
+        <dt>Student Type</dt>
+        <dd>@Model.StudentType</dd>
+
+        <dt>Cohort</dt>
+        <dd>@Model.Cohort?.GraduationYear @(Model.Cohort != null ? $"/ {Model.Cohort.GraduationMonth}" : "N/A")</dd>
+    </dl>
+
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+        <a asp-action="Index" class="btn btn-outline-secondary">Back to List</a>
+    </div>
+</div>

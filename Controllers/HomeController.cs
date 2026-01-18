@@ -1,20 +1,52 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using FutureReady.Models;
+using FutureReady.Data;
+using FutureReady.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace FutureReady.Controllers;
 
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
-    
-    public HomeController(ILogger<HomeController> logger)
+    private readonly ApplicationDbContext _context;
+    private readonly ITenantProvider? _tenantProvider;
+
+    public HomeController(ILogger<HomeController> logger, ApplicationDbContext context, ITenantProvider? tenantProvider = null)
     {
         _logger = logger;
+        _context = context;
+        _tenantProvider = tenantProvider;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
+        var tenantId = _tenantProvider?.GetCurrentTenantId();
+
+        var studentsQuery = _context.Students.AsNoTracking();
+        var cohortsQuery = _context.Cohorts.AsNoTracking();
+
+        if (tenantId.HasValue)
+        {
+            studentsQuery = studentsQuery.Where(s => s.TenantId == tenantId.Value);
+            cohortsQuery = cohortsQuery.Where(c => c.TenantId == tenantId.Value);
+        }
+
+        var totalStudents = await studentsQuery.CountAsync();
+        var activeCohorts = await cohortsQuery.CountAsync();
+
+        var currentYear = DateTime.UtcNow.Year;
+        var currentMonth = DateTime.UtcNow.Month;
+        var upcomingGraduations = await cohortsQuery
+            .Where(c => c.GraduationYear > currentYear ||
+                       (c.GraduationYear == currentYear && c.GraduationMonth >= currentMonth))
+            .CountAsync();
+
+        ViewData["TotalStudents"] = totalStudents;
+        ViewData["ActiveCohorts"] = activeCohorts;
+        ViewData["UpcomingGraduations"] = upcomingGraduations;
+
         return View();
     }
 

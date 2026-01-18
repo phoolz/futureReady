@@ -1,8 +1,51 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="page-header">
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">Welcome to FutureReady</p>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-value">@ViewData["TotalStudents"]</div>
+            <div class="stat-label">Total Students</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon">📚</div>
+            <div class="stat-value">@ViewData["ActiveCohorts"]</div>
+            <div class="stat-label">Active Cohorts</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon">🎓</div>
+            <div class="stat-value">@ViewData["UpcomingGraduations"]</div>
+            <div class="stat-label">Upcoming Graduations</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="stat-card">
+            <h5 class="mb-3">Quick Actions</h5>
+            <div class="quick-actions">
+                <a asp-controller="Students" asp-action="Create" class="btn btn-primary quick-action-btn">
+                    <span>+</span> Add Student
+                </a>
+                <a asp-controller="Cohorts" asp-action="Create" class="btn btn-outline-primary quick-action-btn">
+                    <span>+</span> Create Cohort
+                </a>
+                <a asp-controller="Students" asp-action="Index" class="btn btn-outline-secondary quick-action-btn">
+                    View All Students
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
