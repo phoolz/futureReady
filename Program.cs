@@ -36,26 +36,11 @@ builder.Services.AddScoped<FutureReady.Services.Students.IStudentService, Future
 
 var app = builder.Build();
 
-// Seed database (run only if Schools table is empty)
+// Seed database (always run - seeder is idempotent)
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    try
-    {
-        var db = services.GetRequiredService<FutureReady.Data.ApplicationDbContext>();
-        // If the Schools table exists and has any rows, skip seeding.
-        // If the table doesn't exist (first run), the AnyAsync call will throw — fall through to run the seeder.
-        var hasAny = await db.Schools.AnyAsync();
-        if (!hasAny)
-        {
-            await FutureReady.Data.DatabaseSeeder.SeedAsync(services);
-        }
-    }
-    catch (Exception)
-    {
-        // Likely the database/tables don't exist yet — run the seeder which will apply migrations and create the Admin school.
-        await FutureReady.Data.DatabaseSeeder.SeedAsync(services);
-    }
+    await FutureReady.Data.DatabaseSeeder.SeedAsync(services);
 }
 
 // Configure the HTTP request pipeline.

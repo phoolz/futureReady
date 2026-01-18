@@ -3,7 +3,9 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using FutureReady.Models;
 using FutureReady.Models.School;
+using FutureReady.Services;
 
 namespace FutureReady.Data
 {
@@ -23,22 +25,36 @@ namespace FutureReady.Data
                 await db.Database.MigrateAsync();
 
                 // Insert a School named "Admin" if it doesn't exist
-                var exists = await db.Schools.AnyAsync(s => s.Name == "Admin");
-                if (!exists)
+                School? adminSchool = await db.Schools.FirstOrDefaultAsync(s => s.Name == "Admin");
+                if (adminSchool == null)
                 {
-                    db.Schools.Add(new School
+                    adminSchool = new School
                     {
                         Name = "Admin",
                         TenantKey = "Admin",
                         Timezone = "UTC"
-                    });
-
+                    };
+                    db.Schools.Add(adminSchool);
                     await db.SaveChangesAsync();
                     logger.LogInformation("Seeded School 'Admin'");
                 }
-                else
+
+                // Create admin user if no users exist
+                var hasUsers = await db.Users.AnyAsync();
+                if (!hasUsers)
                 {
-                    logger.LogInformation("School 'Admin' already exists; skipping seeding.");
+                    var adminUser = new User
+                    {
+                        UserName = "adminsean",
+                        DisplayName = "Admin",
+                        Email = "admin@futureready.local",
+                        PasswordHash = PasswordHasher.HashPassword("Undivided-Reputable-Bartender8"),
+                        IsActive = true,
+                        TenantId = adminSchool.Id
+                    };
+                    db.Users.Add(adminUser);
+                    await db.SaveChangesAsync();
+                    logger.LogInformation("Seeded admin user 'adminsean'");
                 }
             }
             catch (Exception ex)
