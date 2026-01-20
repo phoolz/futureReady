@@ -23,8 +23,9 @@
     <table class="table" id="studentsTable">
         <thead>
             <tr>
-                <th>Medicare Number</th>
-                <th>Student Type</th>
+                <th>Name</th>
+                <th>Student Number</th>
+                <th>Status</th>
                 <th>Cohort</th>
                 <th>Actions</th>
             </tr>
@@ -33,9 +34,22 @@
         @foreach (var student in Model)
         {
             <tr>
-                <td>@student.MedicareNumber</td>
-                <td>@student.StudentType</td>
-                <td>@student.Cohort?.GraduationYear @(student.Cohort != null ? $"/ {student.Cohort.GraduationMonth}" : "")</td>
+                <td>@student.FullName</td>
+                <td>@student.StudentNumber</td>
+                <td>
+                    @{
+                        var statusClass = student.Status switch
+                        {
+                            FutureReady.Models.School.StudentStatus.Active => "badge bg-success",
+                            FutureReady.Models.School.StudentStatus.Inactive => "badge bg-secondary",
+                            FutureReady.Models.School.StudentStatus.Graduated => "badge bg-info",
+                            FutureReady.Models.School.StudentStatus.Withdrawn => "badge bg-warning",
+                            _ => "badge bg-secondary"
+                        };
+                    }
+                    <span class="@statusClass">@student.Status</span>
+                </td>
+                <td>@(student.Cohort?.Name ?? "N/A")</td>
                 <td>
                     <div class="action-buttons">
                         <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@student.Id">Edit</a>

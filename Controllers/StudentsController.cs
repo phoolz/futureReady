@@ -52,21 +52,21 @@ namespace FutureReady.Controllers
             var tenantId = _tenantProvider?.GetCurrentTenantId();
             var cohorts = _context.Cohorts.AsNoTracking();
             if (tenantId.HasValue) cohorts = cohorts.Where(c => c.TenantId == tenantId.Value);
-            ViewData["CohortId"] = new SelectList(cohorts, "Id", "GraduationYear");
+            ViewData["CohortId"] = new SelectList(cohorts, "Id", "Name");
             return View();
         }
 
         // POST: Students/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("CohortId,MedicareNumber,StudentType")] Student student)
+        public async Task<IActionResult> Create([Bind("FirstName,LastName,PreferredName,DateOfBirth,StudentNumber,Phone,Status,GuardianName,GuardianEmail,GuardianPhone,CohortId,MedicareNumber")] Student student)
         {
             if (!ModelState.IsValid)
             {
                 var tenantId = _tenantProvider?.GetCurrentTenantId();
                 var cohorts = _context.Cohorts.AsNoTracking();
                 if (tenantId.HasValue) cohorts = cohorts.Where(c => c.TenantId == tenantId.Value);
-                ViewData["CohortId"] = new SelectList(cohorts, "Id", "GraduationYear");
+                ViewData["CohortId"] = new SelectList(cohorts, "Id", "Name");
                 return View(student);
             }
 
@@ -80,7 +80,7 @@ namespace FutureReady.Controllers
                 var tenantId = _tenantProvider?.GetCurrentTenantId();
                 var cohorts = _context.Cohorts.AsNoTracking();
                 if (tenantId.HasValue) cohorts = cohorts.Where(c => c.TenantId == tenantId.Value);
-                ViewData["CohortId"] = new SelectList(cohorts, "Id", "GraduationYear");
+                ViewData["CohortId"] = new SelectList(cohorts, "Id", "Name");
                 return View(student);
             }
 
@@ -98,7 +98,7 @@ namespace FutureReady.Controllers
 
             var cohorts = _context.Cohorts.AsNoTracking();
             if (tenantId.HasValue) cohorts = cohorts.Where(c => c.TenantId == tenantId.Value);
-            ViewData["CohortId"] = new SelectList(cohorts, "Id", "GraduationYear", student.CohortId);
+            ViewData["CohortId"] = new SelectList(cohorts, "Id", "Name", student.CohortId);
 
             return View(student);
         }
@@ -106,7 +106,7 @@ namespace FutureReady.Controllers
         // POST: Students/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,CohortId,MedicareNumber,StudentType,RowVersion")] Student student)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,PreferredName,DateOfBirth,StudentNumber,Phone,Status,GuardianName,GuardianEmail,GuardianPhone,CohortId,MedicareNumber,RowVersion")] Student student)
         {
             if (id != student.Id) return NotFound();
 
@@ -131,7 +131,7 @@ namespace FutureReady.Controllers
                 var tenantId = _tenantProvider?.GetCurrentTenantId();
                 var cohorts = _context.Cohorts.AsNoTracking();
                 if (tenantId.HasValue) cohorts = cohorts.Where(c => c.TenantId == tenantId.Value);
-                ViewData["CohortId"] = new SelectList(cohorts, "Id", "GraduationYear", student.CohortId);
+                ViewData["CohortId"] = new SelectList(cohorts, "Id", "Name", student.CohortId);
                 return View(student);
             }
         }

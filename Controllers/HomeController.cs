@@ -39,10 +39,8 @@ public class HomeController : Controller
         var activeCohorts = await cohortsQuery.CountAsync();
 
         var currentYear = DateTime.UtcNow.Year;
-        var currentMonth = DateTime.UtcNow.Month;
         var upcomingGraduations = await cohortsQuery
-            .Where(c => c.GraduationYear > currentYear ||
-                       (c.GraduationYear == currentYear && c.GraduationMonth >= currentMonth))
+            .Where(c => c.GraduationYear >= currentYear)
             .CountAsync();
 
         ViewData["TotalStudents"] = totalStudents;

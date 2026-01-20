@@ -66,21 +66,8 @@ namespace FutureReady.Controllers
         // POST: Cohorts/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("SchoolId,GraduationYear,GraduationMonth")] Cohort cohort)
+        public async Task<IActionResult> Create([Bind("Name,GraduationYear,GraduationMonth")] Cohort cohort)
         {
-            if (!ModelState.IsValid)
-            {
-                var tenantId = _tenantProvider?.GetCurrentTenantId();
-                if (tenantId.HasValue)
-                {
-                    var school = _context.Schools.AsNoTracking().FirstOrDefault(s => s.Id == tenantId.Value);
-                    ViewData["SchoolName"] = school?.Name;
-                    ViewData["SchoolId"] = school?.Id;
-                }
-                return View(cohort);
-            }
-
-            // Ensure the cohort belongs to the current tenant (do not allow user to set TenantId manually)
             try
             {
                 await _cohortService.CreateAsync(cohort);
@@ -122,7 +109,7 @@ namespace FutureReady.Controllers
         // POST: Cohorts/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,SchoolId,GraduationYear,GraduationMonth,RowVersion")] Cohort cohort)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Name,SchoolId,GraduationYear,GraduationMonth,RowVersion")] Cohort cohort)
         {
             if (id != cohort.Id) return NotFound();
 

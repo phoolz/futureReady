@@ -68,8 +68,9 @@ namespace FutureReady.Data
             modelBuilder.Entity<Cohort>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.GraduationYear).IsRequired();
-                entity.Property(e => e.GraduationMonth).IsRequired();
+                entity.Property(e => e.GraduationMonth).IsRequired().HasMaxLength(20);
                 entity.HasOne(e => e.School).WithMany().HasForeignKey(e => e.SchoolId).OnDelete(DeleteBehavior.Cascade);
                 // Keep table name matching the existing migration (was SchoolCohorts)
                 entity.ToTable("SchoolCohorts");
@@ -78,6 +79,9 @@ namespace FutureReady.Data
             modelBuilder.Entity<Teacher>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Phone).HasMaxLength(20);
                 entity.Property(e => e.UserId).IsRequired();
                 entity.Property(e => e.IsActive).IsRequired();
                 entity.HasIndex(e => e.UserId).IsUnique(); // enforce one-to-one user->teacher
@@ -98,9 +102,17 @@ namespace FutureReady.Data
             modelBuilder.Entity<Student>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.MedicareNumber).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.StudentType).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.PreferredName).HasMaxLength(100);
+                entity.Property(e => e.StudentNumber).HasMaxLength(50);
+                entity.Property(e => e.Phone).HasMaxLength(20);
+                entity.Property(e => e.GuardianName).HasMaxLength(200);
+                entity.Property(e => e.GuardianEmail).HasMaxLength(256);
+                entity.Property(e => e.GuardianPhone).HasMaxLength(20);
+                entity.Property(e => e.MedicareNumber).HasMaxLength(100);
                 entity.HasOne(e => e.Cohort).WithMany().HasForeignKey(e => e.CohortId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.SetNull);
             });
         }
 

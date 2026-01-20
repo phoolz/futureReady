@@ -6,22 +6,77 @@
 
 <div class="page-header">
     <h1 class="page-title">Student Details</h1>
-    <p class="page-subtitle">View student information</p>
+    <p class="page-subtitle">@Model.FullName</p>
 </div>
 
 <div class="details-container">
-    <dl>
-        <dt>Medicare Number</dt>
-        <dd>@Model.MedicareNumber</dd>
+    <h5 class="mb-3">Personal Information</h5>
+    <dl class="row">
+        <dt class="col-sm-3">First Name</dt>
+        <dd class="col-sm-9">@Model.FirstName</dd>
 
-        <dt>Student Type</dt>
-        <dd>@Model.StudentType</dd>
+        <dt class="col-sm-3">Last Name</dt>
+        <dd class="col-sm-9">@Model.LastName</dd>
 
-        <dt>Cohort</dt>
-        <dd>@Model.Cohort?.GraduationYear @(Model.Cohort != null ? $"/ {Model.Cohort.GraduationMonth}" : "N/A")</dd>
+        <dt class="col-sm-3">Preferred Name</dt>
+        <dd class="col-sm-9">@(Model.PreferredName ?? "N/A")</dd>
+
+        <dt class="col-sm-3">Date of Birth</dt>
+        <dd class="col-sm-9">@(Model.DateOfBirth?.ToString("d MMMM yyyy") ?? "N/A")</dd>
+
+        <dt class="col-sm-3">Student Number</dt>
+        <dd class="col-sm-9">@(Model.StudentNumber ?? "N/A")</dd>
     </dl>
 
-    <div class="d-flex gap-2">
+    <hr class="my-4" />
+
+    <h5 class="mb-3">Contact Information</h5>
+    <dl class="row">
+        <dt class="col-sm-3">Phone</dt>
+        <dd class="col-sm-9">@(Model.Phone ?? "N/A")</dd>
+    </dl>
+
+    <hr class="my-4" />
+
+    <h5 class="mb-3">Guardian Information</h5>
+    <dl class="row">
+        <dt class="col-sm-3">Guardian Name</dt>
+        <dd class="col-sm-9">@(Model.GuardianName ?? "N/A")</dd>
+
+        <dt class="col-sm-3">Guardian Email</dt>
+        <dd class="col-sm-9">@(Model.GuardianEmail ?? "N/A")</dd>
+
+        <dt class="col-sm-3">Guardian Phone</dt>
+        <dd class="col-sm-9">@(Model.GuardianPhone ?? "N/A")</dd>
+    </dl>
+
+    <hr class="my-4" />
+
+    <h5 class="mb-3">Academic Information</h5>
+    <dl class="row">
+        <dt class="col-sm-3">Status</dt>
+        <dd class="col-sm-9">
+            @{
+                var statusClass = Model.Status switch
+                {
+                    FutureReady.Models.School.StudentStatus.Active => "badge bg-success",
+                    FutureReady.Models.School.StudentStatus.Inactive => "badge bg-secondary",
+                    FutureReady.Models.School.StudentStatus.Graduated => "badge bg-info",
+                    FutureReady.Models.School.StudentStatus.Withdrawn => "badge bg-warning",
+                    _ => "badge bg-secondary"
+                };
+            }
+            <span class="@statusClass">@Model.Status</span>
+        </dd>
+
+        <dt class="col-sm-3">Cohort</dt>
+        <dd class="col-sm-9">@(Model.Cohort?.Name ?? "N/A")</dd>
+
+        <dt class="col-sm-3">Medicare Number</dt>
+        <dd class="col-sm-9">@(Model.MedicareNumber ?? "N/A")</dd>
+    </dl>
+
+    <div class="d-flex gap-2 mt-4">
         <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
         <a asp-action="Index" class="btn btn-outline-secondary">Back to List</a>
     </div>

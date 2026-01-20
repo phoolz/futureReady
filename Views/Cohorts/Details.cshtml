@@ -6,19 +6,22 @@
 
 <div class="page-header">
     <h1 class="page-title">Cohort Details</h1>
-    <p class="page-subtitle">View cohort information</p>
+    <p class="page-subtitle">@Model.Name</p>
 </div>
 
 <div class="details-container">
-    <dl>
-        <dt>School</dt>
-        <dd>@Model.School?.Name</dd>
+    <dl class="row">
+        <dt class="col-sm-3">Name</dt>
+        <dd class="col-sm-9">@Model.Name</dd>
 
-        <dt>Graduation Year</dt>
-        <dd>@Model.GraduationYear</dd>
+        <dt class="col-sm-3">School</dt>
+        <dd class="col-sm-9">@Model.School?.Name</dd>
 
-        <dt>Graduation Month</dt>
-        <dd>@Model.GraduationMonth</dd>
+        <dt class="col-sm-3">Graduation Year</dt>
+        <dd class="col-sm-9">@Model.GraduationYear</dd>
+
+        <dt class="col-sm-3">Graduation Month</dt>
+        <dd class="col-sm-9">@Model.GraduationMonth</dd>
     </dl>
 
     <div class="d-flex gap-2">

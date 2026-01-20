@@ -64,8 +64,17 @@ namespace FutureReady.Services.Students
                 existing.CohortId = student.CohortId;
             }
 
+            existing.FirstName = student.FirstName;
+            existing.LastName = student.LastName;
+            existing.PreferredName = student.PreferredName;
+            existing.DateOfBirth = student.DateOfBirth;
+            existing.StudentNumber = student.StudentNumber;
+            existing.Phone = student.Phone;
+            existing.Status = student.Status;
+            existing.GuardianName = student.GuardianName;
+            existing.GuardianEmail = student.GuardianEmail;
+            existing.GuardianPhone = student.GuardianPhone;
             existing.MedicareNumber = student.MedicareNumber;
-            existing.StudentType = student.StudentType;
 
             if (rowVersion != null)
                 _context.Entry(existing).Property("RowVersion").OriginalValue = rowVersion;

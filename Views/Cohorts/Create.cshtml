@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Create Cohort";
+    var months = new[] { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
 }
 
 <div class="page-header">
@@ -21,15 +22,29 @@
         </div>
 
         <div class="mb-3">
-            <label asp-for="GraduationYear" class="form-label"></label>
-            <input asp-for="GraduationYear" class="form-control" />
-            <span asp-validation-for="GraduationYear" class="text-danger"></span>
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" placeholder="e.g., Class of 2025" />
+            <span asp-validation-for="Name" class="text-danger"></span>
         </div>
 
-        <div class="mb-3">
-            <label asp-for="GraduationMonth" class="form-label"></label>
-            <input asp-for="GraduationMonth" class="form-control" />
-            <span asp-validation-for="GraduationMonth" class="text-danger"></span>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="GraduationYear" class="form-label"></label>
+                <input asp-for="GraduationYear" class="form-control" type="number" min="2000" max="2100" />
+                <span asp-validation-for="GraduationYear" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label asp-for="GraduationMonth" class="form-label"></label>
+                <select asp-for="GraduationMonth" class="form-select">
+                    <option value="">Select a month</option>
+                    @foreach (var month in months)
+                    {
+                        <option value="@month">@month</option>
+                    }
+                </select>
+                <span asp-validation-for="GraduationMonth" class="text-danger"></span>
+            </div>
         </div>
 
         <div class="d-flex gap-2 mt-4">

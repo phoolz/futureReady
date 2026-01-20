@@ -23,9 +23,9 @@
     <table class="table" id="cohortsTable">
         <thead>
             <tr>
+                <th>Name</th>
+                <th>Graduation</th>
                 <th>School</th>
-                <th>Graduation Year</th>
-                <th>Graduation Month</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -33,9 +33,9 @@
         @foreach (var c in Model)
         {
             <tr>
+                <td>@c.Name</td>
+                <td>@c.GraduationMonth @c.GraduationYear</td>
                 <td>@c.School?.Name</td>
-                <td>@c.GraduationYear</td>
-                <td>@c.GraduationMonth</td>
                 <td>
                     <div class="action-buttons">
                         <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@c.Id">Edit</a>

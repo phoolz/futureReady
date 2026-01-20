@@ -63,6 +63,7 @@ namespace FutureReady.Services.Cohorts
             if (existing == null) throw new InvalidOperationException("Cohort not found");
 
             // Do not allow changing SchoolId; it must remain the tenant's school
+            existing.Name = cohort.Name;
             existing.GraduationYear = cohort.GraduationYear;
             existing.GraduationMonth = cohort.GraduationMonth;
 
