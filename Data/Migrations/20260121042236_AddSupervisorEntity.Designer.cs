@@ -4,16 +4,19 @@ using FutureReady.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace FutureReady.Migrations
+namespace FutureReady.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260121042236_AddSupervisorEntity")]
+    partial class AddSupervisorEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -195,263 +198,6 @@ namespace FutureReady.Migrations
                     b.HasIndex("StudentId");
 
                     b.ToTable("EmergencyContacts");
-                });
-
-            modelBuilder.Entity("FutureReady.Models.School.ParentPermission", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateOnly?>("ConsentDate")
-                        .HasColumnType("date");
-
-                    b.Property<bool>("ConsentGiven")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("DeletedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("DriverContactNumber")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("DriverName")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("MedicalNotesForEmployer")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ParentFirstName")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("ParentLastName")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<Guid>("PlacementId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("PublicTransportDetails")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("RequestTeacherPrevisit")
-                        .HasColumnType("bit");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<bool>("ShareMedicalWithEmployer")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("TransportMethod")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PlacementId");
-
-                    b.ToTable("ParentPermissions");
-                });
-
-            modelBuilder.Entity("FutureReady.Models.School.Placement", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("AdditionalInfoDetails")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool?>("AdditionalInfoRequired")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("BiologicalDetails")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ChemicalDetails")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid?>("CompanyId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("DeletedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("DressRequirement")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("EmployerDriverExperience")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("EmployerLicenceType")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<bool?>("EmployerRequiresVehicleTravel")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("EmployerSubmittedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("EmployerVehicleDetails")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ErgonomicDetails")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("HasBiologicalHazards")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("HasChemicalHazards")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("HasEmergencyProcedures")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("HasErgonomicHazards")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("HasFireExtinguishersChecked")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("HasFirstAidKit")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("HasInductionProgram")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("HasObviousHazards")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("HasOhsPolicy")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("HasPlantMachineryHazards")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("HasSafeAmenities")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("HazardDetails")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("HazardsAdditionalDetails")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InjuryPreventionTraining")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("ParentSubmittedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("PlantMachineryDetails")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool?>("ProvidesHazardReportingInstruction")
-                        .HasColumnType("bit");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<string>("SafetyBriefingMethod")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<bool?>("StaffInformedOfStudent")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("StaffMeetWorkingWithChildrenRequirements")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("SupervisorId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("WorkEndTime")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("WorkStartTime")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<int?>("Year")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CompanyId");
-
-                    b.HasIndex("StudentId");
-
-                    b.HasIndex("SupervisorId");
-
-                    b.ToTable("Placements");
                 });
 
             modelBuilder.Entity("FutureReady.Models.School.School", b =>
@@ -899,42 +645,6 @@ namespace FutureReady.Migrations
                         .IsRequired();
 
                     b.Navigation("Student");
-                });
-
-            modelBuilder.Entity("FutureReady.Models.School.ParentPermission", b =>
-                {
-                    b.HasOne("FutureReady.Models.School.Placement", "Placement")
-                        .WithMany()
-                        .HasForeignKey("PlacementId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Placement");
-                });
-
-            modelBuilder.Entity("FutureReady.Models.School.Placement", b =>
-                {
-                    b.HasOne("FutureReady.Models.School.Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("FutureReady.Models.School.Student", "Student")
-                        .WithMany()
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FutureReady.Models.School.Supervisor", "Supervisor")
-                        .WithMany()
-                        .HasForeignKey("SupervisorId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Company");
-
-                    b.Navigation("Student");
-
-                    b.Navigation("Supervisor");
                 });
 
             modelBuilder.Entity("FutureReady.Models.School.Student", b =>

@@ -52,6 +52,9 @@ builder.Services.AddScoped<FutureReady.Services.Schools.ISchoolService, FutureRe
 builder.Services.AddScoped<FutureReady.Services.Authentication.IAuthenticationService, FutureReady.Services.Authentication.AuthenticationService>();
 builder.Services.AddScoped<FutureReady.Services.Students.IStudentService, FutureReady.Services.Students.StudentService>();
 builder.Services.AddScoped<FutureReady.Services.EmergencyContacts.IEmergencyContactService, FutureReady.Services.EmergencyContacts.EmergencyContactService>();
+builder.Services.AddScoped<FutureReady.Services.StudentMedicalConditions.IStudentMedicalConditionService, FutureReady.Services.StudentMedicalConditions.StudentMedicalConditionService>();
+builder.Services.AddScoped<FutureReady.Services.Companies.ICompanyService, FutureReady.Services.Companies.CompanyService>();
+builder.Services.AddScoped<FutureReady.Services.Supervisors.ISupervisorService, FutureReady.Services.Supervisors.SupervisorService>();
 
 var app = builder.Build();
 

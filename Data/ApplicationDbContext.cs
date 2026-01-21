@@ -25,6 +25,11 @@ namespace FutureReady.Data
         public DbSet<Student> Students { get; set; } = null!;
         public DbSet<Teacher> Teachers { get; set; } = null!;
         public DbSet<EmergencyContact> EmergencyContacts { get; set; } = null!;
+        public DbSet<StudentMedicalCondition> StudentMedicalConditions { get; set; } = null!;
+        public DbSet<Company> Companies { get; set; } = null!;
+        public DbSet<Supervisor> Supervisors { get; set; } = null!;
+        public DbSet<Placement> Placements { get; set; } = null!;
+        public DbSet<ParentPermission> ParentPermissions { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -100,6 +105,70 @@ namespace FutureReady.Data
                 entity.Property(e => e.Relationship).HasMaxLength(50);
                 entity.Property(e => e.IsPrimary).IsRequired();
                 entity.HasOne(e => e.Student).WithMany().HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<StudentMedicalCondition>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ConditionType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Details).HasMaxLength(2000);
+                entity.HasOne(e => e.Student).WithMany().HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Company>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Industry).HasMaxLength(100);
+                entity.Property(e => e.StreetAddress).HasMaxLength(200);
+                entity.Property(e => e.StreetAddress2).HasMaxLength(200);
+                entity.Property(e => e.Suburb).HasMaxLength(100);
+                entity.Property(e => e.City).HasMaxLength(100);
+                entity.Property(e => e.State).HasMaxLength(50);
+                entity.Property(e => e.PostalCode).HasMaxLength(20);
+                entity.Property(e => e.PostalStreetAddress).HasMaxLength(200);
+                entity.Property(e => e.PostalSuburb).HasMaxLength(100);
+                entity.Property(e => e.PostalCity).HasMaxLength(100);
+                entity.Property(e => e.PostalState).HasMaxLength(50);
+                entity.Property(e => e.PostalPostalCode).HasMaxLength(20);
+                entity.Property(e => e.InsuranceValue).HasMaxLength(50);
+            });
+
+            modelBuilder.Entity<Supervisor>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.JobTitle).HasMaxLength(100);
+                entity.Property(e => e.Email).HasMaxLength(200);
+                entity.Property(e => e.Phone).HasMaxLength(20);
+                entity.HasOne(e => e.Company).WithMany().HasForeignKey(e => e.CompanyId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Placement>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Status).HasMaxLength(50);
+                entity.Property(e => e.DressRequirement).HasMaxLength(500);
+                entity.Property(e => e.WorkStartTime).HasMaxLength(10);
+                entity.Property(e => e.WorkEndTime).HasMaxLength(10);
+                entity.Property(e => e.SafetyBriefingMethod).HasMaxLength(500);
+                entity.Property(e => e.EmployerDriverExperience).HasMaxLength(500);
+                entity.Property(e => e.EmployerLicenceType).HasMaxLength(100);
+                entity.HasOne(e => e.Student).WithMany().HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Company).WithMany().HasForeignKey(e => e.CompanyId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Supervisor).WithMany().HasForeignKey(e => e.SupervisorId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<ParentPermission>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.TransportMethod).HasMaxLength(50);
+                entity.Property(e => e.DriverName).HasMaxLength(200);
+                entity.Property(e => e.DriverContactNumber).HasMaxLength(50);
+                entity.Property(e => e.ParentFirstName).HasMaxLength(100);
+                entity.Property(e => e.ParentLastName).HasMaxLength(100);
+                entity.HasOne(e => e.Placement).WithMany().HasForeignKey(e => e.PlacementId).OnDelete(DeleteBehavior.Cascade);
             });
         }
 

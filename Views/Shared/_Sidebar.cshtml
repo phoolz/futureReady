@@ -29,6 +29,20 @@
                 <span class="nav-text">Students</span>
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link @(currentController == "Companies" ? "active" : "")"
+               asp-controller="Companies" asp-action="Index">
+                <span class="nav-icon">🏢</span>
+                <span class="nav-text">Companies</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(currentController == "Supervisors" ? "active" : "")"
+               asp-controller="Supervisors" asp-action="Index">
+                <span class="nav-icon">👔</span>
+                <span class="nav-text">Supervisors</span>
+            </a>
+        </li>
     </ul>
 
     <div class="sidebar-footer">

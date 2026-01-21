@@ -1,0 +1,31 @@
+@model FutureReady.Models.School.StudentMedicalCondition
+@using FutureReady.Models.School
+
+@{
+    ViewData["Title"] = "Medical Condition Details";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Medical Condition Details</h1>
+    <p class="page-subtitle">@MedicalConditionTypes.GetDisplayName(Model.ConditionType)</p>
+</div>
+
+<div class="details-container">
+    <dl class="row">
+        <dt class="col-sm-3">Condition Type</dt>
+        <dd class="col-sm-9">
+            <span class="badge bg-info">@MedicalConditionTypes.GetDisplayName(Model.ConditionType)</span>
+        </dd>
+
+        <dt class="col-sm-3">Details</dt>
+        <dd class="col-sm-9">@(Model.Details ?? "N/A")</dd>
+
+        <dt class="col-sm-3">Student</dt>
+        <dd class="col-sm-9">@Model.Student?.FullName</dd>
+    </dl>
+
+    <div class="d-flex gap-2 mt-4">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+        <a asp-action="Index" asp-route-id="@Model.StudentId" class="btn btn-outline-secondary">Back to List</a>
+    </div>
+</div>

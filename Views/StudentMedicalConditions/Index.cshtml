@@ -1,0 +1,55 @@
+@model IEnumerable<FutureReady.Models.School.StudentMedicalCondition>
+@using FutureReady.Models.School
+
+@{
+    ViewData["Title"] = "Medical Conditions";
+    var student = ViewData["Student"] as Student;
+    var studentId = ViewData["StudentId"];
+}
+
+<div class="page-header">
+    <h1 class="page-title">Medical Conditions</h1>
+    <p class="page-subtitle">for @student?.FullName</p>
+</div>
+
+<div class="table-container">
+    <div class="table-header">
+        <h2 class="table-title">All Medical Conditions</h2>
+        <div class="table-actions">
+            <a asp-action="Create" asp-route-studentId="@studentId" class="btn btn-primary">+ Add Condition</a>
+            <a asp-controller="Students" asp-action="Details" asp-route-id="@studentId" class="btn btn-outline-secondary">Back to Student</a>
+        </div>
+    </div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Condition Type</th>
+                <th>Details</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var condition in Model)
+        {
+            <tr>
+                <td>
+                    <span class="badge bg-info">@MedicalConditionTypes.GetDisplayName(condition.ConditionType)</span>
+                </td>
+                <td>@(condition.Details ?? "N/A")</td>
+                <td>
+                    <div class="action-buttons">
+                        <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@condition.Id">Edit</a>
+                        <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@condition.Id">Delete</a>
+                    </div>
+                </td>
+            </tr>
+        }
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="3" class="text-center text-muted py-4">No medical conditions recorded. Click "Add Condition" to create one.</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

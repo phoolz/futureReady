@@ -1,0 +1,152 @@
+@model FutureReady.Models.School.Company
+
+@{
+    ViewData["Title"] = "Create Company";
+}
+
+<h1>Create Company</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Name" class="form-label"></label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Industry" class="form-label"></label>
+                            <input asp-for="Industry" class="form-control" />
+                            <span asp-validation-for="Industry" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Physical Address</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="StreetAddress" class="form-label"></label>
+                            <input asp-for="StreetAddress" class="form-control" />
+                            <span asp-validation-for="StreetAddress" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="StreetAddress2" class="form-label"></label>
+                            <input asp-for="StreetAddress2" class="form-control" />
+                            <span asp-validation-for="StreetAddress2" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="Suburb" class="form-label"></label>
+                            <input asp-for="Suburb" class="form-control" />
+                            <span asp-validation-for="Suburb" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="City" class="form-label"></label>
+                            <input asp-for="City" class="form-control" />
+                            <span asp-validation-for="City" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label asp-for="State" class="form-label"></label>
+                            <input asp-for="State" class="form-control" />
+                            <span asp-validation-for="State" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label asp-for="PostalCode" class="form-label"></label>
+                            <input asp-for="PostalCode" class="form-control" />
+                            <span asp-validation-for="PostalCode" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Postal Address</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="PostalStreetAddress" class="form-label"></label>
+                            <input asp-for="PostalStreetAddress" class="form-control" />
+                            <span asp-validation-for="PostalStreetAddress" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="PostalSuburb" class="form-label"></label>
+                            <input asp-for="PostalSuburb" class="form-control" />
+                            <span asp-validation-for="PostalSuburb" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="PostalCity" class="form-label"></label>
+                            <input asp-for="PostalCity" class="form-control" />
+                            <span asp-validation-for="PostalCity" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="PostalState" class="form-label"></label>
+                            <input asp-for="PostalState" class="form-control" />
+                            <span asp-validation-for="PostalState" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="PostalPostalCode" class="form-label"></label>
+                            <input asp-for="PostalPostalCode" class="form-control" />
+                            <span asp-validation-for="PostalPostalCode" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Insurance & Experience</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input asp-for="PublicLiabilityInsurance5M" class="form-check-input" />
+                                <label asp-for="PublicLiabilityInsurance5M" class="form-check-label"></label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="InsuranceValue" class="form-label"></label>
+                            <input asp-for="InsuranceValue" class="form-control" />
+                            <span asp-validation-for="InsuranceValue" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input asp-for="HasPreviousWorkExperienceStudents" class="form-check-input" />
+                                <label asp-for="HasPreviousWorkExperienceStudents" class="form-check-label"></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Create</button>
+                <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
