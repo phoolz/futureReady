@@ -1,0 +1,47 @@
+@code {
+    [CascadingParameter] public EmployerFormDto? FormData { get; set; }
+
+    private SupervisorDetailsDto Data => FormData?.SupervisorDetails ?? new();
+}
+
+<FormSection Title="Supervisor Details">
+    <p class="mb-4 text-muted">Please provide the contact details for the person who will be directly supervising the student during their placement.</p>
+
+    <EditForm Model="Data">
+        <DataAnnotationsValidator />
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label required">First Name</label>
+                    <InputText class="form-control" @bind-Value="Data.FirstName" placeholder="Enter first name" />
+                    <ValidationMessage For="@(() => Data.FirstName)" class="validation-message" />
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label required">Last Name</label>
+                    <InputText class="form-control" @bind-Value="Data.LastName" placeholder="Enter last name" />
+                    <ValidationMessage For="@(() => Data.LastName)" class="validation-message" />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Job Title</label>
+            <InputText class="form-control" @bind-Value="Data.JobTitle" placeholder="Enter job title" />
+        </div>
+
+        <div class="form-group">
+            <label class="form-label required">Email</label>
+            <InputText class="form-control" @bind-Value="Data.Email" type="email" placeholder="Enter email address" />
+            <ValidationMessage For="@(() => Data.Email)" class="validation-message" />
+        </div>
+
+        <div class="form-group">
+            <label class="form-label required">Phone</label>
+            <InputText class="form-control" @bind-Value="Data.Phone" type="tel" placeholder="Enter phone number" />
+            <ValidationMessage For="@(() => Data.Phone)" class="validation-message" />
+        </div>
+    </EditForm>
+</FormSection>

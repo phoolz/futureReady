@@ -1,0 +1,83 @@
+@code {
+    [CascadingParameter] public EmployerFormDto? FormData { get; set; }
+
+    private GeneralTravelDto Data => FormData?.GeneralTravel ?? new();
+}
+
+<FormSection Title="General Information & Travel">
+    <p class="mb-4 text-muted">Please provide information about staff awareness and any vehicle travel requirements during the placement.</p>
+
+    <h4 class="mb-3">Staff Information</h4>
+
+    <div class="form-group">
+        <label class="form-label required">Will staff be informed of the student's placement?</label>
+        <div class="yes-no-toggle">
+            <button type="button" class="toggle-btn @(Data.StaffInformedOfStudent == true ? "selected-yes" : "")" @onclick="() => Data.StaffInformedOfStudent = true">Yes</button>
+            <button type="button" class="toggle-btn @(Data.StaffInformedOfStudent == false ? "selected-no" : "")" @onclick="() => Data.StaffInformedOfStudent = false">No</button>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label required">Do all relevant staff meet Working with Children Check requirements?</label>
+        <div class="yes-no-toggle">
+            <button type="button" class="toggle-btn @(Data.StaffMeetWorkingWithChildrenRequirements == true ? "selected-yes" : "")" @onclick="() => Data.StaffMeetWorkingWithChildrenRequirements = true">Yes</button>
+            <button type="button" class="toggle-btn @(Data.StaffMeetWorkingWithChildrenRequirements == false ? "selected-no" : "")" @onclick="() => Data.StaffMeetWorkingWithChildrenRequirements = false">No</button>
+        </div>
+        @if (Data.StaffMeetWorkingWithChildrenRequirements == false)
+        {
+            <p class="text-danger mt-2">
+                <strong>Note:</strong> All staff who will be working with the student should have a valid Working with Children Check.
+            </p>
+        }
+    </div>
+
+    <div class="form-group">
+        <label class="form-label required">Is any additional information required from the student or school?</label>
+        <div class="yes-no-toggle">
+            <button type="button" class="toggle-btn @(Data.AdditionalInfoRequired == true ? "selected-yes" : "")" @onclick="() => Data.AdditionalInfoRequired = true">Yes</button>
+            <button type="button" class="toggle-btn @(Data.AdditionalInfoRequired == false ? "selected-no" : "")" @onclick="() => Data.AdditionalInfoRequired = false">No</button>
+        </div>
+    </div>
+
+    @if (Data.AdditionalInfoRequired == true)
+    {
+        <div class="conditional-field">
+            <div class="form-group">
+                <label class="form-label">Please provide details</label>
+                <InputTextArea class="form-control" @bind-Value="Data.AdditionalInfoDetails" rows="3" placeholder="Describe what additional information is required" />
+            </div>
+        </div>
+    }
+
+    <hr class="my-4" />
+
+    <h4 class="mb-3">Vehicle Travel</h4>
+
+    <div class="form-group">
+        <label class="form-label required">Will the student be required to travel in a vehicle during the placement?</label>
+        <div class="yes-no-toggle">
+            <button type="button" class="toggle-btn @(Data.RequiresVehicleTravel == true ? "selected-yes" : "")" @onclick="() => Data.RequiresVehicleTravel = true">Yes</button>
+            <button type="button" class="toggle-btn @(Data.RequiresVehicleTravel == false ? "selected-no" : "")" @onclick="() => Data.RequiresVehicleTravel = false">No</button>
+        </div>
+    </div>
+
+    @if (Data.RequiresVehicleTravel == true)
+    {
+        <div class="conditional-field">
+            <div class="form-group">
+                <label class="form-label">Please provide vehicle travel details</label>
+                <InputTextArea class="form-control" @bind-Value="Data.VehicleDetails" rows="2" placeholder="Describe the purpose and nature of vehicle travel" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Driver's experience</label>
+                <InputTextArea class="form-control" @bind-Value="Data.DriverExperience" rows="2" placeholder="Describe the driver's experience" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Driver's licence type</label>
+                <InputText class="form-control" @bind-Value="Data.LicenceType" placeholder="e.g., Full, P2, etc." />
+            </div>
+        </div>
+    }
+</FormSection>

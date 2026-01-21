@@ -1,0 +1,20 @@
+@code {
+    [Parameter] public string StudentName { get; set; } = string.Empty;
+    [Parameter] public string SchoolName { get; set; } = string.Empty;
+    [Parameter] public string CompanyName { get; set; } = string.Empty;
+}
+
+<div class="student-info-header">
+    <div class="student-info-item">
+        <span class="info-label">Student</span>
+        <span class="info-value">@StudentName</span>
+    </div>
+    <div class="student-info-item">
+        <span class="info-label">School</span>
+        <span class="info-value">@SchoolName</span>
+    </div>
+    <div class="student-info-item">
+        <span class="info-label">Company</span>
+        <span class="info-value">@CompanyName</span>
+    </div>
+</div>

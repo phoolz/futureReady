@@ -1,0 +1,104 @@
+@model FutureReady.Models.School.Placement
+
+@{
+    ViewData["Title"] = "Employer Acceptance Form";
+    Layout = "_Layout";
+    var token = ViewData["Token"] as string;
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Employer Acceptance Form</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Work Experience Placement</strong>
+                        <p class="mb-0">Please review the placement details below and submit this form to confirm your acceptance.</p>
+                    </div>
+
+                    <h5 class="mt-4">Student Information</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4">Student Name</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.Student != null)
+                            {
+                                @Model.Student.FirstName @Model.Student.LastName
+                            }
+                        </dd>
+                    </dl>
+
+                    <hr />
+
+                    <h5>Company Information</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4">Company</dt>
+                        <dd class="col-sm-8">@Model.Company?.Name</dd>
+
+                        @if (Model.Company?.StreetAddress != null)
+                        {
+                            <dt class="col-sm-4">Address</dt>
+                            <dd class="col-sm-8">
+                                @Model.Company.StreetAddress<br />
+                                @if (!string.IsNullOrEmpty(Model.Company.StreetAddress2))
+                                {
+                                    @Model.Company.StreetAddress2<br />
+                                }
+                                @Model.Company.Suburb @Model.Company.City @Model.Company.State @Model.Company.PostalCode
+                            </dd>
+                        }
+                    </dl>
+
+                    <hr />
+
+                    <h5>Supervisor Information</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4">Supervisor Name</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.Supervisor != null)
+                            {
+                                @Model.Supervisor.FirstName @Model.Supervisor.LastName
+                            }
+                        </dd>
+
+                        @if (!string.IsNullOrEmpty(Model.Supervisor?.JobTitle))
+                        {
+                            <dt class="col-sm-4">Job Title</dt>
+                            <dd class="col-sm-8">@Model.Supervisor.JobTitle</dd>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.Supervisor?.Email))
+                        {
+                            <dt class="col-sm-4">Email</dt>
+                            <dd class="col-sm-8">@Model.Supervisor.Email</dd>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.Supervisor?.Phone))
+                        {
+                            <dt class="col-sm-4">Phone</dt>
+                            <dd class="col-sm-8">@Model.Supervisor.Phone</dd>
+                        }
+                    </dl>
+
+                    <hr />
+
+                    <form asp-controller="Employer" asp-action="FormSubmit" asp-route-token="@token" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div class="alert alert-secondary">
+                            <p class="mb-0"><strong>Note:</strong> This is a placeholder form. Additional fields for employer acceptance will be added here.</p>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-lg"></i> Submit Acceptance Form
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

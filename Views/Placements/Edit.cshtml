@@ -1,0 +1,76 @@
+@model FutureReady.Models.School.Placement
+
+@{
+    ViewData["Title"] = "Edit Placement";
+}
+
+<h1>Edit Placement</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="RowVersion" />
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Placement Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="StudentId" class="form-label">Student</label>
+                            <select asp-for="StudentId" asp-items="ViewBag.StudentId" class="form-select">
+                                <option value="">-- Select Student --</option>
+                            </select>
+                            <span asp-validation-for="StudentId" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Year" class="form-label"></label>
+                            <input asp-for="Year" class="form-control" />
+                            <span asp-validation-for="Year" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="CompanyId" class="form-label">Company</label>
+                            <select asp-for="CompanyId" asp-items="ViewBag.CompanyId" class="form-select">
+                                <option value="">-- Select Company --</option>
+                            </select>
+                            <span asp-validation-for="CompanyId" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="SupervisorId" class="form-label">Supervisor</label>
+                            <select asp-for="SupervisorId" asp-items="ViewBag.SupervisorId" class="form-select">
+                                <option value="">-- Select Supervisor --</option>
+                            </select>
+                            <span asp-validation-for="SupervisorId" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Status" class="form-label"></label>
+                            <select asp-for="Status" class="form-select">
+                                <option value="draft">Draft</option>
+                                <option value="pending_employer">Pending Employer</option>
+                                <option value="pending_parent">Pending Parent</option>
+                                <option value="confirmed">Confirmed</option>
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

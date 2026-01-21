@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using FutureReady.Models.School;
 using FutureReady.Services;
 using FutureReady.Services.Companies;
+using FutureReady.Services.Supervisors;
+using FutureReady.Services.Placements;
 
 namespace FutureReady.Controllers
 {
@@ -13,11 +15,15 @@ namespace FutureReady.Controllers
     public class CompaniesController : Controller
     {
         private readonly ICompanyService _companyService;
+        private readonly ISupervisorService _supervisorService;
+        private readonly IPlacementService _placementService;
         private readonly ITenantProvider? _tenantProvider;
 
-        public CompaniesController(ICompanyService companyService, ITenantProvider? tenantProvider = null)
+        public CompaniesController(ICompanyService companyService, ISupervisorService supervisorService, IPlacementService placementService, ITenantProvider? tenantProvider = null)
         {
             _companyService = companyService;
+            _supervisorService = supervisorService;
+            _placementService = placementService;
             _tenantProvider = tenantProvider;
         }
 
@@ -37,6 +43,12 @@ namespace FutureReady.Controllers
             var tenantId = _tenantProvider?.GetCurrentTenantId();
             var company = await _companyService.GetByIdAsync(id.Value, tenantId);
             if (company == null) return NotFound();
+
+            var supervisors = await _supervisorService.GetByCompanyAsync(id.Value, tenantId);
+            ViewData["Supervisors"] = supervisors;
+
+            var placements = await _placementService.GetByCompanyIdAsync(id.Value, tenantId);
+            ViewData["Placements"] = placements;
 
             return View(company);
         }

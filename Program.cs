@@ -8,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
 
 // Add authentication (cookie)
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -55,6 +57,10 @@ builder.Services.AddScoped<FutureReady.Services.EmergencyContacts.IEmergencyCont
 builder.Services.AddScoped<FutureReady.Services.StudentMedicalConditions.IStudentMedicalConditionService, FutureReady.Services.StudentMedicalConditions.StudentMedicalConditionService>();
 builder.Services.AddScoped<FutureReady.Services.Companies.ICompanyService, FutureReady.Services.Companies.CompanyService>();
 builder.Services.AddScoped<FutureReady.Services.Supervisors.ISupervisorService, FutureReady.Services.Supervisors.SupervisorService>();
+builder.Services.AddScoped<FutureReady.Services.Placements.IPlacementService, FutureReady.Services.Placements.PlacementService>();
+builder.Services.AddScoped<FutureReady.Services.FormTokens.IFormTokenService, FutureReady.Services.FormTokens.FormTokenService>();
+builder.Services.AddScoped<FutureReady.Services.EmployerForm.IEmployerFormService, FutureReady.Services.EmployerForm.EmployerFormService>();
+builder.Services.AddScoped<FutureReady.Services.EmployerForm.IEmployerFormStateService, FutureReady.Services.EmployerForm.EmployerFormStateService>();
 
 var app = builder.Build();
 
@@ -80,6 +86,8 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseAntiforgery();
+
 app.MapStaticAssets();
 
 app.MapControllerRoute(
@@ -87,5 +95,7 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
+app.MapRazorComponents<FutureReady.Components.App>()
+    .AddInteractiveServerRenderMode();
 
 app.Run();

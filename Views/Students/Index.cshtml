@@ -11,7 +11,6 @@
 
 <div class="table-container">
     <div class="table-header">
-        <h2 class="table-title">All Students</h2>
         <div class="table-actions">
             <div class="search-box">
                 <span class="search-icon">🔍</span>
@@ -20,7 +19,7 @@
             <a asp-action="Create" class="btn btn-primary">+ Add Student</a>
         </div>
     </div>
-    <table class="table" id="studentsTable">
+    <table class="table table-hover" id="studentsTable">
         <thead>
             <tr>
                 <th>Name</th>
@@ -28,25 +27,17 @@
                 <th>Year Level</th>
                 <th>Student Type</th>
                 <th>Graduation Year</th>
-                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
         @foreach (var student in Model)
         {
-            <tr>
+            <tr onclick="window.location='@Url.Action("Details", new { id = student.Id })'" style="cursor: pointer;">
                 <td>@student.FullName</td>
                 <td>@(student.StudentNumber ?? "N/A")</td>
                 <td>@(student.YearLevel ?? "N/A")</td>
                 <td>@(student.StudentType ?? "N/A")</td>
                 <td>@(student.GraduationYear?.ToString() ?? "N/A")</td>
-                <td>
-                    <div class="action-buttons">
-                        <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@student.Id">Edit</a>
-                        <a class="btn btn-sm btn-outline-info" asp-action="Details" asp-route-id="@student.Id">Details</a>
-                        <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@student.Id">Delete</a>
-                    </div>
-                </td>
             </tr>
         }
         </tbody>
@@ -64,7 +55,7 @@
         for (var i = 1; i < rows.length; i++) {
             var cells = rows[i].getElementsByTagName("td");
             var match = false;
-            for (var j = 0; j < cells.length - 1; j++) {
+            for (var j = 0; j < cells.length; j++) {
                 if (cells[j].textContent.toLowerCase().indexOf(filter) > -1) {
                     match = true;
                     break;

@@ -1,0 +1,78 @@
+@code {
+    [CascadingParameter] public EmployerFormDto? FormData { get; set; }
+
+    private HazardsAppendixDto Data => FormData?.HazardsAppendix ?? new();
+}
+
+<FormSection Title="Hazards Appendix">
+    <p class="mb-4 text-muted">Please indicate if any of the following hazard types are present in the workplace and provide details where applicable.</p>
+
+    <div class="hazard-checkbox-group">
+        <div class="hazard-item">
+            <div class="hazard-checkbox">
+                <input type="checkbox" id="chemicalHazards" @bind="Data.HasChemicalHazards" />
+                <label for="chemicalHazards">Chemical Hazards</label>
+            </div>
+            <p class="text-muted small mt-1">e.g., cleaning products, solvents, paints, acids, gases</p>
+            @if (Data.HasChemicalHazards)
+            {
+                <div class="hazard-details">
+                    <label class="form-label">Please provide details of chemical hazards</label>
+                    <InputTextArea class="form-control" @bind-Value="Data.ChemicalDetails" rows="2" placeholder="List the chemicals present and how they are managed" />
+                </div>
+            }
+        </div>
+
+        <div class="hazard-item">
+            <div class="hazard-checkbox">
+                <input type="checkbox" id="plantHazards" @bind="Data.HasPlantMachineryHazards" />
+                <label for="plantHazards">Plant/Machinery Hazards</label>
+            </div>
+            <p class="text-muted small mt-1">e.g., forklifts, power tools, conveyor belts, industrial equipment</p>
+            @if (Data.HasPlantMachineryHazards)
+            {
+                <div class="hazard-details">
+                    <label class="form-label">Please provide details of plant/machinery hazards</label>
+                    <InputTextArea class="form-control" @bind-Value="Data.PlantMachineryDetails" rows="2" placeholder="List the equipment present and safety measures in place" />
+                </div>
+            }
+        </div>
+
+        <div class="hazard-item">
+            <div class="hazard-checkbox">
+                <input type="checkbox" id="biologicalHazards" @bind="Data.HasBiologicalHazards" />
+                <label for="biologicalHazards">Biological Hazards</label>
+            </div>
+            <p class="text-muted small mt-1">e.g., blood/bodily fluids, animals, bacteria, viruses, mould</p>
+            @if (Data.HasBiologicalHazards)
+            {
+                <div class="hazard-details">
+                    <label class="form-label">Please provide details of biological hazards</label>
+                    <InputTextArea class="form-control" @bind-Value="Data.BiologicalDetails" rows="2" placeholder="Describe the biological hazards and control measures" />
+                </div>
+            }
+        </div>
+
+        <div class="hazard-item">
+            <div class="hazard-checkbox">
+                <input type="checkbox" id="ergonomicHazards" @bind="Data.HasErgonomicHazards" />
+                <label for="ergonomicHazards">Ergonomic Hazards</label>
+            </div>
+            <p class="text-muted small mt-1">e.g., repetitive tasks, heavy lifting, awkward postures, prolonged sitting/standing</p>
+            @if (Data.HasErgonomicHazards)
+            {
+                <div class="hazard-details">
+                    <label class="form-label">Please provide details of ergonomic hazards</label>
+                    <InputTextArea class="form-control" @bind-Value="Data.ErgonomicDetails" rows="2" placeholder="Describe the ergonomic hazards and how they are managed" />
+                </div>
+            }
+        </div>
+    </div>
+
+    <hr class="my-4" />
+
+    <div class="form-group">
+        <label class="form-label">Additional Hazard Information</label>
+        <InputTextArea class="form-control" @bind-Value="Data.AdditionalDetails" rows="3" placeholder="Provide any additional information about workplace hazards that hasn't been covered above" />
+    </div>
+</FormSection>

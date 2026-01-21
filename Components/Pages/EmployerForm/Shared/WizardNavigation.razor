@@ -1,0 +1,44 @@
+@code {
+    [Parameter] public int CurrentStep { get; set; }
+    [Parameter] public int TotalSteps { get; set; } = 7;
+    [Parameter] public bool IsSubmitting { get; set; }
+    [Parameter] public EventCallback OnPrevious { get; set; }
+    [Parameter] public EventCallback OnNext { get; set; }
+    [Parameter] public EventCallback OnSubmit { get; set; }
+
+    private bool IsFirstStep => CurrentStep == 1;
+    private bool IsLastStep => CurrentStep == TotalSteps;
+}
+
+<div class="wizard-navigation">
+    @if (!IsFirstStep)
+    {
+        <button type="button" class="btn-wizard btn-previous" @onclick="OnPrevious" disabled="@IsSubmitting">
+            &larr; Previous
+        </button>
+    }
+    else
+    {
+        <div></div>
+    }
+
+    @if (IsLastStep)
+    {
+        <button type="button" class="btn-wizard btn-submit" @onclick="OnSubmit" disabled="@IsSubmitting">
+            @if (IsSubmitting)
+            {
+                <span>Submitting...</span>
+            }
+            else
+            {
+                <span>Submit Form</span>
+            }
+        </button>
+    }
+    else
+    {
+        <button type="button" class="btn-wizard btn-next" @onclick="OnNext">
+            Next &rarr;
+        </button>
+    }
+</div>

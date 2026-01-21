@@ -1,0 +1,92 @@
+@model IEnumerable<FutureReady.Models.School.Placement>
+
+@{
+    ViewData["Title"] = "Placements";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Placements</h1>
+    <div class="d-flex gap-2 align-items-center">
+        <div class="input-group" style="width: 250px;">
+            <span class="input-group-text">
+                <i class="bi bi-search"></i>
+            </span>
+            <input type="text" class="form-control" id="searchInput" placeholder="Search..." onkeyup="filterTable()">
+        </div>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Add Placement
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-striped table-hover" id="dataTable">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Company</th>
+                    <th>Supervisor</th>
+                    <th>Year</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr onclick="window.location='@Url.Action("Details", new { id = item.Id })'" style="cursor: pointer;">
+                        <td>
+                            @if (item.Student != null)
+                            {
+                                @($"{item.Student.FirstName} {item.Student.LastName}")
+                            }
+                        </td>
+                        <td>@item.Company?.Name</td>
+                        <td>
+                            @if (item.Supervisor != null)
+                            {
+                                @($"{item.Supervisor.FirstName} {item.Supervisor.LastName}")
+                            }
+                        </td>
+                        <td>@item.Year</td>
+                        <td>
+                            @{
+                                var statusClass = item.Status switch
+                                {
+                                    "confirmed" => "bg-success",
+                                    "pending_employer" => "bg-warning text-dark",
+                                    "pending_parent" => "bg-info",
+                                    _ => "bg-secondary"
+                                };
+                            }
+                            <span class="badge @statusClass">@item.Status</span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function filterTable() {
+        var input = document.getElementById("searchInput");
+        var filter = input.value.toLowerCase();
+        var table = document.getElementById("dataTable");
+        var rows = table.getElementsByTagName("tr");
+
+        for (var i = 1; i < rows.length; i++) {
+            var cells = rows[i].getElementsByTagName("td");
+            var match = false;
+            for (var j = 0; j < cells.length; j++) {
+                if (cells[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                    match = true;
+                    break;
+                }
+            }
+            rows[i].style.display = match ? "" : "none";
+        }
+    }
+</script>
+}

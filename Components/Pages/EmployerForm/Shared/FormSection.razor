@@ -1,0 +1,12 @@
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}
+
+<div class="form-section">
+    @if (!string.IsNullOrEmpty(Title))
+    {
+        <h2 class="form-section-title">@Title</h2>
+    }
+    @ChildContent
+</div>

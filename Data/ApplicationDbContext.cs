@@ -30,6 +30,7 @@ namespace FutureReady.Data
         public DbSet<Supervisor> Supervisors { get; set; } = null!;
         public DbSet<Placement> Placements { get; set; } = null!;
         public DbSet<ParentPermission> ParentPermissions { get; set; } = null!;
+        public DbSet<FormToken> FormTokens { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -168,6 +169,16 @@ namespace FutureReady.Data
                 entity.Property(e => e.DriverContactNumber).HasMaxLength(50);
                 entity.Property(e => e.ParentFirstName).HasMaxLength(100);
                 entity.Property(e => e.ParentLastName).HasMaxLength(100);
+                entity.HasOne(e => e.Placement).WithMany().HasForeignKey(e => e.PlacementId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<FormToken>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Token).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.FormType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Email).HasMaxLength(200);
+                entity.HasIndex(e => e.Token).IsUnique();
                 entity.HasOne(e => e.Placement).WithMany().HasForeignKey(e => e.PlacementId).OnDelete(DeleteBehavior.Cascade);
             });
         }

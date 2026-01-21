@@ -1,0 +1,69 @@
+@code {
+    [CascadingParameter] public EmployerFormDto? FormData { get; set; }
+
+    private InsuranceDto Data => FormData?.Insurance ?? new();
+
+    private void SetInsurance(bool value)
+    {
+        Data.HasPublicLiabilityInsurance5M = value;
+    }
+
+    private void SetPreviousStudents(bool value)
+    {
+        Data.HasPreviousWorkExperienceStudents = value;
+    }
+}
+
+<FormSection Title="Insurance & Experience">
+    <p class="mb-4 text-muted">Please provide information about your public liability insurance and previous experience with work experience students.</p>
+
+    <div class="form-group">
+        <label class="form-label required">Do you have Public Liability Insurance of at least $5 million?</label>
+        <div class="yes-no-toggle">
+            <button type="button"
+                    class="toggle-btn @(Data.HasPublicLiabilityInsurance5M == true ? "selected-yes" : "")"
+                    @onclick="() => SetInsurance(true)">
+                Yes
+            </button>
+            <button type="button"
+                    class="toggle-btn @(Data.HasPublicLiabilityInsurance5M == false ? "selected-no" : "")"
+                    @onclick="() => SetInsurance(false)">
+                No
+            </button>
+        </div>
+        @if (Data.HasPublicLiabilityInsurance5M == false)
+        {
+            <p class="text-danger mt-2">
+                <strong>Note:</strong> Public Liability Insurance of at least $5 million is required for work experience placements.
+            </p>
+        }
+    </div>
+
+    @if (Data.HasPublicLiabilityInsurance5M == true)
+    {
+        <div class="conditional-field">
+            <div class="form-group">
+                <label class="form-label">Insurance Value (if known)</label>
+                <InputText class="form-control" @bind-Value="Data.InsuranceValue" placeholder="e.g., $10 million" />
+            </div>
+        </div>
+    }
+
+    <hr class="my-4" />
+
+    <div class="form-group">
+        <label class="form-label required">Have you had previous work experience students?</label>
+        <div class="yes-no-toggle">
+            <button type="button"
+                    class="toggle-btn @(Data.HasPreviousWorkExperienceStudents == true ? "selected-yes" : "")"
+                    @onclick="() => SetPreviousStudents(true)">
+                Yes
+            </button>
+            <button type="button"
+                    class="toggle-btn @(Data.HasPreviousWorkExperienceStudents == false ? "selected-no" : "")"
+                    @onclick="() => SetPreviousStudents(false)">
+                No
+            </button>
+        </div>
+    </div>
+</FormSection>

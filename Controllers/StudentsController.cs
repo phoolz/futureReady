@@ -7,6 +7,7 @@ using FutureReady.Data;
 using FutureReady.Models.School;
 using FutureReady.Services;
 using FutureReady.Services.Students;
+using FutureReady.Services.Placements;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 
@@ -18,11 +19,13 @@ namespace FutureReady.Controllers
         private readonly ApplicationDbContext _context;
         private readonly ITenantProvider? _tenantProvider;
         private readonly IStudentService _studentService;
+        private readonly IPlacementService _placementService;
 
-        public StudentsController(ApplicationDbContext context, IStudentService studentService, ITenantProvider? tenantProvider = null)
+        public StudentsController(ApplicationDbContext context, IStudentService studentService, IPlacementService placementService, ITenantProvider? tenantProvider = null)
         {
             _context = context;
             _studentService = studentService;
+            _placementService = placementService;
             _tenantProvider = tenantProvider;
         }
 
@@ -42,6 +45,10 @@ namespace FutureReady.Controllers
             var tenantId = _tenantProvider?.GetCurrentTenantId();
             var student = await _studentService.GetByIdAsync(id.Value, tenantId);
             if (student == null) return NotFound();
+
+            // Get placements for this student
+            var placements = await _placementService.GetByStudentIdAsync(id.Value, tenantId);
+            ViewData["Placements"] = placements;
 
             return View(student);
         }

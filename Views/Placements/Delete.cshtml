@@ -1,0 +1,52 @@
+@model FutureReady.Models.School.Placement
+
+@{
+    ViewData["Title"] = "Delete Placement";
+}
+
+<h1>Delete Placement</h1>
+
+<div class="alert alert-danger">
+    <h4 class="alert-heading">Are you sure you want to delete this placement?</h4>
+    <p>This action cannot be undone.</p>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Placement Details</h5>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-4">Student</dt>
+            <dd class="col-sm-8">
+                @if (Model.Student != null)
+                {
+                    @Model.Student.FirstName @Model.Student.LastName
+                }
+            </dd>
+
+            <dt class="col-sm-4">Company</dt>
+            <dd class="col-sm-8">@Model.Company?.Name</dd>
+
+            <dt class="col-sm-4">Supervisor</dt>
+            <dd class="col-sm-8">
+                @if (Model.Supervisor != null)
+                {
+                    @Model.Supervisor.FirstName @Model.Supervisor.LastName
+                }
+            </dd>
+
+            <dt class="col-sm-4">Year</dt>
+            <dd class="col-sm-8">@Model.Year</dd>
+
+            <dt class="col-sm-4">Status</dt>
+            <dd class="col-sm-8">@Model.Status</dd>
+        </dl>
+    </div>
+</div>
+
+<form asp-action="Delete">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

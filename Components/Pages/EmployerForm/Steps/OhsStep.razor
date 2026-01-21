@@ -1,0 +1,101 @@
+@code {
+    [CascadingParameter] public EmployerFormDto? FormData { get; set; }
+
+    private OhsDto Data => FormData?.Ohs ?? new();
+
+    private void SetValue(Action<bool> setter, bool value)
+    {
+        setter(value);
+    }
+}
+
+<FormSection Title="Occupational Health & Safety">
+    <p class="mb-4 text-muted">Please answer the following questions about workplace health and safety at your organisation.</p>
+
+    <div class="form-group">
+        <label class="form-label required">Do you have an OHS policy?</label>
+        <div class="yes-no-toggle">
+            <button type="button" class="toggle-btn @(Data.HasOhsPolicy == true ? "selected-yes" : "")" @onclick="() => Data.HasOhsPolicy = true">Yes</button>
+            <button type="button" class="toggle-btn @(Data.HasOhsPolicy == false ? "selected-no" : "")" @onclick="() => Data.HasOhsPolicy = false">No</button>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label required">Do you have an induction program for new workers?</label>
+        <div class="yes-no-toggle">
+            <button type="button" class="toggle-btn @(Data.HasInductionProgram == true ? "selected-yes" : "")" @onclick="() => Data.HasInductionProgram = true">Yes</button>
+            <button type="button" class="toggle-btn @(Data.HasInductionProgram == false ? "selected-no" : "")" @onclick="() => Data.HasInductionProgram = false">No</button>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">How will the student be briefed on safety procedures?</label>
+        <InputTextArea class="form-control" @bind-Value="Data.SafetyBriefingMethod" rows="2" placeholder="Describe how the student will be briefed on safety procedures" />
+    </div>
+
+    <hr class="my-4" />
+
+    <div class="form-group">
+        <label class="form-label required">Are there any obvious hazards in the workplace?</label>
+        <div class="yes-no-toggle">
+            <button type="button" class="toggle-btn @(Data.HasObviousHazards == true ? "selected-yes" : "")" @onclick="() => Data.HasObviousHazards = true">Yes</button>
+            <button type="button" class="toggle-btn @(Data.HasObviousHazards == false ? "selected-no" : "")" @onclick="() => Data.HasObviousHazards = false">No</button>
+        </div>
+    </div>
+
+    @if (Data.HasObviousHazards == true)
+    {
+        <div class="conditional-field">
+            <div class="form-group">
+                <label class="form-label">Please provide details of the hazards</label>
+                <InputTextArea class="form-control" @bind-Value="Data.HazardDetails" rows="3" placeholder="Describe the hazards present in the workplace" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">What training will be provided to prevent injury?</label>
+                <InputTextArea class="form-control" @bind-Value="Data.InjuryPreventionTraining" rows="2" placeholder="Describe training that will be provided" />
+            </div>
+        </div>
+    }
+
+    <hr class="my-4" />
+
+    <div class="form-group">
+        <label class="form-label required">Will the student be instructed on how to report hazards?</label>
+        <div class="yes-no-toggle">
+            <button type="button" class="toggle-btn @(Data.ProvidesHazardReportingInstruction == true ? "selected-yes" : "")" @onclick="() => Data.ProvidesHazardReportingInstruction = true">Yes</button>
+            <button type="button" class="toggle-btn @(Data.ProvidesHazardReportingInstruction == false ? "selected-no" : "")" @onclick="() => Data.ProvidesHazardReportingInstruction = false">No</button>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label required">Do you have documented emergency procedures?</label>
+        <div class="yes-no-toggle">
+            <button type="button" class="toggle-btn @(Data.HasEmergencyProcedures == true ? "selected-yes" : "")" @onclick="() => Data.HasEmergencyProcedures = true">Yes</button>
+            <button type="button" class="toggle-btn @(Data.HasEmergencyProcedures == false ? "selected-no" : "")" @onclick="() => Data.HasEmergencyProcedures = false">No</button>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label required">Are fire extinguishers checked and maintained?</label>
+        <div class="yes-no-toggle">
+            <button type="button" class="toggle-btn @(Data.HasFireExtinguishersChecked == true ? "selected-yes" : "")" @onclick="() => Data.HasFireExtinguishersChecked = true">Yes</button>
+            <button type="button" class="toggle-btn @(Data.HasFireExtinguishersChecked == false ? "selected-no" : "")" @onclick="() => Data.HasFireExtinguishersChecked = false">No</button>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label required">Is there a first aid kit available?</label>
+        <div class="yes-no-toggle">
+            <button type="button" class="toggle-btn @(Data.HasFirstAidKit == true ? "selected-yes" : "")" @onclick="() => Data.HasFirstAidKit = true">Yes</button>
+            <button type="button" class="toggle-btn @(Data.HasFirstAidKit == false ? "selected-no" : "")" @onclick="() => Data.HasFirstAidKit = false">No</button>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label required">Are amenities (toilets, eating areas) safe and accessible?</label>
+        <div class="yes-no-toggle">
+            <button type="button" class="toggle-btn @(Data.HasSafeAmenities == true ? "selected-yes" : "")" @onclick="() => Data.HasSafeAmenities = true">Yes</button>
+            <button type="button" class="toggle-btn @(Data.HasSafeAmenities == false ? "selected-no" : "")" @onclick="() => Data.HasSafeAmenities = false">No</button>
+        </div>
+    </div>
+</FormSection>

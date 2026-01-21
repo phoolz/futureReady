@@ -1,0 +1,92 @@
+@code {
+    [CascadingParameter] public EmployerFormDto? FormData { get; set; }
+
+    private WorkplaceDetailsDto Data => FormData?.WorkplaceDetails ?? new();
+}
+
+<FormSection Title="Workplace Details">
+    <p class="mb-4 text-muted">Please provide the workplace address where the student will be located and the expected working hours.</p>
+
+    <EditForm Model="Data">
+        <DataAnnotationsValidator />
+
+        <div class="form-group">
+            <label class="form-label required">Street Address</label>
+            <InputText class="form-control" @bind-Value="Data.StreetAddress" placeholder="Enter street address" />
+            <ValidationMessage For="@(() => Data.StreetAddress)" class="validation-message" />
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Street Address 2</label>
+            <InputText class="form-control" @bind-Value="Data.StreetAddress2" placeholder="Apartment, suite, unit, etc. (optional)" />
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label required">Suburb</label>
+                    <InputText class="form-control" @bind-Value="Data.Suburb" placeholder="Enter suburb" />
+                    <ValidationMessage For="@(() => Data.Suburb)" class="validation-message" />
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label required">City</label>
+                    <InputText class="form-control" @bind-Value="Data.City" placeholder="Enter city" />
+                    <ValidationMessage For="@(() => Data.City)" class="validation-message" />
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label required">State</label>
+                    <InputSelect class="form-control" @bind-Value="Data.State">
+                        <option value="">Select state</option>
+                        <option value="ACT">ACT</option>
+                        <option value="NSW">NSW</option>
+                        <option value="NT">NT</option>
+                        <option value="QLD">QLD</option>
+                        <option value="SA">SA</option>
+                        <option value="TAS">TAS</option>
+                        <option value="VIC">VIC</option>
+                        <option value="WA">WA</option>
+                    </InputSelect>
+                    <ValidationMessage For="@(() => Data.State)" class="validation-message" />
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label required">Postal Code</label>
+                    <InputText class="form-control" @bind-Value="Data.PostalCode" placeholder="Enter postal code" />
+                    <ValidationMessage For="@(() => Data.PostalCode)" class="validation-message" />
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <div class="form-group">
+            <label class="form-label">Dress Code Requirements</label>
+            <InputTextArea class="form-control" @bind-Value="Data.DressCode" rows="3" placeholder="Describe any dress code requirements (e.g., safety boots, enclosed shoes, uniform)" />
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label required">Work Start Time</label>
+                    <InputText class="form-control" @bind-Value="Data.WorkStartTime" type="time" />
+                    <ValidationMessage For="@(() => Data.WorkStartTime)" class="validation-message" />
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label required">Work End Time</label>
+                    <InputText class="form-control" @bind-Value="Data.WorkEndTime" type="time" />
+                    <ValidationMessage For="@(() => Data.WorkEndTime)" class="validation-message" />
+                </div>
+            </div>
+        </div>
+    </EditForm>
+</FormSection>

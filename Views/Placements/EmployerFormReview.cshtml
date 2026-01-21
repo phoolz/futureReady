@@ -1,0 +1,469 @@
+@model FutureReady.Models.School.Placement
+
+@{
+    ViewData["Title"] = "Employer Form Review";
+
+    string FormatBool(bool? value) => value switch
+    {
+        true => "Yes",
+        false => "No",
+        _ => "Not specified"
+    };
+
+    string BoolBadgeClass(bool? value) => value switch
+    {
+        true => "bg-success",
+        false => "bg-danger",
+        _ => "bg-secondary"
+    };
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1>Employer Form Review</h1>
+        <p class="text-muted mb-0">
+            @if (Model.EmployerSubmittedAt.HasValue)
+            {
+                <span class="badge bg-success me-2">Submitted</span>
+                <span>Submitted on @Model.EmployerSubmittedAt.Value.ToString("d MMMM yyyy 'at' h:mm tt")</span>
+            }
+            else
+            {
+                <span class="badge bg-warning text-dark">Not yet submitted</span>
+            }
+        </p>
+    </div>
+    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Placement
+    </a>
+</div>
+
+@if (!Model.EmployerSubmittedAt.HasValue)
+{
+    <div class="alert alert-warning">
+        <strong>Form not submitted.</strong> The employer has not yet completed and submitted the acceptance form.
+    </div>
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Placement Overview -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Placement Overview</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Student</dt>
+                    <dd class="col-sm-8">@(Model.Student != null ? $"{Model.Student.FirstName} {Model.Student.LastName}" : "Not assigned")</dd>
+
+                    <dt class="col-sm-4">Company</dt>
+                    <dd class="col-sm-8">@(Model.Company?.Name ?? "Not assigned")</dd>
+
+                    <dt class="col-sm-4">Year</dt>
+                    <dd class="col-sm-8">@Model.Year</dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Workplace Details -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Workplace Details</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    @if (Model.Company != null)
+                    {
+                        <dt class="col-sm-4">Address</dt>
+                        <dd class="col-sm-8">
+                            @if (!string.IsNullOrEmpty(Model.Company.StreetAddress))
+                            {
+                                @Model.Company.StreetAddress<br />
+                                @if (!string.IsNullOrEmpty(Model.Company.StreetAddress2))
+                                {
+                                    @Model.Company.StreetAddress2<br />
+                                }
+                                @Model.Company.Suburb @Model.Company.City @Model.Company.State @Model.Company.PostalCode
+                            }
+                            else
+                            {
+                                <span class="text-muted">Not provided</span>
+                            }
+                        </dd>
+                    }
+
+                    <dt class="col-sm-4">Work Hours</dt>
+                    <dd class="col-sm-8">
+                        @if (!string.IsNullOrEmpty(Model.WorkStartTime) && !string.IsNullOrEmpty(Model.WorkEndTime))
+                        {
+                            @Model.WorkStartTime<text> - </text>@Model.WorkEndTime
+                        }
+                        else
+                        {
+                            <span class="text-muted">Not specified</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Dress Requirements</dt>
+                    <dd class="col-sm-8">@(Model.DressRequirement ?? "Not specified")</dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Supervisor Details -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Supervisor Details</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Supervisor != null)
+                {
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Name</dt>
+                        <dd class="col-sm-8">@Model.Supervisor.FirstName @Model.Supervisor.LastName</dd>
+
+                        <dt class="col-sm-4">Job Title</dt>
+                        <dd class="col-sm-8">@(Model.Supervisor.JobTitle ?? "Not specified")</dd>
+
+                        <dt class="col-sm-4">Email</dt>
+                        <dd class="col-sm-8">@(Model.Supervisor.Email ?? "Not specified")</dd>
+
+                        <dt class="col-sm-4">Phone</dt>
+                        <dd class="col-sm-8">@(Model.Supervisor.Phone ?? "Not specified")</dd>
+                    </dl>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">No supervisor assigned</p>
+                }
+            </div>
+        </div>
+
+        <!-- Insurance & Experience -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Insurance & Experience</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Company != null)
+                {
+                    <dl class="row mb-0">
+                        <dt class="col-sm-6">Public Liability Insurance ($5M+)</dt>
+                        <dd class="col-sm-6">
+                            <span class="badge @(Model.Company.PublicLiabilityInsurance5M ? "bg-success" : "bg-danger")">
+                                @(Model.Company.PublicLiabilityInsurance5M ? "Yes" : "No")
+                            </span>
+                            @if (!string.IsNullOrEmpty(Model.Company.InsuranceValue))
+                            {
+                                <span class="ms-2">(@Model.Company.InsuranceValue)</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-6">Previous Work Experience Students</dt>
+                        <dd class="col-sm-6">
+                            <span class="badge @(Model.Company.HasPreviousWorkExperienceStudents ? "bg-success" : "bg-secondary")">
+                                @(Model.Company.HasPreviousWorkExperienceStudents ? "Yes" : "No")
+                            </span>
+                        </dd>
+                    </dl>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">No company information available</p>
+                }
+            </div>
+        </div>
+
+        <!-- OHS -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Occupational Health & Safety</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-6">Has OHS Policy</dt>
+                    <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Model.HasOhsPolicy)">@FormatBool(Model.HasOhsPolicy)</span></dd>
+
+                    <dt class="col-sm-6">Has Induction Program</dt>
+                    <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Model.HasInductionProgram)">@FormatBool(Model.HasInductionProgram)</span></dd>
+
+                    <dt class="col-sm-6">Safety Briefing Method</dt>
+                    <dd class="col-sm-6">@(Model.SafetyBriefingMethod ?? "Not specified")</dd>
+
+                    <dt class="col-sm-6">Has Obvious Hazards</dt>
+                    <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Model.HasObviousHazards)">@FormatBool(Model.HasObviousHazards)</span></dd>
+
+                    @if (Model.HasObviousHazards == true && !string.IsNullOrEmpty(Model.HazardDetails))
+                    {
+                        <dt class="col-sm-6">Hazard Details</dt>
+                        <dd class="col-sm-6">@Model.HazardDetails</dd>
+
+                        <dt class="col-sm-6">Injury Prevention Training</dt>
+                        <dd class="col-sm-6">@(Model.InjuryPreventionTraining ?? "Not specified")</dd>
+                    }
+
+                    <dt class="col-sm-6">Provides Hazard Reporting Instruction</dt>
+                    <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Model.ProvidesHazardReportingInstruction)">@FormatBool(Model.ProvidesHazardReportingInstruction)</span></dd>
+
+                    <dt class="col-sm-6">Has Emergency Procedures</dt>
+                    <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Model.HasEmergencyProcedures)">@FormatBool(Model.HasEmergencyProcedures)</span></dd>
+
+                    <dt class="col-sm-6">Fire Extinguishers Checked</dt>
+                    <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Model.HasFireExtinguishersChecked)">@FormatBool(Model.HasFireExtinguishersChecked)</span></dd>
+
+                    <dt class="col-sm-6">Has First Aid Kit</dt>
+                    <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Model.HasFirstAidKit)">@FormatBool(Model.HasFirstAidKit)</span></dd>
+
+                    <dt class="col-sm-6">Safe Amenities</dt>
+                    <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Model.HasSafeAmenities)">@FormatBool(Model.HasSafeAmenities)</span></dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- General & Staff -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">General Information</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-6">Staff Informed of Student</dt>
+                    <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Model.StaffInformedOfStudent)">@FormatBool(Model.StaffInformedOfStudent)</span></dd>
+
+                    <dt class="col-sm-6">Staff Meet Working with Children Requirements</dt>
+                    <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Model.StaffMeetWorkingWithChildrenRequirements)">@FormatBool(Model.StaffMeetWorkingWithChildrenRequirements)</span></dd>
+
+                    <dt class="col-sm-6">Additional Information Required</dt>
+                    <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Model.AdditionalInfoRequired)">@FormatBool(Model.AdditionalInfoRequired)</span></dd>
+
+                    @if (Model.AdditionalInfoRequired == true && !string.IsNullOrEmpty(Model.AdditionalInfoDetails))
+                    {
+                        <dt class="col-sm-6">Additional Info Details</dt>
+                        <dd class="col-sm-6">@Model.AdditionalInfoDetails</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+
+        <!-- Vehicle Travel -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Vehicle Travel</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-6">Requires Vehicle Travel</dt>
+                    <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Model.EmployerRequiresVehicleTravel)">@FormatBool(Model.EmployerRequiresVehicleTravel)</span></dd>
+
+                    @if (Model.EmployerRequiresVehicleTravel == true)
+                    {
+                        <dt class="col-sm-6">Vehicle Details</dt>
+                        <dd class="col-sm-6">@(Model.EmployerVehicleDetails ?? "Not specified")</dd>
+
+                        <dt class="col-sm-6">Driver Experience</dt>
+                        <dd class="col-sm-6">@(Model.EmployerDriverExperience ?? "Not specified")</dd>
+
+                        <dt class="col-sm-6">Licence Type</dt>
+                        <dd class="col-sm-6">@(Model.EmployerLicenceType ?? "Not specified")</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+
+        <!-- Hazards Appendix -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Hazards Appendix</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-6">Chemical Hazards</dt>
+                    <dd class="col-sm-6">
+                        <span class="badge @(Model.HasChemicalHazards ? "bg-warning text-dark" : "bg-secondary")">
+                            @(Model.HasChemicalHazards ? "Yes" : "No")
+                        </span>
+                        @if (Model.HasChemicalHazards && !string.IsNullOrEmpty(Model.ChemicalDetails))
+                        {
+                            <p class="mt-2 mb-0 small">@Model.ChemicalDetails</p>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-6">Plant/Machinery Hazards</dt>
+                    <dd class="col-sm-6">
+                        <span class="badge @(Model.HasPlantMachineryHazards ? "bg-warning text-dark" : "bg-secondary")">
+                            @(Model.HasPlantMachineryHazards ? "Yes" : "No")
+                        </span>
+                        @if (Model.HasPlantMachineryHazards && !string.IsNullOrEmpty(Model.PlantMachineryDetails))
+                        {
+                            <p class="mt-2 mb-0 small">@Model.PlantMachineryDetails</p>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-6">Biological Hazards</dt>
+                    <dd class="col-sm-6">
+                        <span class="badge @(Model.HasBiologicalHazards ? "bg-warning text-dark" : "bg-secondary")">
+                            @(Model.HasBiologicalHazards ? "Yes" : "No")
+                        </span>
+                        @if (Model.HasBiologicalHazards && !string.IsNullOrEmpty(Model.BiologicalDetails))
+                        {
+                            <p class="mt-2 mb-0 small">@Model.BiologicalDetails</p>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-6">Ergonomic Hazards</dt>
+                    <dd class="col-sm-6">
+                        <span class="badge @(Model.HasErgonomicHazards ? "bg-warning text-dark" : "bg-secondary")">
+                            @(Model.HasErgonomicHazards ? "Yes" : "No")
+                        </span>
+                        @if (Model.HasErgonomicHazards && !string.IsNullOrEmpty(Model.ErgonomicDetails))
+                        {
+                            <p class="mt-2 mb-0 small">@Model.ErgonomicDetails</p>
+                        }
+                    </dd>
+
+                    @if (!string.IsNullOrEmpty(Model.HazardsAdditionalDetails))
+                    {
+                        <dt class="col-sm-6">Additional Hazard Information</dt>
+                        <dd class="col-sm-6">@Model.HazardsAdditionalDetails</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Summary -->
+    <div class="col-lg-4">
+        <div class="card sticky-top" style="top: 1rem;">
+            <div class="card-header">
+                <h5 class="mb-0">Summary</h5>
+            </div>
+            <div class="card-body">
+                <h6>Submission Status</h6>
+                @if (Model.EmployerSubmittedAt.HasValue)
+                {
+                    <p class="text-success"><i class="bi bi-check-circle-fill"></i> Form submitted</p>
+                }
+                else
+                {
+                    <p class="text-warning"><i class="bi bi-clock-fill"></i> Awaiting submission</p>
+                }
+
+                <hr />
+
+                <h6>Key Safety Items</h6>
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        @if (Model.Company?.PublicLiabilityInsurance5M == true)
+                        {
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                        }
+                        else
+                        {
+                            <i class="bi bi-x-circle-fill text-danger"></i>
+                        }
+                        Public Liability Insurance
+                    </li>
+                    <li class="mb-2">
+                        @if (Model.HasOhsPolicy == true)
+                        {
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                        }
+                        else if (Model.HasOhsPolicy == false)
+                        {
+                            <i class="bi bi-x-circle-fill text-danger"></i>
+                        }
+                        else
+                        {
+                            <i class="bi bi-question-circle-fill text-secondary"></i>
+                        }
+                        OHS Policy
+                    </li>
+                    <li class="mb-2">
+                        @if (Model.HasEmergencyProcedures == true)
+                        {
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                        }
+                        else if (Model.HasEmergencyProcedures == false)
+                        {
+                            <i class="bi bi-x-circle-fill text-danger"></i>
+                        }
+                        else
+                        {
+                            <i class="bi bi-question-circle-fill text-secondary"></i>
+                        }
+                        Emergency Procedures
+                    </li>
+                    <li class="mb-2">
+                        @if (Model.HasFirstAidKit == true)
+                        {
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                        }
+                        else if (Model.HasFirstAidKit == false)
+                        {
+                            <i class="bi bi-x-circle-fill text-danger"></i>
+                        }
+                        else
+                        {
+                            <i class="bi bi-question-circle-fill text-secondary"></i>
+                        }
+                        First Aid Kit
+                    </li>
+                    <li class="mb-2">
+                        @if (Model.StaffMeetWorkingWithChildrenRequirements == true)
+                        {
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                        }
+                        else if (Model.StaffMeetWorkingWithChildrenRequirements == false)
+                        {
+                            <i class="bi bi-x-circle-fill text-danger"></i>
+                        }
+                        else
+                        {
+                            <i class="bi bi-question-circle-fill text-secondary"></i>
+                        }
+                        Working with Children Check
+                    </li>
+                </ul>
+
+                @{
+                    var hasHazards = Model.HasChemicalHazards || Model.HasPlantMachineryHazards || Model.HasBiologicalHazards || Model.HasErgonomicHazards || Model.HasObviousHazards == true;
+                }
+                @if (hasHazards)
+                {
+                    <hr />
+                    <h6 class="text-warning"><i class="bi bi-exclamation-triangle-fill"></i> Hazards Identified</h6>
+                    <ul class="list-unstyled mb-0 small">
+                        @if (Model.HasObviousHazards == true)
+                        {
+                            <li><i class="bi bi-dot"></i> Obvious workplace hazards</li>
+                        }
+                        @if (Model.HasChemicalHazards)
+                        {
+                            <li><i class="bi bi-dot"></i> Chemical hazards</li>
+                        }
+                        @if (Model.HasPlantMachineryHazards)
+                        {
+                            <li><i class="bi bi-dot"></i> Plant/Machinery hazards</li>
+                        }
+                        @if (Model.HasBiologicalHazards)
+                        {
+                            <li><i class="bi bi-dot"></i> Biological hazards</li>
+                        }
+                        @if (Model.HasErgonomicHazards)
+                        {
+                            <li><i class="bi bi-dot"></i> Ergonomic hazards</li>
+                        }
+                    </ul>
+                }
+
+                @if (Model.EmployerRequiresVehicleTravel == true)
+                {
+                    <hr />
+                    <h6><i class="bi bi-car-front-fill"></i> Vehicle Travel Required</h6>
+                    <p class="small mb-0 text-muted">Student may travel in employer's vehicle during placement.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

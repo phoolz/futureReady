@@ -1,0 +1,215 @@
+@code {
+    [CascadingParameter] public EmployerFormDto? FormData { get; set; }
+    [Parameter] public EventCallback<int> OnEditStep { get; set; }
+
+    private string FormatBool(bool? value) => value switch
+    {
+        true => "Yes",
+        false => "No",
+        null => "Not specified"
+    };
+
+    private string BoolClass(bool? value) => value switch
+    {
+        true => "yes",
+        false => "no",
+        _ => ""
+    };
+}
+
+<FormSection Title="Review & Submit">
+    <p class="mb-4 text-muted">Please review all your information before submitting. Click "Edit" on any section to make changes.</p>
+
+    @if (FormData != null)
+    {
+        <!-- Workplace Details -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Workplace Details</h5>
+                <button type="button" class="btn-edit" @onclick="() => OnEditStep.InvokeAsync(1)">Edit</button>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Address</span>
+                    <span class="review-value">
+                        @FormData.WorkplaceDetails.StreetAddress
+                        @if (!string.IsNullOrEmpty(FormData.WorkplaceDetails.StreetAddress2))
+                        {
+                            <br />@FormData.WorkplaceDetails.StreetAddress2
+                        }
+                        <br />@FormData.WorkplaceDetails.Suburb, @FormData.WorkplaceDetails.State @FormData.WorkplaceDetails.PostalCode
+                    </span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Work Hours</span>
+                    <span class="review-value">@FormData.WorkplaceDetails.WorkStartTime - @FormData.WorkplaceDetails.WorkEndTime</span>
+                </div>
+                @if (!string.IsNullOrEmpty(FormData.WorkplaceDetails.DressCode))
+                {
+                    <div class="review-item">
+                        <span class="review-label">Dress Code</span>
+                        <span class="review-value">@FormData.WorkplaceDetails.DressCode</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- Supervisor Details -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Supervisor Details</h5>
+                <button type="button" class="btn-edit" @onclick="() => OnEditStep.InvokeAsync(2)">Edit</button>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Name</span>
+                    <span class="review-value">@FormData.SupervisorDetails.FirstName @FormData.SupervisorDetails.LastName</span>
+                </div>
+                @if (!string.IsNullOrEmpty(FormData.SupervisorDetails.JobTitle))
+                {
+                    <div class="review-item">
+                        <span class="review-label">Job Title</span>
+                        <span class="review-value">@FormData.SupervisorDetails.JobTitle</span>
+                    </div>
+                }
+                <div class="review-item">
+                    <span class="review-label">Email</span>
+                    <span class="review-value">@FormData.SupervisorDetails.Email</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Phone</span>
+                    <span class="review-value">@FormData.SupervisorDetails.Phone</span>
+                </div>
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- Insurance -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Insurance & Experience</h5>
+                <button type="button" class="btn-edit" @onclick="() => OnEditStep.InvokeAsync(3)">Edit</button>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Public Liability Insurance ($5M+)</span>
+                    <span class="review-value @BoolClass(FormData.Insurance.HasPublicLiabilityInsurance5M)">@FormatBool(FormData.Insurance.HasPublicLiabilityInsurance5M)</span>
+                </div>
+                @if (!string.IsNullOrEmpty(FormData.Insurance.InsuranceValue))
+                {
+                    <div class="review-item">
+                        <span class="review-label">Insurance Value</span>
+                        <span class="review-value">@FormData.Insurance.InsuranceValue</span>
+                    </div>
+                }
+                <div class="review-item">
+                    <span class="review-label">Previous Work Experience Students</span>
+                    <span class="review-value @BoolClass(FormData.Insurance.HasPreviousWorkExperienceStudents)">@FormatBool(FormData.Insurance.HasPreviousWorkExperienceStudents)</span>
+                </div>
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- OHS -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Occupational Health & Safety</h5>
+                <button type="button" class="btn-edit" @onclick="() => OnEditStep.InvokeAsync(4)">Edit</button>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">OHS Policy</span>
+                    <span class="review-value @BoolClass(FormData.Ohs.HasOhsPolicy)">@FormatBool(FormData.Ohs.HasOhsPolicy)</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Induction Program</span>
+                    <span class="review-value @BoolClass(FormData.Ohs.HasInductionProgram)">@FormatBool(FormData.Ohs.HasInductionProgram)</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Obvious Hazards</span>
+                    <span class="review-value @BoolClass(FormData.Ohs.HasObviousHazards)">@FormatBool(FormData.Ohs.HasObviousHazards)</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Hazard Reporting Instruction</span>
+                    <span class="review-value @BoolClass(FormData.Ohs.ProvidesHazardReportingInstruction)">@FormatBool(FormData.Ohs.ProvidesHazardReportingInstruction)</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Emergency Procedures</span>
+                    <span class="review-value @BoolClass(FormData.Ohs.HasEmergencyProcedures)">@FormatBool(FormData.Ohs.HasEmergencyProcedures)</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Fire Extinguishers Checked</span>
+                    <span class="review-value @BoolClass(FormData.Ohs.HasFireExtinguishersChecked)">@FormatBool(FormData.Ohs.HasFireExtinguishersChecked)</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">First Aid Kit</span>
+                    <span class="review-value @BoolClass(FormData.Ohs.HasFirstAidKit)">@FormatBool(FormData.Ohs.HasFirstAidKit)</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Safe Amenities</span>
+                    <span class="review-value @BoolClass(FormData.Ohs.HasSafeAmenities)">@FormatBool(FormData.Ohs.HasSafeAmenities)</span>
+                </div>
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- General & Travel -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">General Information & Travel</h5>
+                <button type="button" class="btn-edit" @onclick="() => OnEditStep.InvokeAsync(5)">Edit</button>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Staff Informed</span>
+                    <span class="review-value @BoolClass(FormData.GeneralTravel.StaffInformedOfStudent)">@FormatBool(FormData.GeneralTravel.StaffInformedOfStudent)</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Working with Children Check</span>
+                    <span class="review-value @BoolClass(FormData.GeneralTravel.StaffMeetWorkingWithChildrenRequirements)">@FormatBool(FormData.GeneralTravel.StaffMeetWorkingWithChildrenRequirements)</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Vehicle Travel Required</span>
+                    <span class="review-value @BoolClass(FormData.GeneralTravel.RequiresVehicleTravel)">@FormatBool(FormData.GeneralTravel.RequiresVehicleTravel)</span>
+                </div>
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- Hazards Appendix -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Hazards Appendix</h5>
+                <button type="button" class="btn-edit" @onclick="() => OnEditStep.InvokeAsync(6)">Edit</button>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Chemical Hazards</span>
+                    <span class="review-value @(FormData.HazardsAppendix.HasChemicalHazards ? "yes" : "")">@(FormData.HazardsAppendix.HasChemicalHazards ? "Yes" : "No")</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Plant/Machinery Hazards</span>
+                    <span class="review-value @(FormData.HazardsAppendix.HasPlantMachineryHazards ? "yes" : "")">@(FormData.HazardsAppendix.HasPlantMachineryHazards ? "Yes" : "No")</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Biological Hazards</span>
+                    <span class="review-value @(FormData.HazardsAppendix.HasBiologicalHazards ? "yes" : "")">@(FormData.HazardsAppendix.HasBiologicalHazards ? "Yes" : "No")</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Ergonomic Hazards</span>
+                    <span class="review-value @(FormData.HazardsAppendix.HasErgonomicHazards ? "yes" : "")">@(FormData.HazardsAppendix.HasErgonomicHazards ? "Yes" : "No")</span>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="alert alert-info mt-4">
+        <strong>Ready to submit?</strong> By clicking "Submit Form" below, you confirm that the information provided is accurate and complete.
+    </div>
+</FormSection>
