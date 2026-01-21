@@ -15,5 +15,14 @@ namespace FutureReady.Models.School
         [Required]
         [MaxLength(100)]
         public string Timezone { get; set; } = null!;
+
+        [MaxLength(256)]
+        [EmailAddress]
+        [Display(Name = "Contact Email")]
+        public string? ContactEmail { get; set; }
+
+        [MaxLength(20)]
+        [Display(Name = "Contact Phone")]
+        public string? ContactPhone { get; set; }
     }
 }

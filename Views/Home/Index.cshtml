@@ -15,20 +15,6 @@
             <div class="stat-label">Total Students</div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="stat-card">
-            <div class="stat-icon">📚</div>
-            <div class="stat-value">@ViewData["ActiveCohorts"]</div>
-            <div class="stat-label">Active Cohorts</div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="stat-card">
-            <div class="stat-icon">🎓</div>
-            <div class="stat-value">@ViewData["UpcomingGraduations"]</div>
-            <div class="stat-label">Upcoming Graduations</div>
-        </div>
-    </div>
 </div>
 
 <div class="row">
@@ -38,9 +24,6 @@
             <div class="quick-actions">
                 <a asp-controller="Students" asp-action="Create" class="btn btn-primary quick-action-btn">
                     <span>+</span> Add Student
-                </a>
-                <a asp-controller="Cohorts" asp-action="Create" class="btn btn-outline-primary quick-action-btn">
-                    <span>+</span> Create Cohort
                 </a>
                 <a asp-controller="Students" asp-action="Index" class="btn btn-outline-secondary quick-action-btn">
                     View All Students

@@ -49,24 +49,16 @@ namespace FutureReady.Controllers
         // GET: Students/Create
         public IActionResult Create()
         {
-            var tenantId = _tenantProvider?.GetCurrentTenantId();
-            var cohorts = _context.Cohorts.AsNoTracking();
-            if (tenantId.HasValue) cohorts = cohorts.Where(c => c.TenantId == tenantId.Value);
-            ViewData["CohortId"] = new SelectList(cohorts, "Id", "Name");
             return View();
         }
 
         // POST: Students/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("FirstName,LastName,PreferredName,DateOfBirth,StudentNumber,Phone,Status,GuardianName,GuardianEmail,GuardianPhone,CohortId,MedicareNumber")] Student student)
+        public async Task<IActionResult> Create([Bind("FirstName,LastName,PreferredName,DateOfBirth,StudentNumber,Phone,Status,GuardianName,GuardianEmail,GuardianPhone,MedicareNumber")] Student student)
         {
             if (!ModelState.IsValid)
             {
-                var tenantId = _tenantProvider?.GetCurrentTenantId();
-                var cohorts = _context.Cohorts.AsNoTracking();
-                if (tenantId.HasValue) cohorts = cohorts.Where(c => c.TenantId == tenantId.Value);
-                ViewData["CohortId"] = new SelectList(cohorts, "Id", "Name");
                 return View(student);
             }
 
@@ -77,10 +69,6 @@ namespace FutureReady.Controllers
             catch (InvalidOperationException ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
-                var tenantId = _tenantProvider?.GetCurrentTenantId();
-                var cohorts = _context.Cohorts.AsNoTracking();
-                if (tenantId.HasValue) cohorts = cohorts.Where(c => c.TenantId == tenantId.Value);
-                ViewData["CohortId"] = new SelectList(cohorts, "Id", "Name");
                 return View(student);
             }
 
@@ -96,17 +84,13 @@ namespace FutureReady.Controllers
             var student = await _studentService.GetByIdAsync(id.Value, tenantId);
             if (student == null) return NotFound();
 
-            var cohorts = _context.Cohorts.AsNoTracking();
-            if (tenantId.HasValue) cohorts = cohorts.Where(c => c.TenantId == tenantId.Value);
-            ViewData["CohortId"] = new SelectList(cohorts, "Id", "Name", student.CohortId);
-
             return View(student);
         }
 
         // POST: Students/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,PreferredName,DateOfBirth,StudentNumber,Phone,Status,GuardianName,GuardianEmail,GuardianPhone,CohortId,MedicareNumber,RowVersion")] Student student)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,PreferredName,DateOfBirth,StudentNumber,Phone,Status,GuardianName,GuardianEmail,GuardianPhone,MedicareNumber,RowVersion")] Student student)
         {
             if (id != student.Id) return NotFound();
 
@@ -128,10 +112,6 @@ namespace FutureReady.Controllers
             catch (InvalidOperationException ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
-                var tenantId = _tenantProvider?.GetCurrentTenantId();
-                var cohorts = _context.Cohorts.AsNoTracking();
-                if (tenantId.HasValue) cohorts = cohorts.Where(c => c.TenantId == tenantId.Value);
-                ViewData["CohortId"] = new SelectList(cohorts, "Id", "Name", student.CohortId);
                 return View(student);
             }
         }

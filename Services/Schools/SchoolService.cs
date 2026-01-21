@@ -40,6 +40,8 @@ namespace FutureReady.Services.Schools
             existing.Name = school.Name;
             existing.TenantKey = school.TenantKey;
             existing.Timezone = school.Timezone;
+            existing.ContactEmail = school.ContactEmail;
+            existing.ContactPhone = school.ContactPhone;
 
             if (rowVersion != null)
                 _context.Entry(existing).Property("RowVersion").OriginalValue = rowVersion;

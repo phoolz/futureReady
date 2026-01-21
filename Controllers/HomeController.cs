@@ -27,25 +27,15 @@ public class HomeController : Controller
         var tenantId = _tenantProvider?.GetCurrentTenantId();
 
         var studentsQuery = _context.Students.AsNoTracking();
-        var cohortsQuery = _context.Cohorts.AsNoTracking();
 
         if (tenantId.HasValue)
         {
             studentsQuery = studentsQuery.Where(s => s.TenantId == tenantId.Value);
-            cohortsQuery = cohortsQuery.Where(c => c.TenantId == tenantId.Value);
         }
 
         var totalStudents = await studentsQuery.CountAsync();
-        var activeCohorts = await cohortsQuery.CountAsync();
-
-        var currentYear = DateTime.UtcNow.Year;
-        var upcomingGraduations = await cohortsQuery
-            .Where(c => c.GraduationYear >= currentYear)
-            .CountAsync();
 
         ViewData["TotalStudents"] = totalStudents;
-        ViewData["ActiveCohorts"] = activeCohorts;
-        ViewData["UpcomingGraduations"] = upcomingGraduations;
 
         return View();
     }

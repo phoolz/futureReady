@@ -51,12 +51,6 @@ namespace FutureReady.Models.School
         [Display(Name = "Guardian Phone")]
         public string? GuardianPhone { get; set; }
 
-        [Required]
-        public Guid CohortId { get; set; }
-
-        [ForeignKey(nameof(CohortId))]
-        public Cohort? Cohort { get; set; }
-
         [MaxLength(100)]
         [Display(Name = "Medicare Number")]
         public string? MedicareNumber { get; set; }

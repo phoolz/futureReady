@@ -22,10 +22,8 @@ namespace FutureReady.Data
 
         public DbSet<School> Schools { get; set; } = null!;
         public DbSet<User> Users { get; set; } = null!;
-        public DbSet<Cohort> Cohorts { get; set; } = null!;
         public DbSet<Student> Students { get; set; } = null!;
         public DbSet<Teacher> Teachers { get; set; } = null!;
-        public DbSet<CohortTeacher> CohortTeachers { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -65,17 +63,6 @@ namespace FutureReady.Data
                 entity.HasIndex(e => e.TenantKey).IsUnique();
             });
 
-            modelBuilder.Entity<Cohort>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
-                entity.Property(e => e.GraduationYear).IsRequired();
-                entity.Property(e => e.GraduationMonth).IsRequired().HasMaxLength(20);
-                entity.HasOne(e => e.School).WithMany().HasForeignKey(e => e.SchoolId).OnDelete(DeleteBehavior.Cascade);
-                // Keep table name matching the existing migration (was SchoolCohorts)
-                entity.ToTable("SchoolCohorts");
-            });
-
             modelBuilder.Entity<Teacher>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -87,16 +74,6 @@ namespace FutureReady.Data
                 entity.HasIndex(e => e.UserId).IsUnique(); // enforce one-to-one user->teacher
                 entity.HasOne(e => e.User).WithOne().HasForeignKey<Teacher>(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
                 entity.HasOne(e => e.School).WithMany().HasForeignKey(e => e.SchoolId).OnDelete(DeleteBehavior.SetNull);
-            });
-
-            modelBuilder.Entity<CohortTeacher>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.TeacherId).IsRequired();
-                entity.Property(e => e.CohortId).IsRequired();
-                entity.Property(e => e.IsSubstitute).IsRequired();
-                entity.HasOne(e => e.Teacher).WithMany().HasForeignKey(e => e.TeacherId).OnDelete(DeleteBehavior.Cascade);
-                entity.HasOne(e => e.Cohort).WithMany().HasForeignKey(e => e.CohortId).OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<Student>(entity =>
@@ -111,7 +88,6 @@ namespace FutureReady.Data
                 entity.Property(e => e.GuardianEmail).HasMaxLength(256);
                 entity.Property(e => e.GuardianPhone).HasMaxLength(20);
                 entity.Property(e => e.MedicareNumber).HasMaxLength(100);
-                entity.HasOne(e => e.Cohort).WithMany().HasForeignKey(e => e.CohortId).OnDelete(DeleteBehavior.Cascade);
                 entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.SetNull);
             });
         }

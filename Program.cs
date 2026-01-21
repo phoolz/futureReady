@@ -49,7 +49,6 @@ builder.Services.AddDbContext<FutureReady.Data.ApplicationDbContext>((servicePro
 // Register application services
 builder.Services.AddScoped<FutureReady.Services.Users.IUserService, FutureReady.Services.Users.UserService>();
 builder.Services.AddScoped<FutureReady.Services.Schools.ISchoolService, FutureReady.Services.Schools.SchoolService>();
-builder.Services.AddScoped<FutureReady.Services.Cohorts.ICohortService, FutureReady.Services.Cohorts.CohortService>();
 builder.Services.AddScoped<FutureReady.Services.Authentication.IAuthenticationService, FutureReady.Services.Authentication.AuthenticationService>();
 builder.Services.AddScoped<FutureReady.Services.Students.IStudentService, FutureReady.Services.Students.StudentService>();
 

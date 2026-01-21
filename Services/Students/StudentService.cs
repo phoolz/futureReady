@@ -23,7 +23,7 @@ namespace FutureReady.Services.Students
         public async Task<List<Student>> GetAllAsync(Guid? tenantId = null)
         {
             tenantId ??= _tenantProvider?.GetCurrentTenantId();
-            var query = _context.Set<Student>().Include(s => s.Cohort).AsNoTracking().AsQueryable();
+            var query = _context.Set<Student>().AsNoTracking().AsQueryable();
             if (tenantId.HasValue) query = query.Where(s => s.TenantId == tenantId.Value);
             return await query.ToListAsync();
         }
@@ -31,7 +31,7 @@ namespace FutureReady.Services.Students
         public async Task<Student?> GetByIdAsync(Guid id, Guid? tenantId = null)
         {
             tenantId ??= _tenantProvider?.GetCurrentTenantId();
-            return await _context.Set<Student>().Include(s => s.Cohort).AsNoTracking()
+            return await _context.Set<Student>().AsNoTracking()
                 .FirstOrDefaultAsync(s => s.Id == id && (!tenantId.HasValue || s.TenantId == tenantId.Value));
         }
 
@@ -42,10 +42,6 @@ namespace FutureReady.Services.Students
 
             student.TenantId = tenantId.Value;
 
-            // Ensure cohort belongs to same tenant
-            var cohort = await _context.Cohorts.AsNoTracking().FirstOrDefaultAsync(c => c.Id == student.CohortId && c.TenantId == tenantId.Value);
-            if (cohort == null) throw new InvalidOperationException("Invalid cohort for tenant");
-
             _context.Add(student);
             await _context.SaveChangesAsync();
         }
@@ -55,14 +51,6 @@ namespace FutureReady.Services.Students
             tenantId ??= _tenantProvider?.GetCurrentTenantId();
             var existing = await _context.Set<Student>().FirstOrDefaultAsync(s => s.Id == student.Id && (!tenantId.HasValue || s.TenantId == tenantId.Value));
             if (existing == null) throw new InvalidOperationException("Student not found");
-
-            // prevent changing cohort to another tenant's cohort
-            if (existing.CohortId != student.CohortId)
-            {
-                var cohort = await _context.Cohorts.AsNoTracking().FirstOrDefaultAsync(c => c.Id == student.CohortId && (!tenantId.HasValue || c.TenantId == tenantId.Value));
-                if (cohort == null) throw new InvalidOperationException("Invalid cohort for tenant");
-                existing.CohortId = student.CohortId;
-            }
 
             existing.FirstName = student.FirstName;
             existing.LastName = student.LastName;

@@ -50,7 +50,7 @@ namespace FutureReady.Controllers
         // POST: Schools/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name,TenantKey,Timezone")] School school)
+        public async Task<IActionResult> Create([Bind("Name,TenantKey,Timezone,ContactEmail,ContactPhone")] School school)
         {
             if (!ModelState.IsValid) return View(school);
 
@@ -71,7 +71,7 @@ namespace FutureReady.Controllers
         // POST: Schools/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Name,TenantKey,Timezone,RowVersion")] School school)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Name,TenantKey,Timezone,ContactEmail,ContactPhone,RowVersion")] School school)
         {
             if (id != school.Id) return NotFound();
 

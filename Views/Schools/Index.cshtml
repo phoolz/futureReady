@@ -16,6 +16,8 @@
             <th>Name</th>
             <th>Tenant Key</th>
             <th>Timezone</th>
+            <th>Contact Email</th>
+            <th>Contact Phone</th>
             <th></th>
         </tr>
     </thead>
@@ -26,6 +28,8 @@
             <td>@s.Name</td>
             <td>@s.TenantKey</td>
             <td>@s.Timezone</td>
+            <td>@(s.ContactEmail ?? "N/A")</td>
+            <td>@(s.ContactPhone ?? "N/A")</td>
             <td>
                 <a class="btn btn-sm btn-secondary" asp-action="Edit" asp-route-id="@s.Id">Edit</a>
                 <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@s.Id">Details</a>

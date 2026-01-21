@@ -82,11 +82,6 @@
         <h5 class="mb-3">Academic Information</h5>
         <div class="row">
             <div class="col-md-4 mb-3">
-                <label asp-for="CohortId" class="form-label">Cohort</label>
-                <select asp-for="CohortId" class="form-select" asp-items="ViewBag.CohortId"></select>
-                <span asp-validation-for="CohortId" class="text-danger"></span>
-            </div>
-            <div class="col-md-4 mb-3">
                 <label asp-for="Status" class="form-label"></label>
                 <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<FutureReady.Models.School.StudentStatus>()"></select>
                 <span asp-validation-for="Status" class="text-danger"></span>

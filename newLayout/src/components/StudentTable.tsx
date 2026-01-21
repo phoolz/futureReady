@@ -4,13 +4,11 @@ import { Student, Status } from '../data/mockData';
 import { StatusBadge } from './StatusBadge';
 interface StudentTableProps {
   students: Student[];
-  cohortName: string;
 }
 type SortField = 'name' | 'company' | 'status' | 'startDate' | 'supervisor';
 type SortDirection = 'asc' | 'desc';
 export function StudentTable({
-  students,
-  cohortName
+  students
 }: StudentTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<Status | 'All'>('All');
@@ -64,7 +62,7 @@ export function StudentTable({
       <div className="px-8 py-6 border-b border-slate-200 flex-shrink-0">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">{cohortName}</h1>
+            <h1 className="text-2xl font-bold text-slate-900">All Students</h1>
             <p className="text-sm text-slate-500 mt-1">
               Showing {filteredAndSortedStudents.length} of {students.length}{' '}
               students
