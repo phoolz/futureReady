@@ -1,0 +1,66 @@
+@model FutureReady.Models.School.EmergencyContact
+
+@{
+    ViewData["Title"] = "Edit Emergency Contact";
+    var student = ViewData["Student"] as FutureReady.Models.School.Student;
+    var studentId = ViewData["StudentId"];
+}
+
+<div class="page-header">
+    <h1 class="page-title">Edit Emergency Contact</h1>
+    <p class="page-subtitle">for @student?.FullName</p>
+</div>
+
+<div class="form-container">
+    <form asp-action="Edit">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="StudentId" />
+        <input type="hidden" asp-for="RowVersion" />
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="FirstName" class="form-label"></label>
+                <input asp-for="FirstName" class="form-control" />
+                <span asp-validation-for="FirstName" class="text-danger"></span>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="LastName" class="form-label"></label>
+                <input asp-for="LastName" class="form-control" />
+                <span asp-validation-for="LastName" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="MobileNumber" class="form-label"></label>
+                <input asp-for="MobileNumber" type="tel" class="form-control" />
+                <span asp-validation-for="MobileNumber" class="text-danger"></span>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="Relationship" class="form-label"></label>
+                <input asp-for="Relationship" class="form-control" placeholder="e.g., Mother, Father, Guardian" />
+                <span asp-validation-for="Relationship" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="form-check">
+                    <input asp-for="IsPrimary" class="form-check-input" />
+                    <label asp-for="IsPrimary" class="form-check-label"></label>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a asp-action="Index" asp-route-id="@studentId" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,41 @@
+@model FutureReady.Models.School.EmergencyContact
+
+@{
+    ViewData["Title"] = "Delete Emergency Contact";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Delete Emergency Contact</h1>
+    <p class="page-subtitle">Confirm deletion</p>
+</div>
+
+<div class="details-container">
+    <div class="alert alert-warning mb-4">
+        <strong>Warning:</strong> Are you sure you want to delete <strong>@Model.FullName</strong>? This action cannot be undone.
+    </div>
+
+    <dl class="row">
+        <dt class="col-sm-3">Name</dt>
+        <dd class="col-sm-9">@Model.FullName</dd>
+
+        <dt class="col-sm-3">Mobile Number</dt>
+        <dd class="col-sm-9">@(Model.MobileNumber ?? "N/A")</dd>
+
+        <dt class="col-sm-3">Relationship</dt>
+        <dd class="col-sm-9">@(Model.Relationship ?? "N/A")</dd>
+
+        <dt class="col-sm-3">Primary Contact</dt>
+        <dd class="col-sm-9">@(Model.IsPrimary ? "Yes" : "No")</dd>
+
+        <dt class="col-sm-3">Student</dt>
+        <dd class="col-sm-9">@Model.Student?.FullName</dd>
+    </dl>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger">Delete Contact</button>
+            <a asp-action="Index" asp-route-id="@Model.StudentId" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>

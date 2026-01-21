@@ -1,0 +1,65 @@
+@model IEnumerable<FutureReady.Models.School.EmergencyContact>
+
+@{
+    ViewData["Title"] = "Emergency Contacts";
+    var student = ViewData["Student"] as FutureReady.Models.School.Student;
+    var studentId = ViewData["StudentId"];
+}
+
+<div class="page-header">
+    <h1 class="page-title">Emergency Contacts</h1>
+    <p class="page-subtitle">for @student?.FullName</p>
+</div>
+
+<div class="table-container">
+    <div class="table-header">
+        <h2 class="table-title">All Emergency Contacts</h2>
+        <div class="table-actions">
+            <a asp-action="Create" asp-route-studentId="@studentId" class="btn btn-primary">+ Add Contact</a>
+            <a asp-controller="Students" asp-action="Details" asp-route-id="@studentId" class="btn btn-outline-secondary">Back to Student</a>
+        </div>
+    </div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Mobile Number</th>
+                <th>Relationship</th>
+                <th>Primary</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var contact in Model)
+        {
+            <tr>
+                <td>@contact.FullName</td>
+                <td>@(contact.MobileNumber ?? "N/A")</td>
+                <td>@(contact.Relationship ?? "N/A")</td>
+                <td>
+                    @if (contact.IsPrimary)
+                    {
+                        <span class="badge bg-success">Yes</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">No</span>
+                    }
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@contact.Id">Edit</a>
+                        <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@contact.Id">Delete</a>
+                    </div>
+                </td>
+            </tr>
+        }
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="5" class="text-center text-muted py-4">No emergency contacts found. Click "Add Contact" to create one.</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

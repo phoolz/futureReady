@@ -58,10 +58,9 @@ namespace FutureReady.Services.Students
             existing.DateOfBirth = student.DateOfBirth;
             existing.StudentNumber = student.StudentNumber;
             existing.Phone = student.Phone;
-            existing.Status = student.Status;
-            existing.GuardianName = student.GuardianName;
-            existing.GuardianEmail = student.GuardianEmail;
-            existing.GuardianPhone = student.GuardianPhone;
+            existing.StudentType = student.StudentType;
+            existing.YearLevel = student.YearLevel;
+            existing.GraduationYear = student.GraduationYear;
             existing.MedicareNumber = student.MedicareNumber;
 
             if (rowVersion != null)

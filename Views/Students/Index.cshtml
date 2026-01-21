@@ -25,7 +25,9 @@
             <tr>
                 <th>Name</th>
                 <th>Student Number</th>
-                <th>Status</th>
+                <th>Year Level</th>
+                <th>Student Type</th>
+                <th>Graduation Year</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -34,20 +36,10 @@
         {
             <tr>
                 <td>@student.FullName</td>
-                <td>@student.StudentNumber</td>
-                <td>
-                    @{
-                        var statusClass = student.Status switch
-                        {
-                            FutureReady.Models.School.StudentStatus.Active => "badge bg-success",
-                            FutureReady.Models.School.StudentStatus.Inactive => "badge bg-secondary",
-                            FutureReady.Models.School.StudentStatus.Graduated => "badge bg-info",
-                            FutureReady.Models.School.StudentStatus.Withdrawn => "badge bg-warning",
-                            _ => "badge bg-secondary"
-                        };
-                    }
-                    <span class="@statusClass">@student.Status</span>
-                </td>
+                <td>@(student.StudentNumber ?? "N/A")</td>
+                <td>@(student.YearLevel ?? "N/A")</td>
+                <td>@(student.StudentType ?? "N/A")</td>
+                <td>@(student.GraduationYear?.ToString() ?? "N/A")</td>
                 <td>
                     <div class="action-buttons">
                         <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@student.Id">Edit</a>

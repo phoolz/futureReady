@@ -1,0 +1,46 @@
+@model FutureReady.Models.School.EmergencyContact
+
+@{
+    ViewData["Title"] = "Emergency Contact Details";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Emergency Contact Details</h1>
+    <p class="page-subtitle">@Model.FullName</p>
+</div>
+
+<div class="details-container">
+    <dl class="row">
+        <dt class="col-sm-3">First Name</dt>
+        <dd class="col-sm-9">@Model.FirstName</dd>
+
+        <dt class="col-sm-3">Last Name</dt>
+        <dd class="col-sm-9">@Model.LastName</dd>
+
+        <dt class="col-sm-3">Mobile Number</dt>
+        <dd class="col-sm-9">@(Model.MobileNumber ?? "N/A")</dd>
+
+        <dt class="col-sm-3">Relationship</dt>
+        <dd class="col-sm-9">@(Model.Relationship ?? "N/A")</dd>
+
+        <dt class="col-sm-3">Primary Contact</dt>
+        <dd class="col-sm-9">
+            @if (Model.IsPrimary)
+            {
+                <span class="badge bg-success">Yes</span>
+            }
+            else
+            {
+                <span class="badge bg-secondary">No</span>
+            }
+        </dd>
+
+        <dt class="col-sm-3">Student</dt>
+        <dd class="col-sm-9">@Model.Student?.FullName</dd>
+    </dl>
+
+    <div class="d-flex gap-2 mt-4">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+        <a asp-action="Index" asp-route-id="@Model.StudentId" class="btn btn-outline-secondary">Back to List</a>
+    </div>
+</div>

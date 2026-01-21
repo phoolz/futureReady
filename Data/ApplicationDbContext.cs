@@ -24,6 +24,7 @@ namespace FutureReady.Data
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<Student> Students { get; set; } = null!;
         public DbSet<Teacher> Teachers { get; set; } = null!;
+        public DbSet<EmergencyContact> EmergencyContacts { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -84,11 +85,21 @@ namespace FutureReady.Data
                 entity.Property(e => e.PreferredName).HasMaxLength(100);
                 entity.Property(e => e.StudentNumber).HasMaxLength(50);
                 entity.Property(e => e.Phone).HasMaxLength(20);
-                entity.Property(e => e.GuardianName).HasMaxLength(200);
-                entity.Property(e => e.GuardianEmail).HasMaxLength(256);
-                entity.Property(e => e.GuardianPhone).HasMaxLength(20);
+                entity.Property(e => e.StudentType).HasMaxLength(20);
+                entity.Property(e => e.YearLevel).HasMaxLength(20);
                 entity.Property(e => e.MedicareNumber).HasMaxLength(100);
                 entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<EmergencyContact>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.MobileNumber).HasMaxLength(20);
+                entity.Property(e => e.Relationship).HasMaxLength(50);
+                entity.Property(e => e.IsPrimary).IsRequired();
+                entity.HasOne(e => e.Student).WithMany().HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Cascade);
             });
         }
 

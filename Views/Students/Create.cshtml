@@ -43,13 +43,7 @@
                 <input asp-for="StudentNumber" class="form-control" />
                 <span asp-validation-for="StudentNumber" class="text-danger"></span>
             </div>
-        </div>
-
-        <hr class="my-4" />
-
-        <h5 class="mb-3">Contact Information</h5>
-        <div class="row">
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4 mb-3">
                 <label asp-for="Phone" class="form-label"></label>
                 <input asp-for="Phone" type="tel" class="form-control" />
                 <span asp-validation-for="Phone" class="text-danger"></span>
@@ -58,35 +52,28 @@
 
         <hr class="my-4" />
 
-        <h5 class="mb-3">Guardian Information</h5>
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <label asp-for="GuardianName" class="form-label"></label>
-                <input asp-for="GuardianName" class="form-control" />
-                <span asp-validation-for="GuardianName" class="text-danger"></span>
-            </div>
-            <div class="col-md-4 mb-3">
-                <label asp-for="GuardianEmail" class="form-label"></label>
-                <input asp-for="GuardianEmail" type="email" class="form-control" />
-                <span asp-validation-for="GuardianEmail" class="text-danger"></span>
-            </div>
-            <div class="col-md-4 mb-3">
-                <label asp-for="GuardianPhone" class="form-label"></label>
-                <input asp-for="GuardianPhone" type="tel" class="form-control" />
-                <span asp-validation-for="GuardianPhone" class="text-danger"></span>
-            </div>
-        </div>
-
-        <hr class="my-4" />
-
         <h5 class="mb-3">Academic Information</h5>
         <div class="row">
-            <div class="col-md-4 mb-3">
-                <label asp-for="Status" class="form-label"></label>
-                <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<FutureReady.Models.School.StudentStatus>()"></select>
-                <span asp-validation-for="Status" class="text-danger"></span>
+            <div class="col-md-3 mb-3">
+                <label asp-for="StudentType" class="form-label"></label>
+                <select asp-for="StudentType" class="form-select">
+                    <option value="">Select Type</option>
+                    <option value="day">Day</option>
+                    <option value="boarding">Boarding</option>
+                </select>
+                <span asp-validation-for="StudentType" class="text-danger"></span>
             </div>
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
+                <label asp-for="YearLevel" class="form-label"></label>
+                <input asp-for="YearLevel" class="form-control" />
+                <span asp-validation-for="YearLevel" class="text-danger"></span>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label asp-for="GraduationYear" class="form-label"></label>
+                <input asp-for="GraduationYear" type="number" class="form-control" />
+                <span asp-validation-for="GraduationYear" class="text-danger"></span>
+            </div>
+            <div class="col-md-3 mb-3">
                 <label asp-for="MedicareNumber" class="form-label"></label>
                 <input asp-for="MedicareNumber" class="form-control" />
                 <span asp-validation-for="MedicareNumber" class="text-danger"></span>

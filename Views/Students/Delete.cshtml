@@ -21,8 +21,11 @@
         <dt class="col-sm-3">Student Number</dt>
         <dd class="col-sm-9">@(Model.StudentNumber ?? "N/A")</dd>
 
-        <dt class="col-sm-3">Status</dt>
-        <dd class="col-sm-9">@Model.Status</dd>
+        <dt class="col-sm-3">Year Level</dt>
+        <dd class="col-sm-9">@(Model.YearLevel ?? "N/A")</dd>
+
+        <dt class="col-sm-3">Graduation Year</dt>
+        <dd class="col-sm-9">@(Model.GraduationYear?.ToString() ?? "N/A")</dd>
     </dl>
 
     <form asp-action="Delete">

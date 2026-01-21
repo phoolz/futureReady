@@ -36,20 +36,16 @@ namespace FutureReady.Models.School
         [ForeignKey(nameof(UserId))]
         public User? User { get; set; }
 
-        public StudentStatus Status { get; set; } = StudentStatus.Active;
-
-        [MaxLength(200)]
-        [Display(Name = "Guardian Name")]
-        public string? GuardianName { get; set; }
-
-        [MaxLength(256)]
-        [EmailAddress]
-        [Display(Name = "Guardian Email")]
-        public string? GuardianEmail { get; set; }
+        [MaxLength(20)]
+        [Display(Name = "Student Type")]
+        public string? StudentType { get; set; }
 
         [MaxLength(20)]
-        [Display(Name = "Guardian Phone")]
-        public string? GuardianPhone { get; set; }
+        [Display(Name = "Year Level")]
+        public string? YearLevel { get; set; }
+
+        [Display(Name = "Graduation Year")]
+        public int? GraduationYear { get; set; }
 
         [MaxLength(100)]
         [Display(Name = "Medicare Number")]

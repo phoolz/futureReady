@@ -51,6 +51,7 @@ builder.Services.AddScoped<FutureReady.Services.Users.IUserService, FutureReady.
 builder.Services.AddScoped<FutureReady.Services.Schools.ISchoolService, FutureReady.Services.Schools.SchoolService>();
 builder.Services.AddScoped<FutureReady.Services.Authentication.IAuthenticationService, FutureReady.Services.Authentication.AuthenticationService>();
 builder.Services.AddScoped<FutureReady.Services.Students.IStudentService, FutureReady.Services.Students.StudentService>();
+builder.Services.AddScoped<FutureReady.Services.EmergencyContacts.IEmergencyContactService, FutureReady.Services.EmergencyContacts.EmergencyContactService>();
 
 var app = builder.Build();
 
