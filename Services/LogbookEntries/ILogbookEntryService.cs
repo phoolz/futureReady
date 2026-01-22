@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using FutureReady.Models.School;
 
-namespace FutureReady.Services.Interfaces
+namespace FutureReady.Services.LogbookEntries
 {
     public interface ILogbookEntryService
     {

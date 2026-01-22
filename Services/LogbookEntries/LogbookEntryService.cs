@@ -5,9 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using FutureReady.Data;
 using FutureReady.Models.School;
-using FutureReady.Services.Interfaces;
-
-namespace FutureReady.Services.Implementations
+namespace FutureReady.Services.LogbookEntries
 {
     public class LogbookEntryService : ILogbookEntryService
     {

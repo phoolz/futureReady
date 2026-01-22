@@ -65,8 +65,8 @@ builder.Services.AddScoped<FutureReady.Services.ParentForm.IParentFormService, F
 builder.Services.AddScoped<FutureReady.Services.ParentForm.IParentFormStateService, FutureReady.Services.ParentForm.ParentFormStateService>();
 builder.Services.AddScoped<FutureReady.Services.LogbookEvaluations.ILogbookEvaluationService, FutureReady.Services.LogbookEvaluations.LogbookEvaluationService>();
 builder.Services.AddScoped<FutureReady.Services.StudentWorkHistories.IStudentWorkHistoryService, FutureReady.Services.StudentWorkHistories.StudentWorkHistoryService>();
-builder.Services.AddScoped<FutureReady.Services.Interfaces.ILogbookEntryService, FutureReady.Services.Implementations.LogbookEntryService>();
-builder.Services.AddScoped<FutureReady.Services.Interfaces.ILogbookTaskService, FutureReady.Services.Implementations.LogbookTaskService>();
+builder.Services.AddScoped<FutureReady.Services.LogbookEntries.ILogbookEntryService, FutureReady.Services.LogbookEntries.LogbookEntryService>();
+builder.Services.AddScoped<FutureReady.Services.LogbookTasks.ILogbookTaskService, FutureReady.Services.LogbookTasks.LogbookTaskService>();
 
 var app = builder.Build();
 
