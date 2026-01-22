@@ -1,0 +1,39 @@
+@code {
+    [Parameter] public int CurrentStep { get; set; }
+    [Parameter] public int TotalSteps { get; set; } = 7;
+
+    private string[] StepLabels = new[]
+    {
+        "Student",
+        "Emergency",
+        "Workplace",
+        "Transport",
+        "Medical",
+        "Consent",
+        "Review"
+    };
+}
+
+<div class="progress-indicator">
+    @for (int i = 1; i <= TotalSteps; i++)
+    {
+        var step = i;
+        var isActive = step == CurrentStep;
+        var isCompleted = step < CurrentStep;
+        var cssClass = isActive ? "active" : (isCompleted ? "completed" : "");
+
+        <div class="progress-step @cssClass">
+            <div class="step-circle">
+                @if (isCompleted)
+                {
+                    <span>&#10003;</span>
+                }
+                else
+                {
+                    @step
+                }
+            </div>
+            <span class="step-label">@StepLabels[step - 1]</span>
+        </div>
+    }
+</div>

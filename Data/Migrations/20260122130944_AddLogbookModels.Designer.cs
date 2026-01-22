@@ -4,16 +4,19 @@ using FutureReady.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace FutureReady.Migrations
+namespace FutureReady.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260122130944_AddLogbookModels")]
+    partial class AddLogbookModels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -348,88 +351,6 @@ namespace FutureReady.Migrations
                         .IsUnique();
 
                     b.ToTable("LogbookEntries");
-                });
-
-            modelBuilder.Entity("FutureReady.Models.School.LogbookEvaluation", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Appearance")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AttendancePunctuality")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Comments")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("CommunicationSkills")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("DeletedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<int>("Initiative")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("OverallPerformance")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("PlacementId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<int>("SafetyAwareness")
-                        .HasColumnType("int");
-
-                    b.Property<string>("SupervisorName")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<DateTimeOffset?>("SupervisorSignedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<int>("Teamwork")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<int>("WorkQuality")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PlacementId");
-
-                    b.ToTable("LogbookEvaluations");
                 });
 
             modelBuilder.Entity("FutureReady.Models.School.LogbookTask", b =>
@@ -956,70 +877,6 @@ namespace FutureReady.Migrations
                     b.ToTable("StudentMedicalConditions");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.StudentWorkHistory", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Certificates")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CommunityService")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("CurrentCourses")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("DeletedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("PartTimeEmployment")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("VetQualifications")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StudentId")
-                        .IsUnique();
-
-                    b.ToTable("StudentWorkHistories");
-                });
-
             modelBuilder.Entity("FutureReady.Models.School.Supervisor", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1278,17 +1135,6 @@ namespace FutureReady.Migrations
                     b.Navigation("Placement");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.LogbookEvaluation", b =>
-                {
-                    b.HasOne("FutureReady.Models.School.Placement", "Placement")
-                        .WithMany()
-                        .HasForeignKey("PlacementId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Placement");
-                });
-
             modelBuilder.Entity("FutureReady.Models.School.LogbookTask", b =>
                 {
                     b.HasOne("FutureReady.Models.School.Placement", "Placement")
@@ -1347,17 +1193,6 @@ namespace FutureReady.Migrations
                 });
 
             modelBuilder.Entity("FutureReady.Models.School.StudentMedicalCondition", b =>
-                {
-                    b.HasOne("FutureReady.Models.School.Student", "Student")
-                        .WithMany()
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Student");
-                });
-
-            modelBuilder.Entity("FutureReady.Models.School.StudentWorkHistory", b =>
                 {
                     b.HasOne("FutureReady.Models.School.Student", "Student")
                         .WithMany()

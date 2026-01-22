@@ -1,0 +1,49 @@
+@code {
+    [CascadingParameter] public ParentFormDto? FormData { get; set; }
+
+    private EmergencyContactDto Data => FormData?.EmergencyContact ?? new();
+}
+
+<FormSection Title="Emergency Contact">
+    <p class="mb-4 text-muted">Please provide an emergency contact who can be reached during the student's work placement.</p>
+
+    <EditForm Model="Data">
+        <DataAnnotationsValidator />
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label required">First Name</label>
+                    <InputText class="form-control" @bind-Value="Data.FirstName" placeholder="Enter first name" />
+                    <ValidationMessage For="@(() => Data.FirstName)" class="validation-message" />
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label required">Last Name</label>
+                    <InputText class="form-control" @bind-Value="Data.LastName" placeholder="Enter last name" />
+                    <ValidationMessage For="@(() => Data.LastName)" class="validation-message" />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label required">Mobile Number</label>
+            <InputText class="form-control" @bind-Value="Data.MobileNumber" type="tel" placeholder="Enter mobile number" />
+            <ValidationMessage For="@(() => Data.MobileNumber)" class="validation-message" />
+        </div>
+
+        <div class="form-group">
+            <label class="form-label required">Relationship to Student</label>
+            <InputSelect class="form-control" @bind-Value="Data.Relationship">
+                <option value="">Select relationship...</option>
+                <option value="Mother">Mother</option>
+                <option value="Father">Father</option>
+                <option value="Guardian">Guardian</option>
+                <option value="Grandparent">Grandparent</option>
+                <option value="Other">Other</option>
+            </InputSelect>
+            <ValidationMessage For="@(() => Data.Relationship)" class="validation-message" />
+        </div>
+    </EditForm>
+</FormSection>

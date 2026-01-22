@@ -1,0 +1,139 @@
+@code {
+    [CascadingParameter] public ParentFormDto? FormData { get; set; }
+
+    private ConsentDto Data => FormData?.Consent ?? new();
+}
+
+<FormSection Title="Consent & Declarations">
+    <p class="mb-4 text-muted">Please read the following information carefully and provide your consent.</p>
+
+    <div class="alert alert-secondary mb-4">
+        <h5>Insurance Disclaimer</h5>
+        <p>Your child's work experience placement is covered by the school's insurance policy. The school maintains comprehensive public liability and personal accident insurance for students participating in approved work experience programs.</p>
+        <p class="mb-0">The employer is required to have their own public liability insurance of at least $5 million. If you have any concerns about insurance coverage, please contact the school's work experience coordinator.</p>
+    </div>
+
+    <hr class="my-4" />
+
+    <h5>Medical Information Sharing</h5>
+    <div class="form-group">
+        <div class="consent-checkbox">
+            <input type="checkbox" id="shareMedical" @bind="Data.ShareMedicalWithEmployer" />
+            <label for="shareMedical">
+                <strong>I consent to sharing relevant medical information with the employer</strong>
+                <p class="text-muted mb-0">If checked, a summary of any medical conditions you indicated will be shared with the employer to help ensure your child's safety during the placement.</p>
+            </label>
+        </div>
+    </div>
+
+    <hr class="my-4" />
+
+    <h5>Teacher Pre-visit</h5>
+    <div class="form-group">
+        <div class="consent-checkbox">
+            <input type="checkbox" id="requestPrevisit" @bind="Data.RequestTeacherPrevisit" />
+            <label for="requestPrevisit">
+                <strong>I would like to request a teacher pre-visit to the workplace</strong>
+                <p class="text-muted mb-0">A teacher can visit the workplace before the placement begins to assess its suitability. This is optional but recommended for first-time placements.</p>
+            </label>
+        </div>
+    </div>
+
+    <hr class="my-4" />
+
+    <h5>Parent/Guardian Details</h5>
+    <EditForm Model="Data">
+        <DataAnnotationsValidator />
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label required">Parent/Guardian First Name</label>
+                    <InputText class="form-control" @bind-Value="Data.ParentFirstName" placeholder="Enter your first name" />
+                    <ValidationMessage For="@(() => Data.ParentFirstName)" class="validation-message" />
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label required">Parent/Guardian Last Name</label>
+                    <InputText class="form-control" @bind-Value="Data.ParentLastName" placeholder="Enter your last name" />
+                    <ValidationMessage For="@(() => Data.ParentLastName)" class="validation-message" />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Date</label>
+            <div class="form-control-static">@Data.ConsentDate.ToString("dd MMMM yyyy")</div>
+        </div>
+    </EditForm>
+
+    <hr class="my-4" />
+
+    <div class="consent-declaration">
+        <h5>Declaration & Consent</h5>
+        <div class="alert alert-warning">
+            <p>By checking the box below, I declare that:</p>
+            <ul class="mb-0">
+                <li>I am the parent/guardian of the student named on this form</li>
+                <li>The information I have provided is true and accurate</li>
+                <li>I consent to my child participating in the work experience placement as described</li>
+                <li>I understand the school's duty of care guidelines for work experience</li>
+                <li>I will ensure my child understands workplace safety requirements</li>
+            </ul>
+        </div>
+
+        <div class="form-group">
+            <div class="consent-checkbox consent-final">
+                <input type="checkbox" id="consentGiven" @bind="Data.ConsentGiven" />
+                <label for="consentGiven">
+                    <strong>I consent to this work experience placement</strong>
+                </label>
+            </div>
+            @if (!Data.ConsentGiven)
+            {
+                <small class="text-danger">You must provide consent to submit this form.</small>
+            }
+        </div>
+    </div>
+</FormSection>
+
+<style>
+    .consent-checkbox {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+        padding: 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background-color: #fafafa;
+    }
+
+    .consent-checkbox input[type="checkbox"] {
+        width: 1.5rem;
+        height: 1.5rem;
+        margin-top: 0.25rem;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    .consent-checkbox label {
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .consent-final {
+        background-color: #fff3cd;
+        border-color: #ffc107;
+    }
+
+    .consent-final input[type="checkbox"]:checked + label {
+        color: #155724;
+    }
+
+    .consent-declaration {
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+</style>

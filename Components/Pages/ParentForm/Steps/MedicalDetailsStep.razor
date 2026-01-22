@@ -1,0 +1,152 @@
+@code {
+    [CascadingParameter] public ParentFormDto? FormData { get; set; }
+
+    private MedicalDetailsDto Data => FormData?.MedicalDetails ?? new();
+}
+
+<FormSection Title="Medical Information">
+    <p class="mb-4 text-muted">Please indicate if the student has any medical conditions that the school and/or employer should be aware of. This information helps ensure the student's safety and wellbeing during their placement.</p>
+
+    <div class="alert alert-info mb-4">
+        <strong>Privacy Note:</strong> This information is collected for health and safety purposes. You will have the option to choose whether this information is shared with the employer on the next step.
+    </div>
+
+    <div class="medical-checkbox-group">
+        <div class="medical-item">
+            <div class="medical-checkbox">
+                <input type="checkbox" id="hasAsthma" @bind="Data.HasAsthma" />
+                <label for="hasAsthma">Asthma</label>
+            </div>
+            @if (Data.HasAsthma)
+            {
+                <div class="medical-details">
+                    <label class="form-label">Please provide details about the asthma management</label>
+                    <InputTextArea class="form-control" @bind-Value="Data.AsthmaDetails" rows="2" placeholder="e.g., Uses Ventolin as needed, triggers include exercise and dust" />
+                </div>
+            }
+        </div>
+
+        <div class="medical-item">
+            <div class="medical-checkbox">
+                <input type="checkbox" id="hasDiabetes" @bind="Data.HasDiabetes" />
+                <label for="hasDiabetes">Diabetes</label>
+            </div>
+            @if (Data.HasDiabetes)
+            {
+                <div class="medical-details">
+                    <label class="form-label">Please provide details about diabetes management</label>
+                    <InputTextArea class="form-control" @bind-Value="Data.DiabetesDetails" rows="2" placeholder="e.g., Type 1, manages with insulin pump, needs regular meal breaks" />
+                </div>
+            }
+        </div>
+
+        <div class="medical-item">
+            <div class="medical-checkbox">
+                <input type="checkbox" id="hasEpilepsy" @bind="Data.HasEpilepsy" />
+                <label for="hasEpilepsy">Epilepsy</label>
+            </div>
+            @if (Data.HasEpilepsy)
+            {
+                <div class="medical-details">
+                    <label class="form-label">Please provide details about epilepsy management</label>
+                    <InputTextArea class="form-control" @bind-Value="Data.EpilepsyDetails" rows="2" placeholder="e.g., Last seizure date, triggers, what to do if a seizure occurs" />
+                </div>
+            }
+        </div>
+
+        <div class="medical-item">
+            <div class="medical-checkbox">
+                <input type="checkbox" id="hasAllergies" @bind="Data.HasAllergies" />
+                <label for="hasAllergies">Allergies</label>
+            </div>
+            @if (Data.HasAllergies)
+            {
+                <div class="medical-details">
+                    <label class="form-label">Please list all allergies and their severity</label>
+                    <InputTextArea class="form-control" @bind-Value="Data.AllergiesDetails" rows="2" placeholder="e.g., Peanut allergy (severe, carries EpiPen), hay fever (mild)" />
+                </div>
+            }
+        </div>
+
+        <div class="medical-item">
+            <div class="medical-checkbox">
+                <input type="checkbox" id="hasLearningDifficulties" @bind="Data.HasLearningDifficulties" />
+                <label for="hasLearningDifficulties">Learning Difficulties</label>
+            </div>
+            @if (Data.HasLearningDifficulties)
+            {
+                <div class="medical-details">
+                    <label class="form-label">Please describe the learning difficulty and any support that helps</label>
+                    <InputTextArea class="form-control" @bind-Value="Data.LearningDifficultiesDetails" rows="2" placeholder="e.g., Dyslexia - benefits from written instructions, extra time for tasks" />
+                </div>
+            }
+        </div>
+
+        <div class="medical-item">
+            <div class="medical-checkbox">
+                <input type="checkbox" id="hasMedication" @bind="Data.HasMedication" />
+                <label for="hasMedication">Regular Medication</label>
+            </div>
+            @if (Data.HasMedication)
+            {
+                <div class="medical-details">
+                    <label class="form-label">Please list medications and when they are taken</label>
+                    <InputTextArea class="form-control" @bind-Value="Data.MedicationDetails" rows="2" placeholder="e.g., Takes medication for ADHD each morning before school" />
+                </div>
+            }
+        </div>
+
+        <div class="medical-item">
+            <div class="medical-checkbox">
+                <input type="checkbox" id="hasOther" @bind="Data.HasOther" />
+                <label for="hasOther">Other Medical Condition</label>
+            </div>
+            @if (Data.HasOther)
+            {
+                <div class="medical-details">
+                    <label class="form-label">Please describe the condition and any relevant information</label>
+                    <InputTextArea class="form-control" @bind-Value="Data.OtherDetails" rows="2" placeholder="Please describe any other medical conditions" />
+                </div>
+            }
+        </div>
+    </div>
+</FormSection>
+
+<style>
+    .medical-checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .medical-item {
+        padding: 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background-color: #fafafa;
+    }
+
+    .medical-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .medical-checkbox input[type="checkbox"] {
+        width: 1.25rem;
+        height: 1.25rem;
+        cursor: pointer;
+    }
+
+    .medical-checkbox label {
+        font-weight: 600;
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .medical-details {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e0e0e0;
+    }
+</style>

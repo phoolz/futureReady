@@ -61,6 +61,8 @@ builder.Services.AddScoped<FutureReady.Services.Placements.IPlacementService, Fu
 builder.Services.AddScoped<FutureReady.Services.FormTokens.IFormTokenService, FutureReady.Services.FormTokens.FormTokenService>();
 builder.Services.AddScoped<FutureReady.Services.EmployerForm.IEmployerFormService, FutureReady.Services.EmployerForm.EmployerFormService>();
 builder.Services.AddScoped<FutureReady.Services.EmployerForm.IEmployerFormStateService, FutureReady.Services.EmployerForm.EmployerFormStateService>();
+builder.Services.AddScoped<FutureReady.Services.ParentForm.IParentFormService, FutureReady.Services.ParentForm.ParentFormService>();
+builder.Services.AddScoped<FutureReady.Services.ParentForm.IParentFormStateService, FutureReady.Services.ParentForm.ParentFormStateService>();
 
 var app = builder.Build();
 

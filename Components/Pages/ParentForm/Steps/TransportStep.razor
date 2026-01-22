@@ -1,0 +1,128 @@
+@code {
+    [CascadingParameter] public ParentFormDto? FormData { get; set; }
+
+    private TransportDto Data => FormData?.Transport ?? new();
+
+    private void SetTransportMethod(string method)
+    {
+        Data.TransportMethod = method;
+        // Clear conditional fields when changing method
+        if (method == "public")
+        {
+            Data.DriverName = null;
+            Data.DriverContactNumber = null;
+        }
+    }
+}
+
+<FormSection Title="Transport Arrangements">
+    <p class="mb-4 text-muted">Please indicate how the student will travel to and from the workplace.</p>
+
+    <div class="form-group">
+        <label class="form-label required">How will the student travel to and from the workplace?</label>
+        <div class="transport-options">
+            <div class="transport-option @(Data.TransportMethod == "public" ? "selected" : "")" @onclick='() => SetTransportMethod("public")'>
+                <div class="transport-icon">&#128652;</div>
+                <div class="transport-label">Public Transport</div>
+                <div class="transport-desc">Bus, train, tram, etc.</div>
+            </div>
+            <div class="transport-option @(Data.TransportMethod == "private_car" ? "selected" : "")" @onclick='() => SetTransportMethod("private_car")'>
+                <div class="transport-icon">&#128663;</div>
+                <div class="transport-label">Private Car</div>
+                <div class="transport-desc">Parent/guardian drives</div>
+            </div>
+            <div class="transport-option @(Data.TransportMethod == "combination" ? "selected" : "")" @onclick='() => SetTransportMethod("combination")'>
+                <div class="transport-icon">&#128652;&#128663;</div>
+                <div class="transport-label">Combination</div>
+                <div class="transport-desc">Mix of public and private</div>
+            </div>
+        </div>
+    </div>
+
+    @if (Data.TransportMethod == "public")
+    {
+        <div class="conditional-field">
+            <div class="form-group">
+                <label class="form-label">Public Transport Details</label>
+                <InputTextArea class="form-control" @bind-Value="Data.PublicTransportDetails" rows="3" placeholder="Please provide details of the public transport route (e.g., Bus 123 to City, then train to Suburb station)" />
+            </div>
+        </div>
+    }
+
+    @if (Data.TransportMethod == "private_car" || Data.TransportMethod == "combination")
+    {
+        <div class="conditional-field">
+            <div class="alert alert-info">
+                <strong>Driver Information Required</strong>
+                <p class="mb-0">Please provide the details of the person who will be driving the student.</p>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label required">Driver Name</label>
+                        <InputText class="form-control" @bind-Value="Data.DriverName" placeholder="Enter driver's full name" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label required">Driver Contact Number</label>
+                        <InputText class="form-control" @bind-Value="Data.DriverContactNumber" type="tel" placeholder="Enter driver's phone number" />
+                    </div>
+                </div>
+            </div>
+
+            @if (Data.TransportMethod == "combination")
+            {
+                <div class="form-group">
+                    <label class="form-label">Public Transport Details</label>
+                    <InputTextArea class="form-control" @bind-Value="Data.PublicTransportDetails" rows="3" placeholder="Please describe how the student will use both methods (e.g., dropped off at station, catches train, etc.)" />
+                </div>
+            }
+        </div>
+    }
+</FormSection>
+
+<style>
+    .transport-options {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .transport-option {
+        flex: 1;
+        min-width: 150px;
+        padding: 1.5rem 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .transport-option:hover {
+        border-color: #007bff;
+        background-color: #f8f9fa;
+    }
+
+    .transport-option.selected {
+        border-color: #007bff;
+        background-color: #e7f1ff;
+    }
+
+    .transport-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .transport-label {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .transport-desc {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+</style>

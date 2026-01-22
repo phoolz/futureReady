@@ -1,0 +1,178 @@
+@page "/parent/form/{Token}"
+@layout ParentFormLayout
+@rendermode InteractiveServer
+@inject IParentFormStateService StateService
+@inject IParentFormService FormService
+@inject NavigationManager Navigation
+
+<PageTitle>Parent Permission Form</PageTitle>
+
+@if (StateService.IsLoading)
+{
+    <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>Loading form...</p>
+    </div>
+}
+else if (!string.IsNullOrEmpty(StateService.ErrorMessage))
+{
+    <div class="error-container">
+        <p class="error-message">@StateService.ErrorMessage</p>
+        <p class="text-muted">Please contact the school if you believe this is an error.</p>
+    </div>
+}
+else if (IsSubmitted)
+{
+    <FormSection Title="Form Submitted Successfully">
+        <div class="text-center py-4">
+            <div class="text-success mb-3" style="font-size: 4rem;">&#10003;</div>
+            <h4>Thank you for completing the Parent Permission Form</h4>
+            <p class="text-muted">
+                Your consent has been recorded. The school will review your submission
+                and contact you if any additional information is required.
+            </p>
+        </div>
+    </FormSection>
+}
+else if (StateService.IsInitialized)
+{
+    <CascadingValue Value="StateService.FormData">
+        <ParentInfoHeader
+            StudentName="@StateService.FormData.StudentName"
+            SchoolName="@StateService.FormData.SchoolName" />
+
+        <ParentProgressIndicator CurrentStep="@CurrentStep" TotalSteps="7" />
+
+        @switch (CurrentStep)
+        {
+            case 1:
+                <StudentDetailsStep />
+                break;
+            case 2:
+                <EmergencyContactStep />
+                break;
+            case 3:
+                <WorkplaceDetailsStep />
+                break;
+            case 4:
+                <TransportStep />
+                break;
+            case 5:
+                <MedicalDetailsStep />
+                break;
+            case 6:
+                <ConsentStep />
+                break;
+            case 7:
+                <ReviewSubmitStep OnEditStep="HandleEditStep" />
+                break;
+        }
+
+        @if (!string.IsNullOrEmpty(ValidationError))
+        {
+            <div class="alert alert-danger mt-3">
+                @ValidationError
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(SubmitError))
+        {
+            <div class="alert alert-danger mt-3">
+                @SubmitError
+            </div>
+        }
+
+        <WizardNavigation
+            CurrentStep="@CurrentStep"
+            TotalSteps="7"
+            IsSubmitting="@IsSubmitting"
+            OnPrevious="HandlePrevious"
+            OnNext="HandleNext"
+            OnSubmit="HandleSubmit" />
+    </CascadingValue>
+}
+
+@code {
+    [Parameter] public string Token { get; set; } = string.Empty;
+
+    private int CurrentStep => StateService.CurrentStep;
+    private bool IsSubmitting { get; set; }
+    private bool IsSubmitted { get; set; }
+    private string? ValidationError { get; set; }
+    private string? SubmitError { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await StateService.InitializeAsync(Token);
+    }
+
+    private async Task HandlePrevious()
+    {
+        ValidationError = null;
+        if (CurrentStep > 1)
+        {
+            StateService.SetCurrentStep(CurrentStep - 1);
+            await StateService.SaveToStorageAsync();
+        }
+    }
+
+    private async Task HandleNext()
+    {
+        ValidationError = null;
+        if (StateService.ValidateCurrentStep())
+        {
+            if (CurrentStep < 7)
+            {
+                StateService.SetCurrentStep(CurrentStep + 1);
+                await StateService.SaveToStorageAsync();
+            }
+        }
+        else
+        {
+            ValidationError = "Please complete all required fields before proceeding.";
+        }
+    }
+
+    private async Task HandleEditStep(int step)
+    {
+        StateService.SetCurrentStep(step);
+        await StateService.SaveToStorageAsync();
+    }
+
+    private async Task HandleSubmit()
+    {
+        SubmitError = null;
+
+        if (!StateService.ValidateCurrentStep())
+        {
+            SubmitError = "Please complete all required fields before submitting.";
+            return;
+        }
+
+        IsSubmitting = true;
+        StateHasChanged();
+
+        try
+        {
+            var success = await FormService.SubmitFormAsync(Token, StateService.FormData);
+            if (success)
+            {
+                await StateService.ClearStorageAsync(Token);
+                IsSubmitted = true;
+            }
+            else
+            {
+                SubmitError = "Failed to submit the form. The link may have expired or already been used.";
+            }
+        }
+        catch (Exception ex)
+        {
+            SubmitError = "An error occurred while submitting the form. Please try again.";
+            Console.WriteLine($"Submit error: {ex.Message}");
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+}

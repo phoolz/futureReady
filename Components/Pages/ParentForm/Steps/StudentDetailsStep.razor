@@ -1,0 +1,41 @@
+@code {
+    [CascadingParameter] public ParentFormDto? FormData { get; set; }
+
+    private StudentDetailsDto Data => FormData?.StudentDetails ?? new();
+
+    private void SetStudentType(string type)
+    {
+        Data.StudentType = type;
+    }
+}
+
+<FormSection Title="Student Details">
+    <p class="mb-4 text-muted">Please confirm the student's details and provide any updates.</p>
+
+    <div class="form-group">
+        <label class="form-label">Student Name</label>
+        <div class="form-control-static">@FormData?.StudentName</div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label required">Student Type</label>
+        <div class="yes-no-toggle">
+            <button type="button"
+                    class="toggle-btn @(Data.StudentType == "day" ? "selected-yes" : "")"
+                    @onclick='() => SetStudentType("day")'>
+                Day Student
+            </button>
+            <button type="button"
+                    class="toggle-btn @(Data.StudentType == "boarding" ? "selected-yes" : "")"
+                    @onclick='() => SetStudentType("boarding")'>
+                Boarding Student
+            </button>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label required">Student Mobile Number</label>
+        <InputText class="form-control" @bind-Value="Data.MobileNumber" type="tel" placeholder="Enter student's mobile number" />
+        <small class="text-muted">This number will be used for emergency contact during the placement.</small>
+    </div>
+</FormSection>

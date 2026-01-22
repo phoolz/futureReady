@@ -1,0 +1,156 @@
+@code {
+    [CascadingParameter] public ParentFormDto? FormData { get; set; }
+
+    private WorkplaceDetailsDto Data => FormData?.WorkplaceDetails ?? new();
+}
+
+<FormSection Title="Workplace Details">
+    @if (Data.IsCompanyPreset)
+    {
+        <p class="mb-4 text-muted">The workplace details have been provided by the school. Please review and confirm they are correct.</p>
+
+        <div class="review-grid">
+            <div class="review-item">
+                <span class="review-label">Company Name</span>
+                <span class="review-value">@Data.CompanyName</span>
+            </div>
+            <div class="review-item">
+                <span class="review-label">Contact Person</span>
+                <span class="review-value">@Data.ContactFirstName @Data.ContactLastName</span>
+            </div>
+            @if (!string.IsNullOrEmpty(Data.ContactEmail))
+            {
+                <div class="review-item">
+                    <span class="review-label">Contact Email</span>
+                    <span class="review-value">@Data.ContactEmail</span>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Data.ContactPhone))
+            {
+                <div class="review-item">
+                    <span class="review-label">Contact Phone</span>
+                    <span class="review-value">@Data.ContactPhone</span>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Data.Industry))
+            {
+                <div class="review-item">
+                    <span class="review-label">Industry</span>
+                    <span class="review-value">@Data.Industry</span>
+                </div>
+            }
+            <div class="review-item">
+                <span class="review-label">Address</span>
+                <span class="review-value">
+                    @Data.StreetAddress
+                    @if (!string.IsNullOrEmpty(Data.StreetAddress2))
+                    {
+                        <br />@Data.StreetAddress2
+                    }
+                    <br />@Data.City, @Data.State @Data.PostalCode
+                </span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <p class="mb-4 text-muted">Please provide the details of where the student will be working.</p>
+
+        <EditForm Model="Data">
+            <DataAnnotationsValidator />
+
+            <div class="form-group">
+                <label class="form-label required">Company Name</label>
+                <InputText class="form-control" @bind-Value="Data.CompanyName" placeholder="Enter company name" />
+                <ValidationMessage For="@(() => Data.CompanyName)" class="validation-message" />
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label required">Contact First Name</label>
+                        <InputText class="form-control" @bind-Value="Data.ContactFirstName" placeholder="Enter first name" />
+                        <ValidationMessage For="@(() => Data.ContactFirstName)" class="validation-message" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label required">Contact Last Name</label>
+                        <InputText class="form-control" @bind-Value="Data.ContactLastName" placeholder="Enter last name" />
+                        <ValidationMessage For="@(() => Data.ContactLastName)" class="validation-message" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label required">Contact Email</label>
+                        <InputText class="form-control" @bind-Value="Data.ContactEmail" type="email" placeholder="Enter email address" />
+                        <ValidationMessage For="@(() => Data.ContactEmail)" class="validation-message" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label required">Contact Phone</label>
+                        <InputText class="form-control" @bind-Value="Data.ContactPhone" type="tel" placeholder="Enter phone number" />
+                        <ValidationMessage For="@(() => Data.ContactPhone)" class="validation-message" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Industry</label>
+                <InputText class="form-control" @bind-Value="Data.Industry" placeholder="e.g., Healthcare, Retail, Technology" />
+            </div>
+
+            <hr class="my-4" />
+            <h5>Workplace Address</h5>
+
+            <div class="form-group">
+                <label class="form-label required">Street Address</label>
+                <InputText class="form-control" @bind-Value="Data.StreetAddress" placeholder="Enter street address" />
+                <ValidationMessage For="@(() => Data.StreetAddress)" class="validation-message" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Street Address 2</label>
+                <InputText class="form-control" @bind-Value="Data.StreetAddress2" placeholder="Apartment, suite, unit, etc. (optional)" />
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label required">City</label>
+                        <InputText class="form-control" @bind-Value="Data.City" placeholder="Enter city" />
+                        <ValidationMessage For="@(() => Data.City)" class="validation-message" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label required">State</label>
+                        <InputSelect class="form-control" @bind-Value="Data.State">
+                            <option value="">Select state...</option>
+                            <option value="NSW">New South Wales</option>
+                            <option value="VIC">Victoria</option>
+                            <option value="QLD">Queensland</option>
+                            <option value="WA">Western Australia</option>
+                            <option value="SA">South Australia</option>
+                            <option value="TAS">Tasmania</option>
+                            <option value="ACT">Australian Capital Territory</option>
+                            <option value="NT">Northern Territory</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => Data.State)" class="validation-message" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label required">Postal Code</label>
+                        <InputText class="form-control" @bind-Value="Data.PostalCode" placeholder="Enter postal code" />
+                        <ValidationMessage For="@(() => Data.PostalCode)" class="validation-message" />
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    }
+</FormSection>

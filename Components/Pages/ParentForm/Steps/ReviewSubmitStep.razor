@@ -1,0 +1,264 @@
+@code {
+    [CascadingParameter] public ParentFormDto? FormData { get; set; }
+    [Parameter] public EventCallback<int> OnEditStep { get; set; }
+
+    private string FormatBool(bool value) => value ? "Yes" : "No";
+
+    private string GetTransportMethodDisplay(string? method) => method switch
+    {
+        "public" => "Public Transport",
+        "private_car" => "Private Car",
+        "combination" => "Combination",
+        _ => "Not specified"
+    };
+
+    private bool HasAnyMedicalCondition()
+    {
+        if (FormData?.MedicalDetails == null) return false;
+        var m = FormData.MedicalDetails;
+        return m.HasAsthma || m.HasDiabetes || m.HasEpilepsy || m.HasAllergies ||
+               m.HasLearningDifficulties || m.HasMedication || m.HasOther;
+    }
+}
+
+<FormSection Title="Review & Submit">
+    <p class="mb-4 text-muted">Please review all your information before submitting. Click "Edit" on any section to make changes.</p>
+
+    @if (FormData != null)
+    {
+        <!-- Student Details -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Student Details</h5>
+                <button type="button" class="btn-edit" @onclick="() => OnEditStep.InvokeAsync(1)">Edit</button>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Student Name</span>
+                    <span class="review-value">@FormData.StudentName</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Student Type</span>
+                    <span class="review-value">@(FormData.StudentDetails.StudentType == "day" ? "Day Student" : "Boarding Student")</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Mobile Number</span>
+                    <span class="review-value">@FormData.StudentDetails.MobileNumber</span>
+                </div>
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- Emergency Contact -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Emergency Contact</h5>
+                <button type="button" class="btn-edit" @onclick="() => OnEditStep.InvokeAsync(2)">Edit</button>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Name</span>
+                    <span class="review-value">@FormData.EmergencyContact.FirstName @FormData.EmergencyContact.LastName</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Mobile Number</span>
+                    <span class="review-value">@FormData.EmergencyContact.MobileNumber</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Relationship</span>
+                    <span class="review-value">@FormData.EmergencyContact.Relationship</span>
+                </div>
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- Workplace Details -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Workplace Details</h5>
+                @if (!FormData.WorkplaceDetails.IsCompanyPreset)
+                {
+                    <button type="button" class="btn-edit" @onclick="() => OnEditStep.InvokeAsync(3)">Edit</button>
+                }
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Company</span>
+                    <span class="review-value">@FormData.WorkplaceDetails.CompanyName</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Contact Person</span>
+                    <span class="review-value">@FormData.WorkplaceDetails.ContactFirstName @FormData.WorkplaceDetails.ContactLastName</span>
+                </div>
+                @if (!string.IsNullOrEmpty(FormData.WorkplaceDetails.ContactEmail))
+                {
+                    <div class="review-item">
+                        <span class="review-label">Contact Email</span>
+                        <span class="review-value">@FormData.WorkplaceDetails.ContactEmail</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(FormData.WorkplaceDetails.ContactPhone))
+                {
+                    <div class="review-item">
+                        <span class="review-label">Contact Phone</span>
+                        <span class="review-value">@FormData.WorkplaceDetails.ContactPhone</span>
+                    </div>
+                }
+                <div class="review-item">
+                    <span class="review-label">Address</span>
+                    <span class="review-value">
+                        @FormData.WorkplaceDetails.StreetAddress
+                        @if (!string.IsNullOrEmpty(FormData.WorkplaceDetails.StreetAddress2))
+                        {
+                            <br />@FormData.WorkplaceDetails.StreetAddress2
+                        }
+                        <br />@FormData.WorkplaceDetails.City, @FormData.WorkplaceDetails.State @FormData.WorkplaceDetails.PostalCode
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- Transport -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Transport Arrangements</h5>
+                <button type="button" class="btn-edit" @onclick="() => OnEditStep.InvokeAsync(4)">Edit</button>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Transport Method</span>
+                    <span class="review-value">@GetTransportMethodDisplay(FormData.Transport.TransportMethod)</span>
+                </div>
+                @if (!string.IsNullOrEmpty(FormData.Transport.PublicTransportDetails))
+                {
+                    <div class="review-item">
+                        <span class="review-label">Public Transport Details</span>
+                        <span class="review-value">@FormData.Transport.PublicTransportDetails</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(FormData.Transport.DriverName))
+                {
+                    <div class="review-item">
+                        <span class="review-label">Driver Name</span>
+                        <span class="review-value">@FormData.Transport.DriverName</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(FormData.Transport.DriverContactNumber))
+                {
+                    <div class="review-item">
+                        <span class="review-label">Driver Contact</span>
+                        <span class="review-value">@FormData.Transport.DriverContactNumber</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- Medical Information -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Medical Information</h5>
+                <button type="button" class="btn-edit" @onclick="() => OnEditStep.InvokeAsync(5)">Edit</button>
+            </div>
+            @if (HasAnyMedicalCondition())
+            {
+                <div class="review-grid">
+                    @if (FormData.MedicalDetails.HasAsthma)
+                    {
+                        <div class="review-item">
+                            <span class="review-label">Asthma</span>
+                            <span class="review-value">@(FormData.MedicalDetails.AsthmaDetails ?? "Yes")</span>
+                        </div>
+                    }
+                    @if (FormData.MedicalDetails.HasDiabetes)
+                    {
+                        <div class="review-item">
+                            <span class="review-label">Diabetes</span>
+                            <span class="review-value">@(FormData.MedicalDetails.DiabetesDetails ?? "Yes")</span>
+                        </div>
+                    }
+                    @if (FormData.MedicalDetails.HasEpilepsy)
+                    {
+                        <div class="review-item">
+                            <span class="review-label">Epilepsy</span>
+                            <span class="review-value">@(FormData.MedicalDetails.EpilepsyDetails ?? "Yes")</span>
+                        </div>
+                    }
+                    @if (FormData.MedicalDetails.HasAllergies)
+                    {
+                        <div class="review-item">
+                            <span class="review-label">Allergies</span>
+                            <span class="review-value">@(FormData.MedicalDetails.AllergiesDetails ?? "Yes")</span>
+                        </div>
+                    }
+                    @if (FormData.MedicalDetails.HasLearningDifficulties)
+                    {
+                        <div class="review-item">
+                            <span class="review-label">Learning Difficulties</span>
+                            <span class="review-value">@(FormData.MedicalDetails.LearningDifficultiesDetails ?? "Yes")</span>
+                        </div>
+                    }
+                    @if (FormData.MedicalDetails.HasMedication)
+                    {
+                        <div class="review-item">
+                            <span class="review-label">Regular Medication</span>
+                            <span class="review-value">@(FormData.MedicalDetails.MedicationDetails ?? "Yes")</span>
+                        </div>
+                    }
+                    @if (FormData.MedicalDetails.HasOther)
+                    {
+                        <div class="review-item">
+                            <span class="review-label">Other Condition</span>
+                            <span class="review-value">@(FormData.MedicalDetails.OtherDetails ?? "Yes")</span>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-muted">No medical conditions indicated.</p>
+            }
+        </div>
+
+        <hr />
+
+        <!-- Consent -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Consent & Declarations</h5>
+                <button type="button" class="btn-edit" @onclick="() => OnEditStep.InvokeAsync(6)">Edit</button>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Share Medical with Employer</span>
+                    <span class="review-value">@FormatBool(FormData.Consent.ShareMedicalWithEmployer)</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Request Teacher Pre-visit</span>
+                    <span class="review-value">@FormatBool(FormData.Consent.RequestTeacherPrevisit)</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Parent/Guardian</span>
+                    <span class="review-value">@FormData.Consent.ParentFirstName @FormData.Consent.ParentLastName</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Consent Date</span>
+                    <span class="review-value">@FormData.Consent.ConsentDate.ToString("dd MMMM yyyy")</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Consent Given</span>
+                    <span class="review-value @(FormData.Consent.ConsentGiven ? "yes" : "no")">@FormatBool(FormData.Consent.ConsentGiven)</span>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="alert alert-info mt-4">
+        <strong>Ready to submit?</strong> By clicking "Submit Form" below, you confirm that the information provided is accurate and complete.
+    </div>
+</FormSection>

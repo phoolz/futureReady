@@ -31,6 +31,10 @@ namespace FutureReady.Data
         public DbSet<Placement> Placements { get; set; } = null!;
         public DbSet<ParentPermission> ParentPermissions { get; set; } = null!;
         public DbSet<FormToken> FormTokens { get; set; } = null!;
+        public DbSet<LogbookEntry> LogbookEntries { get; set; } = null!;
+        public DbSet<LogbookTask> LogbookTasks { get; set; } = null!;
+        public DbSet<LogbookEvaluation> LogbookEvaluations { get; set; } = null!;
+        public DbSet<StudentWorkHistory> StudentWorkHistories { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -180,6 +184,42 @@ namespace FutureReady.Data
                 entity.Property(e => e.Email).HasMaxLength(200);
                 entity.HasIndex(e => e.Token).IsUnique();
                 entity.HasOne(e => e.Placement).WithMany().HasForeignKey(e => e.PlacementId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<LogbookEntry>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.StartTime).HasMaxLength(10);
+                entity.Property(e => e.LunchStartTime).HasMaxLength(10);
+                entity.Property(e => e.LunchEndTime).HasMaxLength(10);
+                entity.Property(e => e.FinishTime).HasMaxLength(10);
+                entity.Property(e => e.TotalHoursWorked).HasPrecision(5, 2);
+                entity.Property(e => e.CumulativeHours).HasPrecision(6, 2);
+                entity.HasOne(e => e.Placement).WithMany().HasForeignKey(e => e.PlacementId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(e => new { e.PlacementId, e.Date }).IsUnique();
+            });
+
+            modelBuilder.Entity<LogbookTask>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Description).IsRequired().HasMaxLength(2000);
+                entity.HasOne(e => e.Placement).WithMany().HasForeignKey(e => e.PlacementId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(e => new { e.PlacementId, e.DatePerformed });
+            });
+
+            modelBuilder.Entity<LogbookEvaluation>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.SupervisorName).HasMaxLength(200);
+                entity.HasOne(e => e.Placement).WithMany().HasForeignKey(e => e.PlacementId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(e => e.PlacementId);
+            });
+
+            modelBuilder.Entity<StudentWorkHistory>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Student).WithMany().HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(e => e.StudentId).IsUnique();
             });
         }
 

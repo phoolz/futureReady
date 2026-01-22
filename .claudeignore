@@ -1,0 +1,86 @@
+# .claudeignore for .NET MVC/Blazor/Razor project
+# Optimizes token usage by excluding non-essential files
+
+# Build outputs
+bin/
+obj/
+out/
+publish/
+artifacts/
+
+# NuGet packages
+packages/
+*.nupkg
+*.snupkg
+
+# IDE and editor files
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+*.sln.iml
+
+# Generated files
+*.Designer.cs
+*.g.cs
+*.g.i.cs
+wwwroot/lib/
+
+# Logs and databases
+*.log
+*.mdf
+*.ldf
+*.sqlite
+*.db
+
+# Local settings (keep template versions)
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+
+# Test results
+TestResults/
+coverage/
+*.trx
+*.coverage
+*.coveragexml
+
+# Static asset builds (if using bundlers)
+node_modules/
+wwwroot/dist/
+wwwroot/css/*.min.css
+wwwroot/js/*.min.js
+
+# Compiled Razor views (generated at runtime)
+*.cshtml.g.cs
+
+# Scaffolding backups
+ScaffoldingReadMe.txt
+
+# Publish profiles (usually not needed for code review)
+Properties/PublishProfiles/
+
+# Migration snapshots (keep actual migrations)
+**/Migrations/*ModelSnapshot.cs
+
+# Documentation builds
+docs/_site/
+_site/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~

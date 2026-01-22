@@ -232,6 +232,59 @@ namespace FutureReady.Controllers
             return View(placement);
         }
 
+        // POST: Placements/SendParentForm/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SendParentForm(Guid id)
+        {
+            var tenantId = _tenantProvider?.GetCurrentTenantId();
+            var placement = await _placementService.GetByIdWithDetailsAsync(id, tenantId);
+            if (placement == null) return NotFound();
+
+            var formToken = await _formTokenService.GenerateTokenAsync(id, "parent_permission", null, tenantId);
+
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            var formUrl = $"{baseUrl}/parent/form/{formToken.Token}";
+            TempData["ParentFormLink"] = formUrl;
+            TempData["ParentFormLinkMessage"] = "Parent permission form link generated. Copy and send to the parent/guardian:";
+
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        // POST: Placements/DeleteParentFormToken
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteParentFormToken(Guid id, Guid tokenId)
+        {
+            var tenantId = _tenantProvider?.GetCurrentTenantId();
+            await _formTokenService.RevokeTokenByIdAsync(tokenId, tenantId);
+            TempData["SuccessMessage"] = "Parent form token deleted successfully.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        // POST: Placements/ResendParentForm
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResendParentForm(Guid id, Guid tokenId)
+        {
+            var tenantId = _tenantProvider?.GetCurrentTenantId();
+            var placement = await _placementService.GetByIdWithDetailsAsync(id, tenantId);
+            if (placement == null) return NotFound();
+
+            // Revoke the old token
+            await _formTokenService.RevokeTokenByIdAsync(tokenId, tenantId);
+
+            // Generate a new token
+            var formToken = await _formTokenService.GenerateTokenAsync(id, "parent_permission", null, tenantId);
+
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            var formUrl = $"{baseUrl}/parent/form/{formToken.Token}";
+            TempData["ParentFormLink"] = formUrl;
+            TempData["ParentFormLinkMessage"] = "New parent form link generated (previous link revoked). Copy and send to the parent/guardian:";
+
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
         private async Task PopulateDropdowns(Guid? studentId = null, Guid? companyId = null, Guid? supervisorId = null)
         {
             var tenantId = _tenantProvider?.GetCurrentTenantId();
