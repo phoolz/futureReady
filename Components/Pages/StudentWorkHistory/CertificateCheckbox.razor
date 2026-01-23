@@ -1,0 +1,43 @@
+@code {
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public bool Checked { get; set; }
+    [Parameter] public EventCallback<bool> CheckedChanged { get; set; }
+    [Parameter] public DateOnly? Date { get; set; }
+    [Parameter] public EventCallback<DateOnly?> DateChanged { get; set; }
+
+    private string UniqueId { get; } = $"cert_{Guid.NewGuid():N}";
+
+    private async Task OnCheckedChange(ChangeEventArgs e)
+    {
+        var newValue = (bool)(e.Value ?? false);
+        Checked = newValue;
+        await CheckedChanged.InvokeAsync(newValue);
+    }
+
+    private async Task OnDateChange(ChangeEventArgs e)
+    {
+        DateOnly? newDate = null;
+        if (DateOnly.TryParse(e.Value?.ToString(), out var parsed))
+        {
+            newDate = parsed;
+        }
+        Date = newDate;
+        await DateChanged.InvokeAsync(newDate);
+    }
+}
+
+<div class="certificate-item">
+    <div class="certificate-checkbox">
+        <input type="checkbox" id="@UniqueId" checked="@Checked" @onchange="OnCheckedChange" />
+        <label for="@UniqueId">@Label</label>
+    </div>
+    @if (Checked)
+    {
+        <div class="certificate-details">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-control form-control-sm"
+                   value="@Date?.ToString("yyyy-MM-dd")"
+                   @onchange="OnDateChange" />
+        </div>
+    }
+</div>

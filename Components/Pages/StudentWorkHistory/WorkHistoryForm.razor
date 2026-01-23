@@ -1,0 +1,509 @@
+@page "/student/work-history/{StudentId:guid}"
+@rendermode InteractiveServer
+@inject IStudentWorkHistoryService WorkHistoryService
+@inject NavigationManager Navigation
+@using System.Text.Json
+@using FutureReady.Models.School
+
+<PageTitle>Work History</PageTitle>
+
+<div class="work-history-form">
+    @if (IsLoading)
+    {
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>Loading work history...</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger">@ErrorMessage</div>
+    }
+    else
+    {
+        <div class="form-header mb-4">
+            <h1>Work History</h1>
+            @if (!string.IsNullOrEmpty(StudentName))
+            {
+                <p class="text-muted">@StudentName</p>
+            }
+        </div>
+
+        @* Current School Courses Section *@
+        <div class="form-section-collapsible">
+            <div class="section-header" @onclick="() => ToggleSection(0)">
+                <span class="section-toggle">@(ExpandedSections[0] ? "▼" : "▶")</span>
+                <h2>Current School Courses</h2>
+            </div>
+            @if (ExpandedSections[0])
+            {
+                <div class="section-content">
+                    @for (int i = 0; i < FormData.CurrentCourses.Count; i++)
+                    {
+                        var index = i;
+                        <div class="list-item">
+                            <input type="text" class="form-control" placeholder="Course name"
+                                   @bind="FormData.CurrentCourses[index].Name" />
+                            <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => RemoveCourse(index)">Remove</button>
+                        </div>
+                    }
+                    <button type="button" class="btn btn-outline-primary btn-sm mt-2" @onclick="AddCourse">+ Add Course</button>
+                </div>
+            }
+        </div>
+
+        @* VET Qualifications Section *@
+        <div class="form-section-collapsible">
+            <div class="section-header" @onclick="() => ToggleSection(1)">
+                <span class="section-toggle">@(ExpandedSections[1] ? "▼" : "▶")</span>
+                <h2>VET Qualifications</h2>
+            </div>
+            @if (ExpandedSections[1])
+            {
+                <div class="section-content">
+                    @for (int i = 0; i < FormData.VetQualifications.Count; i++)
+                    {
+                        var index = i;
+                        <div class="list-item">
+                            <input type="text" class="form-control" placeholder="Qualification name"
+                                   @bind="FormData.VetQualifications[index].Name" />
+                            <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => RemoveQualification(index)">Remove</button>
+                        </div>
+                    }
+                    <button type="button" class="btn btn-outline-primary btn-sm mt-2" @onclick="AddQualification">+ Add Qualification</button>
+                </div>
+            }
+        </div>
+
+        @* Certificates Section *@
+        <div class="form-section-collapsible">
+            <div class="section-header" @onclick="() => ToggleSection(2)">
+                <span class="section-toggle">@(ExpandedSections[2] ? "▼" : "▶")</span>
+                <h2>Certificates</h2>
+            </div>
+            @if (ExpandedSections[2])
+            {
+                <div class="section-content">
+                    <h3 class="subsection-title">WorkSafe SmartMove Modules</h3>
+                    <div class="certificate-grid">
+                        <CertificateCheckbox Label="Automotive" @bind-Checked="FormData.Certificates.SmartMoveAutomotive" @bind-Date="FormData.Certificates.SmartMoveAutomotiveDate" />
+                        <CertificateCheckbox Label="Building & Construction" @bind-Checked="FormData.Certificates.SmartMoveBuildingConstruction" @bind-Date="FormData.Certificates.SmartMoveBuildingConstructionDate" />
+                        <CertificateCheckbox Label="Business & IT" @bind-Checked="FormData.Certificates.SmartMoveBusinessIT" @bind-Date="FormData.Certificates.SmartMoveBusinessITDate" />
+                        <CertificateCheckbox Label="Electrical" @bind-Checked="FormData.Certificates.SmartMoveElectrical" @bind-Date="FormData.Certificates.SmartMoveElectricalDate" />
+                        <CertificateCheckbox Label="Farming/Forestry/Fishing" @bind-Checked="FormData.Certificates.SmartMoveFarmingForestryFishing" @bind-Date="FormData.Certificates.SmartMoveFarmingForestryFishingDate" />
+                        <CertificateCheckbox Label="General Module" @bind-Checked="FormData.Certificates.SmartMoveGeneralModule" @bind-Date="FormData.Certificates.SmartMoveGeneralModuleDate" />
+                        <CertificateCheckbox Label="Hairdressing" @bind-Checked="FormData.Certificates.SmartMoveHairdressing" @bind-Date="FormData.Certificates.SmartMoveHairdressingDate" />
+                        <CertificateCheckbox Label="Health & Community Services" @bind-Checked="FormData.Certificates.SmartMoveHealthCommunityServices" @bind-Date="FormData.Certificates.SmartMoveHealthCommunityServicesDate" />
+                        <CertificateCheckbox Label="Hospitality & Tourism" @bind-Checked="FormData.Certificates.SmartMoveHospitalityTourism" @bind-Date="FormData.Certificates.SmartMoveHospitalityTourismDate" />
+                        <CertificateCheckbox Label="Manufacturing" @bind-Checked="FormData.Certificates.SmartMoveManufacturing" @bind-Date="FormData.Certificates.SmartMoveManufacturingDate" />
+                        <CertificateCheckbox Label="Metals & Engineering" @bind-Checked="FormData.Certificates.SmartMoveMetalsEngineering" @bind-Date="FormData.Certificates.SmartMoveMetalsEngineeringDate" />
+                        <CertificateCheckbox Label="Mining" @bind-Checked="FormData.Certificates.SmartMoveMining" @bind-Date="FormData.Certificates.SmartMoveMiningDate" />
+                        <CertificateCheckbox Label="Nail & Beauty Technology" @bind-Checked="FormData.Certificates.SmartMoveNailBeautyTechnology" @bind-Date="FormData.Certificates.SmartMoveNailBeautyTechnologyDate" />
+                        <CertificateCheckbox Label="Retail" @bind-Checked="FormData.Certificates.SmartMoveRetail" @bind-Date="FormData.Certificates.SmartMoveRetailDate" />
+                        <CertificateCheckbox Label="Sport & Recreation" @bind-Checked="FormData.Certificates.SmartMoveSportRecreation" @bind-Date="FormData.Certificates.SmartMoveSportRecreationDate" />
+                        <CertificateCheckbox Label="WHS Extension Module" @bind-Checked="FormData.Certificates.SmartMoveWHSExtensionModule" @bind-Date="FormData.Certificates.SmartMoveWHSExtensionModuleDate" />
+                    </div>
+
+                    <h3 class="subsection-title mt-4">Other Certificates</h3>
+                    <div class="certificate-grid">
+                        <CertificateCheckbox Label="White Card" @bind-Checked="FormData.Certificates.WhiteCard" @bind-Date="FormData.Certificates.WhiteCardDate" />
+                        <CertificateCheckbox Label="WorkSafe Safety Passport" @bind-Checked="FormData.Certificates.WorkSafeSafetyPassport" @bind-Date="FormData.Certificates.WorkSafeSafetyPassportDate" />
+                        <CertificateCheckbox Label="Electrical Training Licence" @bind-Checked="FormData.Certificates.ElectricalTrainingLicence" @bind-Date="FormData.Certificates.ElectricalTrainingLicenceDate" />
+
+                        @* First Aid with level field *@
+                        <div class="certificate-item">
+                            <div class="certificate-checkbox">
+                                <input type="checkbox" id="firstAid" @bind="FormData.Certificates.FirstAidCertificate" />
+                                <label for="firstAid">First Aid Certificate</label>
+                            </div>
+                            @if (FormData.Certificates.FirstAidCertificate)
+                            {
+                                <div class="certificate-details">
+                                    <div class="mb-2">
+                                        <label class="form-label">Level</label>
+                                        <input type="text" class="form-control form-control-sm" placeholder="e.g., Level 2"
+                                               @bind="FormData.Certificates.FirstAidLevel" />
+                                    </div>
+                                    <div>
+                                        <label class="form-label">Date</label>
+                                        <input type="date" class="form-control form-control-sm"
+                                               @bind="FormData.Certificates.FirstAidCertificateDate" />
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <CertificateCheckbox Label="Bronze Medallion" @bind-Checked="FormData.Certificates.BronzeMedallion" @bind-Date="FormData.Certificates.BronzeMedallionDate" />
+                        <CertificateCheckbox Label="School-developed workplace induction" @bind-Checked="FormData.Certificates.SchoolWorkplaceInduction" @bind-Date="FormData.Certificates.SchoolWorkplaceInductionDate" />
+                        <CertificateCheckbox Label="Workplace-developed induction program" @bind-Checked="FormData.Certificates.WorkplaceInductionProgram" @bind-Date="FormData.Certificates.WorkplaceInductionProgramDate" />
+                        <CertificateCheckbox Label="Year 9/10 Work Studies" @bind-Checked="FormData.Certificates.Year9_10WorkStudies" @bind-Date="FormData.Certificates.Year9_10WorkStudiesDate" />
+                    </div>
+                </div>
+            }
+        </div>
+
+        @* Part-Time Employment Section *@
+        <div class="form-section-collapsible">
+            <div class="section-header" @onclick="() => ToggleSection(3)">
+                <span class="section-toggle">@(ExpandedSections[3] ? "▼" : "▶")</span>
+                <h2>Part-Time Employment</h2>
+            </div>
+            @if (ExpandedSections[3])
+            {
+                <div class="section-content">
+                    @for (int i = 0; i < FormData.PartTimeEmployment.Count; i++)
+                    {
+                        var index = i;
+                        <div class="list-item employment-item">
+                            <div class="employment-fields">
+                                <div class="field-group">
+                                    <label class="form-label">Employer</label>
+                                    <input type="text" class="form-control" placeholder="Employer name"
+                                           @bind="FormData.PartTimeEmployment[index].EmployerName" />
+                                </div>
+                                <div class="field-group">
+                                    <label class="form-label">Role</label>
+                                    <input type="text" class="form-control" placeholder="Your role"
+                                           @bind="FormData.PartTimeEmployment[index].Role" />
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => RemoveEmployment(index)">Remove</button>
+                        </div>
+                    }
+                    <button type="button" class="btn btn-outline-primary btn-sm mt-2" @onclick="AddEmployment">+ Add Employment</button>
+                </div>
+            }
+        </div>
+
+        @* Community Service Section *@
+        <div class="form-section-collapsible">
+            <div class="section-header" @onclick="() => ToggleSection(4)">
+                <span class="section-toggle">@(ExpandedSections[4] ? "▼" : "▶")</span>
+                <h2>Community Service</h2>
+            </div>
+            @if (ExpandedSections[4])
+            {
+                <div class="section-content">
+                    @for (int i = 0; i < FormData.CommunityService.Count; i++)
+                    {
+                        var index = i;
+                        <div class="list-item">
+                            <input type="text" class="form-control" placeholder="Description of community service"
+                                   @bind="FormData.CommunityService[index].Description" />
+                            <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => RemoveCommunityService(index)">Remove</button>
+                        </div>
+                    }
+                    <button type="button" class="btn btn-outline-primary btn-sm mt-2" @onclick="AddCommunityService">+ Add Service</button>
+                </div>
+            }
+        </div>
+
+        @* Save Button and Status *@
+        <div class="form-actions mt-4">
+            @if (!string.IsNullOrEmpty(SuccessMessage))
+            {
+                <div class="alert alert-success">@SuccessMessage</div>
+            }
+            @if (!string.IsNullOrEmpty(SaveError))
+            {
+                <div class="alert alert-danger">@SaveError</div>
+            }
+            <button type="button" class="btn btn-primary btn-lg" @onclick="SaveWorkHistory" disabled="@IsSaving">
+                @if (IsSaving)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                }
+                Save Work History
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid StudentId { get; set; }
+
+    private WorkHistoryFormDto FormData { get; set; } = new();
+    private FutureReady.Models.School.StudentWorkHistory? ExistingRecord { get; set; }
+    private string StudentName { get; set; } = "";
+    private bool IsLoading { get; set; } = true;
+    private bool IsSaving { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? SuccessMessage { get; set; }
+    private string? SaveError { get; set; }
+    private bool[] ExpandedSections { get; set; } = { true, true, true, true, true };
+
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadWorkHistory();
+    }
+
+    private async Task LoadWorkHistory()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            ExistingRecord = await WorkHistoryService.GetByStudentIdAsync(StudentId);
+
+            if (ExistingRecord?.Student != null)
+            {
+                StudentName = ExistingRecord.Student.FullName;
+            }
+
+            if (ExistingRecord != null)
+            {
+                // Deserialize JSON fields into DTOs
+                if (!string.IsNullOrEmpty(ExistingRecord.CurrentCourses))
+                {
+                    FormData.CurrentCourses = JsonSerializer.Deserialize<List<CourseDto>>(ExistingRecord.CurrentCourses, JsonOptions) ?? new();
+                }
+
+                if (!string.IsNullOrEmpty(ExistingRecord.VetQualifications))
+                {
+                    FormData.VetQualifications = JsonSerializer.Deserialize<List<QualificationDto>>(ExistingRecord.VetQualifications, JsonOptions) ?? new();
+                }
+
+                if (!string.IsNullOrEmpty(ExistingRecord.Certificates))
+                {
+                    FormData.Certificates = JsonSerializer.Deserialize<CertificatesDto>(ExistingRecord.Certificates, JsonOptions) ?? new();
+                }
+
+                if (!string.IsNullOrEmpty(ExistingRecord.PartTimeEmployment))
+                {
+                    FormData.PartTimeEmployment = JsonSerializer.Deserialize<List<EmploymentDto>>(ExistingRecord.PartTimeEmployment, JsonOptions) ?? new();
+                }
+
+                if (!string.IsNullOrEmpty(ExistingRecord.CommunityService))
+                {
+                    FormData.CommunityService = JsonSerializer.Deserialize<List<CommunityServiceDto>>(ExistingRecord.CommunityService, JsonOptions) ?? new();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = "Failed to load work history. Please try again.";
+            Console.WriteLine($"Error loading work history: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task SaveWorkHistory()
+    {
+        IsSaving = true;
+        SuccessMessage = null;
+        SaveError = null;
+
+        try
+        {
+            var record = ExistingRecord ?? new FutureReady.Models.School.StudentWorkHistory
+            {
+                StudentId = StudentId
+            };
+
+            // Serialize DTOs to JSON
+            record.CurrentCourses = JsonSerializer.Serialize(FormData.CurrentCourses, JsonOptions);
+            record.VetQualifications = JsonSerializer.Serialize(FormData.VetQualifications, JsonOptions);
+            record.Certificates = JsonSerializer.Serialize(FormData.Certificates, JsonOptions);
+            record.PartTimeEmployment = JsonSerializer.Serialize(FormData.PartTimeEmployment, JsonOptions);
+            record.CommunityService = JsonSerializer.Serialize(FormData.CommunityService, JsonOptions);
+
+            await WorkHistoryService.CreateOrUpdateAsync(record);
+            SuccessMessage = "Work history saved successfully.";
+        }
+        catch (Exception ex)
+        {
+            SaveError = "Failed to save work history. Please try again.";
+            Console.WriteLine($"Error saving work history: {ex.Message}");
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private void ToggleSection(int index)
+    {
+        ExpandedSections[index] = !ExpandedSections[index];
+    }
+
+    // Add/Remove methods for list sections
+    private void AddCourse() => FormData.CurrentCourses.Add(new CourseDto());
+    private void RemoveCourse(int index) => FormData.CurrentCourses.RemoveAt(index);
+
+    private void AddQualification() => FormData.VetQualifications.Add(new QualificationDto());
+    private void RemoveQualification(int index) => FormData.VetQualifications.RemoveAt(index);
+
+    private void AddEmployment() => FormData.PartTimeEmployment.Add(new EmploymentDto());
+    private void RemoveEmployment(int index) => FormData.PartTimeEmployment.RemoveAt(index);
+
+    private void AddCommunityService() => FormData.CommunityService.Add(new CommunityServiceDto());
+    private void RemoveCommunityService(int index) => FormData.CommunityService.RemoveAt(index);
+}
+
+<style>
+    .work-history-form {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .form-header h1 {
+        margin-bottom: 0.25rem;
+    }
+
+    .form-section-collapsible {
+        margin-bottom: 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .section-header:hover {
+        background-color: #e9ecef;
+    }
+
+    .section-header h2 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .section-toggle {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+
+    .section-content {
+        padding: 1rem;
+        background-color: #fff;
+    }
+
+    .list-item {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .list-item .form-control {
+        flex: 1;
+    }
+
+    .employment-item {
+        flex-wrap: wrap;
+    }
+
+    .employment-fields {
+        display: flex;
+        flex: 1;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .employment-fields .field-group {
+        flex: 1;
+        min-width: 150px;
+    }
+
+    .subsection-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #495057;
+    }
+
+    .certificate-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .certificate-item {
+        padding: 0.75rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        background-color: #fafafa;
+    }
+
+    .certificate-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .certificate-checkbox input[type="checkbox"] {
+        width: 1.25rem;
+        height: 1.25rem;
+        cursor: pointer;
+    }
+
+    .certificate-checkbox label {
+        font-weight: 500;
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .certificate-details {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #e0e0e0;
+    }
+
+    .form-actions {
+        text-align: center;
+    }
+
+    .loading-container {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @@keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    @@media (max-width: 576px) {
+        .employment-fields {
+            flex-direction: column;
+        }
+
+        .list-item {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .list-item button {
+            align-self: flex-end;
+        }
+    }
+</style>
