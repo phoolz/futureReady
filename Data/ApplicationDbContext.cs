@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using FutureReady.Models;
 using System;
 using System.Linq;
@@ -6,10 +8,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using FutureReady.Services;
 using FutureReady.Models.School;
-    
+
 namespace FutureReady.Data
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
     {
         private readonly IUserProvider? _userProvider;
         private readonly ITenantProvider? _tenantProvider;
@@ -21,7 +23,6 @@ namespace FutureReady.Data
         }
 
         public DbSet<School> Schools { get; set; } = null!;
-        public DbSet<User> Users { get; set; } = null!;
         public DbSet<Student> Students { get; set; } = null!;
         public DbSet<Teacher> Teachers { get; set; } = null!;
         public DbSet<EmergencyContact> EmergencyContacts { get; set; } = null!;
@@ -40,14 +41,11 @@ namespace FutureReady.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configure Users
-            modelBuilder.Entity<User>(entity =>
+            // Configure ApplicationUser (Identity user with custom properties)
+            modelBuilder.Entity<ApplicationUser>(entity =>
             {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.UserName).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
-                entity.HasIndex(e => e.UserName).IsUnique();
-                entity.HasIndex(e => e.Email).IsUnique();
+                entity.Property(e => e.DisplayName).HasMaxLength(200);
+                entity.HasQueryFilter(e => !e.IsDeleted);
             });
 
             // Apply configuration for BaseEntity-derived types
@@ -272,6 +270,26 @@ namespace FutureReady.Data
                         entity.DeletedAt = now;
                         entity.DeletedBy = user;
                         entry.State = EntityState.Modified;
+                        break;
+                }
+            }
+
+            // Handle ApplicationUser audit fields separately (not derived from BaseEntity)
+            foreach (var entry in ChangeTracker.Entries<ApplicationUser>())
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        entry.Entity.CreatedAt = DateTime.UtcNow;
+                        entry.Entity.CreatedBy = entry.Entity.CreatedBy ?? user;
+                        if (entry.Entity.TenantId == Guid.Empty && tenantId.HasValue)
+                        {
+                            entry.Entity.TenantId = tenantId.Value;
+                        }
+                        break;
+                    case EntityState.Modified:
+                        entry.Entity.UpdatedAt = DateTime.UtcNow;
+                        entry.Entity.UpdatedBy = user;
                         break;
                 }
             }

@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using FutureReady.Data;
+using FutureReady.Models;
 using FutureReady.Services;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,47 +11,40 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// Add authentication (cookie)
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/Authentication/Login";
-        options.LogoutPath = "/Authentication/Logout";
-        options.Cookie.Name = "FutureReadyAuth";
-        options.ExpireTimeSpan = TimeSpan.FromDays(7);
-        options.Events.OnValidatePrincipal = async context =>
-        {
-            var userIdClaim = context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-            {
-                context.RejectPrincipal();
-                await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-                return;
-            }
+// Add EF Core DbContext (SQL Server)
+builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            var dbContext = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
-            var userExists = await dbContext.Users.AnyAsync(u => u.Id == userId && !u.IsDeleted);
-            if (!userExists)
-            {
-                context.RejectPrincipal();
-                await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            }
-        };
-    });
+// Add ASP.NET Core Identity
+builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+    options.Password.RequiredLength = 8;
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireNonAlphanumeric = false;
+    options.User.RequireUniqueEmail = true;
+})
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
+
+// Configure application cookie
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Authentication/Login";
+    options.LogoutPath = "/Authentication/Logout";
+    options.Cookie.Name = "FutureReadyAuth";
+    options.ExpireTimeSpan = TimeSpan.FromDays(7);
+});
 
 // Register IHttpContextAccessor so UserProvider can read the current user
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserProvider, HttpContextUserProvider>();
 builder.Services.AddScoped<ITenantProvider, HttpContextTenantProvider>();
 
-// Add EF Core DbContext (SQL Server)
-builder.Services.AddDbContext<FutureReady.Data.ApplicationDbContext>((serviceProvider, options) =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
 // Register application services
-builder.Services.AddScoped<FutureReady.Services.Users.IUserService, FutureReady.Services.Users.UserService>();
 builder.Services.AddScoped<FutureReady.Services.Schools.ISchoolService, FutureReady.Services.Schools.SchoolService>();
-builder.Services.AddScoped<FutureReady.Services.Authentication.IAuthenticationService, FutureReady.Services.Authentication.AuthenticationService>();
 builder.Services.AddScoped<FutureReady.Services.Students.IStudentService, FutureReady.Services.Students.StudentService>();
 builder.Services.AddScoped<FutureReady.Services.EmergencyContacts.IEmergencyContactService, FutureReady.Services.EmergencyContacts.EmergencyContactService>();
 builder.Services.AddScoped<FutureReady.Services.StudentMedicalConditions.IStudentMedicalConditionService, FutureReady.Services.StudentMedicalConditions.StudentMedicalConditionService>();
@@ -74,7 +67,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    await FutureReady.Data.DatabaseSeeder.SeedAsync(services);
+    await DatabaseSeeder.SeedAsync(services);
 }
 
 // Configure the HTTP request pipeline.

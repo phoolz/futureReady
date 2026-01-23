@@ -1,4 +1,4 @@
-@model FutureReady.Models.User
+@model FutureReady.Models.ApplicationUser
 
 @{
     ViewData["Title"] = "Settings";
@@ -23,7 +23,6 @@
         <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
         <input type="hidden" asp-for="Id" />
-        <input type="hidden" asp-for="RowVersion" />
 
         <div class="mb-3">
             <label asp-for="UserName" class="form-label"></label>

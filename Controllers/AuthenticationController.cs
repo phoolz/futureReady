@@ -1,25 +1,21 @@
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using FutureReady.Data;
-using FutureReady.Services;
-// avoid ambiguous IAuthenticationService name (Microsoft.AspNetCore.Authentication.IAuthenticationService)
-// use fully-qualified name in the controller fields/ctor
-using FutureReady.Services.Authentication;
+using FutureReady.Models;
 
 namespace FutureReady.Controllers
 {
     public class AuthenticationController : Controller
     {
-        private readonly ApplicationDbContext _context; // keep for view needs if any
-        private readonly FutureReady.Services.Authentication.IAuthenticationService _authService;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public AuthenticationController(ApplicationDbContext context, FutureReady.Services.Authentication.IAuthenticationService authService)
+        public AuthenticationController(
+            SignInManager<ApplicationUser> signInManager,
+            UserManager<ApplicationUser> userManager)
         {
-            _context = context;
-            _authService = authService;
+            _signInManager = signInManager;
+            _userManager = userManager;
         }
 
         // GET: /Authentication/Login
@@ -37,11 +33,25 @@ namespace FutureReady.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
-            var (success, error) = await _authService.SignInAsync(model.Username ?? string.Empty, model.Password ?? string.Empty, model.RememberMe);
+            // Try to find user by username or email
+            var user = await _userManager.FindByNameAsync(model.Username ?? string.Empty)
+                       ?? await _userManager.FindByEmailAsync(model.Username ?? string.Empty);
 
-            if (!success)
+            if (user == null || !user.IsActive)
             {
-                ModelState.AddModelError(string.Empty, error ?? "Invalid username or password");
+                ModelState.AddModelError(string.Empty, "Invalid username or password");
+                return View(model);
+            }
+
+            var result = await _signInManager.PasswordSignInAsync(
+                user,
+                model.Password ?? string.Empty,
+                isPersistent: model.RememberMe,
+                lockoutOnFailure: false);
+
+            if (!result.Succeeded)
+            {
+                ModelState.AddModelError(string.Empty, "Invalid username or password");
                 return View(model);
             }
 
@@ -58,7 +68,7 @@ namespace FutureReady.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
-            await _authService.SignOutAsync();
+            await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
         }
     }

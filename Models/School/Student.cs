@@ -34,7 +34,7 @@ namespace FutureReady.Models.School
         public Guid? UserId { get; set; }
 
         [ForeignKey(nameof(UserId))]
-        public User? User { get; set; }
+        public ApplicationUser? User { get; set; }
 
         [MaxLength(20)]
         [Display(Name = "Student Type")]

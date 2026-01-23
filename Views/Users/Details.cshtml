@@ -1,0 +1,39 @@
+@model FutureReady.Models.ApplicationUser
+
+@{
+    ViewData["Title"] = "User Details";
+}
+
+<h1>User Details</h1>
+
+<div>
+    <h4>User</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">UserName</dt>
+        <dd class="col-sm-10">@Model.UserName</dd>
+
+        <dt class="col-sm-2">Display Name</dt>
+        <dd class="col-sm-10">@Model.DisplayName</dd>
+
+        <dt class="col-sm-2">Email</dt>
+        <dd class="col-sm-10">@Model.Email</dd>
+
+        <dt class="col-sm-2">Active</dt>
+        <dd class="col-sm-10">@Model.IsActive</dd>
+
+        <dt class="col-sm-2">Created</dt>
+        <dd class="col-sm-10">@Model.CreatedAt.ToString("g")</dd>
+
+        @if (Model.UpdatedAt.HasValue)
+        {
+            <dt class="col-sm-2">Updated</dt>
+            <dd class="col-sm-10">@Model.UpdatedAt.Value.ToString("g")</dd>
+        }
+    </dl>
+</div>
+
+<div class="mt-3">
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>

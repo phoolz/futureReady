@@ -1,30 +1,37 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FutureReady.Data;
 using FutureReady.Models;
 using FutureReady.Services;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using FutureReady.Services.Users;
 
 namespace FutureReady.Controllers
 {
+    [Authorize]
     public class UsersController : Controller
     {
-        private readonly ApplicationDbContext _context; // kept for view helpers like School select list
-        private readonly IUserService _userService;
+        private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUserProvider _userProvider;
 
-        public UsersController(ApplicationDbContext context, IUserService userService, IUserProvider userProvider)
+        public UsersController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager,
+            IUserProvider userProvider)
         {
             _context = context;
-            _userService = userService;
+            _userManager = userManager;
             _userProvider = userProvider;
         }
 
         // GET: Users
         public async Task<IActionResult> Index()
         {
-            var users = await _userService.GetAllAsync();
+            var users = await _userManager.Users
+                .Where(u => !u.IsDeleted)
+                .ToListAsync();
             return View(users);
         }
 
@@ -33,13 +40,13 @@ namespace FutureReady.Controllers
         {
             if (id == null) return NotFound();
 
-            var user = await _userService.GetByIdAsync(id.Value);
+            var user = await _userManager.FindByIdAsync(id.Value.ToString());
 
-            if (user == null) return NotFound();
+            if (user == null || user.IsDeleted) return NotFound();
 
             return View(user);
         }
-        
+
         // GET: Users/Create
         public IActionResult Create()
         {
@@ -50,15 +57,34 @@ namespace FutureReady.Controllers
         // POST: Users/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("UserName,DisplayName,Email,PasswordHash,IsActive,ExternalId,TenantId")] User user)
+        public async Task<IActionResult> Create(CreateUserViewModel model)
         {
             if (ModelState.IsValid)
             {
-                await _userService.CreateAsync(user);
-                return RedirectToAction(nameof(Index));
+                var user = new ApplicationUser
+                {
+                    UserName = model.UserName,
+                    Email = model.Email,
+                    DisplayName = model.DisplayName,
+                    IsActive = model.IsActive,
+                    TenantId = model.TenantId
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Password ?? string.Empty);
+
+                if (result.Succeeded)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
             }
-            ViewData["SchoolId"] = new SelectList(_context.Schools.AsNoTracking(), "Id", "Name", user.TenantId);
-            return View(user);
+
+            ViewData["SchoolId"] = new SelectList(_context.Schools.AsNoTracking(), "Id", "Name", model.TenantId);
+            return View(model);
         }
 
         // GET: Users/Edit/5
@@ -66,32 +92,67 @@ namespace FutureReady.Controllers
         {
             if (id == null) return NotFound();
 
-            var user = await _userService.GetByIdAsync(id.Value);
-            if (user == null) return NotFound();
-            return View(user);
+            var user = await _userManager.FindByIdAsync(id.Value.ToString());
+            if (user == null || user.IsDeleted) return NotFound();
+
+            var model = new EditUserViewModel
+            {
+                Id = user.Id,
+                UserName = user.UserName ?? string.Empty,
+                Email = user.Email ?? string.Empty,
+                DisplayName = user.DisplayName,
+                IsActive = user.IsActive
+            };
+
+            return View(model);
         }
 
         // POST: Users/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,UserName,DisplayName,Email,PasswordHash,IsActive,ExternalId,RowVersion")] User user)
-        { 
-            if (id != user.Id) return NotFound();
+        public async Task<IActionResult> Edit(Guid id, EditUserViewModel model)
+        {
+            if (id != model.Id) return NotFound();
 
-            if (!ModelState.IsValid) return View(user);
+            if (!ModelState.IsValid) return View(model);
 
-            try
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null || user.IsDeleted) return NotFound();
+
+            user.UserName = model.UserName;
+            user.Email = model.Email;
+            user.DisplayName = model.DisplayName;
+            user.IsActive = model.IsActive;
+
+            var result = await _userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
             {
-                await _userService.UpdateAsync(user, user.RowVersion);
+                // Update password if provided
+                if (!string.IsNullOrWhiteSpace(model.NewPassword))
+                {
+                    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    var passwordResult = await _userManager.ResetPasswordAsync(user, token, model.NewPassword);
+
+                    if (!passwordResult.Succeeded)
+                    {
+                        foreach (var error in passwordResult.Errors)
+                        {
+                            ModelState.AddModelError(string.Empty, error.Description);
+                        }
+                        return View(model);
+                    }
+                }
+
                 return RedirectToAction(nameof(Index));
             }
-            catch (DbUpdateConcurrencyException)
+
+            foreach (var error in result.Errors)
             {
-                if (!await _context.Users.AnyAsync(e => e.Id == id))
-                    return NotFound();
-                else
-                    throw;
+                ModelState.AddModelError(string.Empty, error.Description);
             }
+
+            return View(model);
         }
 
         // GET: Users/Delete/5
@@ -99,8 +160,8 @@ namespace FutureReady.Controllers
         {
             if (id == null) return NotFound();
 
-            var user = await _userService.GetByIdAsync(id.Value);
-            if (user == null) return NotFound();
+            var user = await _userManager.FindByIdAsync(id.Value.ToString());
+            if (user == null || user.IsDeleted) return NotFound();
 
             return View(user);
         }
@@ -110,7 +171,13 @@ namespace FutureReady.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            await _userService.DeleteAsync(id);
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user != null)
+            {
+                // Soft delete
+                user.IsDeleted = true;
+                await _userManager.UpdateAsync(user);
+            }
             return RedirectToAction(nameof(Index));
         }
 
@@ -123,11 +190,10 @@ namespace FutureReady.Controllers
                 return RedirectToAction("Login", "Authentication");
             }
 
-            var user = await _context.Users
-                .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.UserName == username || u.Email == username);
+            var user = await _userManager.FindByNameAsync(username)
+                       ?? await _userManager.FindByEmailAsync(username);
 
-            if (user == null)
+            if (user == null || user.IsDeleted)
             {
                 return NotFound();
             }
@@ -138,7 +204,7 @@ namespace FutureReady.Controllers
         // POST: Users/Profile
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Profile([Bind("Id,UserName,DisplayName,Email,RowVersion")] User user)
+        public async Task<IActionResult> Profile(ProfileViewModel model)
         {
             var username = _userProvider.GetCurrentUsername();
             if (string.IsNullOrEmpty(username))
@@ -146,10 +212,10 @@ namespace FutureReady.Controllers
                 return RedirectToAction("Login", "Authentication");
             }
 
-            var existingUser = await _context.Users
-                .FirstOrDefaultAsync(u => u.UserName == username || u.Email == username);
+            var user = await _userManager.FindByNameAsync(username)
+                       ?? await _userManager.FindByEmailAsync(username);
 
-            if (existingUser == null || existingUser.Id != user.Id)
+            if (user == null || user.IsDeleted || user.Id != model.Id)
             {
                 return NotFound();
             }
@@ -159,21 +225,50 @@ namespace FutureReady.Controllers
                 return View(user);
             }
 
-            try
+            user.DisplayName = model.DisplayName;
+            user.Email = model.Email;
+
+            var result = await _userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
             {
-                existingUser.DisplayName = user.DisplayName;
-                existingUser.Email = user.Email;
-                await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Profile updated successfully.";
                 return RedirectToAction(nameof(Profile));
             }
-            catch (DbUpdateConcurrencyException)
+
+            foreach (var error in result.Errors)
             {
-                if (!await _context.Users.AnyAsync(e => e.Id == user.Id))
-                    return NotFound();
-                else
-                    throw;
+                ModelState.AddModelError(string.Empty, error.Description);
             }
+
+            return View(user);
         }
+    }
+
+    public class CreateUserViewModel
+    {
+        public string UserName { get; set; } = null!;
+        public string Email { get; set; } = null!;
+        public string? DisplayName { get; set; }
+        public string? Password { get; set; }
+        public bool IsActive { get; set; } = true;
+        public Guid TenantId { get; set; }
+    }
+
+    public class EditUserViewModel
+    {
+        public Guid Id { get; set; }
+        public string UserName { get; set; } = null!;
+        public string Email { get; set; } = null!;
+        public string? DisplayName { get; set; }
+        public string? NewPassword { get; set; }
+        public bool IsActive { get; set; }
+    }
+
+    public class ProfileViewModel
+    {
+        public Guid Id { get; set; }
+        public string? DisplayName { get; set; }
+        public string? Email { get; set; }
     }
 }

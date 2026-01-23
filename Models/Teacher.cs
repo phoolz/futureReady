@@ -37,7 +37,7 @@ namespace FutureReady.Models
         public string? ExternalId { get; set; }
 
         [ForeignKey(nameof(UserId))]
-        public User? User { get; set; }
+        public ApplicationUser? User { get; set; }
 
         [ForeignKey(nameof(SchoolId))]
         // Fully-qualify the School type to avoid ambiguity with the nested namespace "School" under FutureReady.Models

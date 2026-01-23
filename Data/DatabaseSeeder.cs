@@ -1,11 +1,11 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using FutureReady.Models;
 using FutureReady.Models.School;
-using FutureReady.Services;
 
 namespace FutureReady.Data
 {
@@ -20,6 +20,7 @@ namespace FutureReady.Data
             try
             {
                 var db = provider.GetRequiredService<ApplicationDbContext>();
+                var userManager = provider.GetRequiredService<UserManager<ApplicationUser>>();
 
                 // Apply pending migrations (safe in development; remove if you don't want automatic migrations)
                 await db.Database.MigrateAsync();
@@ -40,21 +41,31 @@ namespace FutureReady.Data
                 }
 
                 // Create admin user if no users exist
-                var hasUsers = await db.Users.AnyAsync();
+                var hasUsers = await userManager.Users.AnyAsync();
                 if (!hasUsers)
                 {
-                    var adminUser = new User
+                    var adminUser = new ApplicationUser
                     {
                         UserName = "adminsean",
                         DisplayName = "Admin",
                         Email = "admin@futureready.local",
-                        PasswordHash = PasswordHasher.HashPassword("Undivided-Reputable-Bartender8"),
                         IsActive = true,
                         TenantId = adminSchool.Id
                     };
-                    db.Users.Add(adminUser);
-                    await db.SaveChangesAsync();
-                    logger.LogInformation("Seeded admin user 'adminsean'");
+
+                    var result = await userManager.CreateAsync(adminUser, "Undivided-Reputable-Bartender8");
+
+                    if (result.Succeeded)
+                    {
+                        logger.LogInformation("Seeded admin user 'adminsean'");
+                    }
+                    else
+                    {
+                        foreach (var error in result.Errors)
+                        {
+                            logger.LogError("Error creating admin user: {Error}", error.Description);
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -65,4 +76,3 @@ namespace FutureReady.Data
         }
     }
 }
-
