@@ -9,7 +9,7 @@ using FutureReady.Services;
 
 namespace FutureReady.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = Roles.SiteAdmin)]
     public class UsersController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -32,7 +32,19 @@ namespace FutureReady.Controllers
             var users = await _userManager.Users
                 .Where(u => !u.IsDeleted)
                 .ToListAsync();
-            return View(users);
+
+            var userViewModels = new List<UserIndexViewModel>();
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                userViewModels.Add(new UserIndexViewModel
+                {
+                    User = user,
+                    RoleName = string.Join(", ", roles)
+                });
+            }
+
+            return View(userViewModels);
         }
 
         // GET: Users/Details/5
@@ -51,6 +63,7 @@ namespace FutureReady.Controllers
         public IActionResult Create()
         {
             ViewData["SchoolId"] = new SelectList(_context.Schools.AsNoTracking(), "Id", "Name");
+            ViewData["Roles"] = new SelectList(Roles.AllRoles);
             return View();
         }
 
@@ -74,6 +87,8 @@ namespace FutureReady.Controllers
 
                 if (result.Succeeded)
                 {
+                    // Assign role to the user
+                    await _userManager.AddToRoleAsync(user, model.RoleName);
                     return RedirectToAction(nameof(Index));
                 }
 
@@ -84,6 +99,7 @@ namespace FutureReady.Controllers
             }
 
             ViewData["SchoolId"] = new SelectList(_context.Schools.AsNoTracking(), "Id", "Name", model.TenantId);
+            ViewData["Roles"] = new SelectList(Roles.AllRoles);
             return View(model);
         }
 
@@ -95,15 +111,20 @@ namespace FutureReady.Controllers
             var user = await _userManager.FindByIdAsync(id.Value.ToString());
             if (user == null || user.IsDeleted) return NotFound();
 
+            var roles = await _userManager.GetRolesAsync(user);
+            var currentRole = roles.FirstOrDefault() ?? Roles.Teacher;
+
             var model = new EditUserViewModel
             {
                 Id = user.Id,
                 UserName = user.UserName ?? string.Empty,
                 Email = user.Email ?? string.Empty,
                 DisplayName = user.DisplayName,
-                IsActive = user.IsActive
+                IsActive = user.IsActive,
+                RoleName = currentRole
             };
 
+            ViewData["Roles"] = new SelectList(Roles.AllRoles);
             return View(model);
         }
 
@@ -114,7 +135,11 @@ namespace FutureReady.Controllers
         {
             if (id != model.Id) return NotFound();
 
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+            {
+                ViewData["Roles"] = new SelectList(Roles.AllRoles);
+                return View(model);
+            }
 
             var user = await _userManager.FindByIdAsync(id.ToString());
             if (user == null || user.IsDeleted) return NotFound();
@@ -128,6 +153,16 @@ namespace FutureReady.Controllers
 
             if (result.Succeeded)
             {
+                // Update role if changed
+                var currentRoles = await _userManager.GetRolesAsync(user);
+                if (!currentRoles.Contains(model.RoleName))
+                {
+                    // Remove all existing roles
+                    await _userManager.RemoveFromRolesAsync(user, currentRoles);
+                    // Add new role
+                    await _userManager.AddToRoleAsync(user, model.RoleName);
+                }
+
                 // Update password if provided
                 if (!string.IsNullOrWhiteSpace(model.NewPassword))
                 {
@@ -140,6 +175,7 @@ namespace FutureReady.Controllers
                         {
                             ModelState.AddModelError(string.Empty, error.Description);
                         }
+                        ViewData["Roles"] = new SelectList(Roles.AllRoles);
                         return View(model);
                     }
                 }
@@ -152,6 +188,7 @@ namespace FutureReady.Controllers
                 ModelState.AddModelError(string.Empty, error.Description);
             }
 
+            ViewData["Roles"] = new SelectList(Roles.AllRoles);
             return View(model);
         }
 
@@ -182,6 +219,7 @@ namespace FutureReady.Controllers
         }
 
         // GET: Users/Profile
+        [Authorize] // Override class-level authorization - allow all authenticated users
         public async Task<IActionResult> Profile()
         {
             var username = _userProvider.GetCurrentUsername();
@@ -202,6 +240,7 @@ namespace FutureReady.Controllers
         }
 
         // POST: Users/Profile
+        [Authorize] // Override class-level authorization - allow all authenticated users
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Profile(ProfileViewModel model)
@@ -253,6 +292,7 @@ namespace FutureReady.Controllers
         public string? Password { get; set; }
         public bool IsActive { get; set; } = true;
         public Guid TenantId { get; set; }
+        public string RoleName { get; set; } = Roles.Teacher;
     }
 
     public class EditUserViewModel
@@ -263,6 +303,13 @@ namespace FutureReady.Controllers
         public string? DisplayName { get; set; }
         public string? NewPassword { get; set; }
         public bool IsActive { get; set; }
+        public string RoleName { get; set; } = Roles.Teacher;
+    }
+
+    public class UserIndexViewModel
+    {
+        public ApplicationUser User { get; set; } = null!;
+        public string RoleName { get; set; } = string.Empty;
     }
 
     public class ProfileViewModel

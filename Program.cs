@@ -34,6 +34,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Authentication/Login";
     options.LogoutPath = "/Authentication/Logout";
+    options.AccessDeniedPath = "/Error/AccessDenied";
     options.Cookie.Name = "FutureReadyAuth";
     options.ExpireTimeSpan = TimeSpan.FromDays(7);
 });
@@ -46,6 +47,7 @@ builder.Services.AddScoped<ITenantProvider, HttpContextTenantProvider>();
 // Register application services
 builder.Services.AddScoped<FutureReady.Services.Schools.ISchoolService, FutureReady.Services.Schools.SchoolService>();
 builder.Services.AddScoped<FutureReady.Services.Students.IStudentService, FutureReady.Services.Students.StudentService>();
+builder.Services.AddScoped<FutureReady.Services.Students.IStudentAuthorizationService, FutureReady.Services.Students.StudentAuthorizationService>();
 builder.Services.AddScoped<FutureReady.Services.EmergencyContacts.IEmergencyContactService, FutureReady.Services.EmergencyContacts.EmergencyContactService>();
 builder.Services.AddScoped<FutureReady.Services.StudentMedicalConditions.IStudentMedicalConditionService, FutureReady.Services.StudentMedicalConditions.StudentMedicalConditionService>();
 builder.Services.AddScoped<FutureReady.Services.Companies.ICompanyService, FutureReady.Services.Companies.CompanyService>();

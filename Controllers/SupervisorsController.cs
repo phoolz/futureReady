@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using FutureReady.Models;
 using FutureReady.Models.School;
 using FutureReady.Services;
 using FutureReady.Services.Supervisors;
@@ -11,7 +12,7 @@ using FutureReady.Services.Companies;
 
 namespace FutureReady.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = Roles.Teacher)]
     public class SupervisorsController : Controller
     {
         private readonly ISupervisorService _supervisorService;

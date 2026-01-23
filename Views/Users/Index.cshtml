@@ -1,4 +1,4 @@
-@model IEnumerable<FutureReady.Models.ApplicationUser>
+@model IEnumerable<FutureReady.Controllers.UserIndexViewModel>
 
 @{
     ViewData["Title"] = "Users";
@@ -16,22 +16,24 @@
             <th>UserName</th>
             <th>DisplayName</th>
             <th>Email</th>
+            <th>Role</th>
             <th>IsActive</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-    @foreach (var user in Model)
+    @foreach (var item in Model)
     {
         <tr>
-            <td>@user.UserName</td>
-            <td>@user.DisplayName</td>
-            <td>@user.Email</td>
-            <td>@user.IsActive</td>
+            <td>@item.User.UserName</td>
+            <td>@item.User.DisplayName</td>
+            <td>@item.User.Email</td>
+            <td>@item.RoleName</td>
+            <td>@item.User.IsActive</td>
             <td>
-                <a class="btn btn-sm btn-secondary" asp-action="Edit" asp-route-id="@user.Id">Edit</a>
-                <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@user.Id">Details</a>
-                <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@user.Id">Delete</a>
+                <a class="btn btn-sm btn-secondary" asp-action="Edit" asp-route-id="@item.User.Id">Edit</a>
+                <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@item.User.Id">Details</a>
+                <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@item.User.Id">Delete</a>
             </td>
         </tr>
     }

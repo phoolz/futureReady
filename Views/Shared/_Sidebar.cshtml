@@ -1,6 +1,9 @@
+@using FutureReady.Models
 @{
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var isSiteAdmin = User.IsInRole(Roles.SiteAdmin);
+    var isTeacher = User.IsInRole(Roles.Teacher);
 }
 
 <nav id="sidebar" class="sidebar">
@@ -22,27 +25,57 @@
                 <span class="nav-text">Dashboard</span>
             </a>
         </li>
-        <li class="nav-item">
-            <a class="nav-link @(currentController == "Students" ? "active" : "")"
-               asp-controller="Students" asp-action="Index">
-                <span class="nav-icon">👥</span>
-                <span class="nav-text">Students</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link @(currentController == "Companies" ? "active" : "")"
-               asp-controller="Companies" asp-action="Index">
-                <span class="nav-icon">🏢</span>
-                <span class="nav-text">Companies</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link @(currentController == "Placements" ? "active" : "")"
-               asp-controller="Placements" asp-action="Index">
-                <span class="nav-icon">📋</span>
-                <span class="nav-text">Placements</span>
-            </a>
-        </li>
+
+        @if (isSiteAdmin)
+        {
+            @* Site Admin Menu Items *@
+            <li class="nav-item">
+                <a class="nav-link @(currentController == "Schools" ? "active" : "")"
+                   asp-controller="Schools" asp-action="Index">
+                    <span class="nav-icon">🏫</span>
+                    <span class="nav-text">Schools</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(currentController == "Users" && currentAction != "Profile" ? "active" : "")"
+                   asp-controller="Users" asp-action="Index">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-text">Users</span>
+                </a>
+            </li>
+        }
+        else if (isTeacher)
+        {
+            @* Teacher Menu Items *@
+            <li class="nav-item">
+                <a class="nav-link @(currentController == "Students" ? "active" : "")"
+                   asp-controller="Students" asp-action="Index">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-text">Students</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(currentController == "Companies" ? "active" : "")"
+                   asp-controller="Companies" asp-action="Index">
+                    <span class="nav-icon">🏢</span>
+                    <span class="nav-text">Companies</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(currentController == "Placements" ? "active" : "")"
+                   asp-controller="Placements" asp-action="Index">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-text">Placements</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(currentController == "Supervisors" ? "active" : "")"
+                   asp-controller="Supervisors" asp-action="Index">
+                    <span class="nav-icon">👔</span>
+                    <span class="nav-text">Supervisors</span>
+                </a>
+            </li>
+        }
     </ul>
 
     <div class="sidebar-footer">

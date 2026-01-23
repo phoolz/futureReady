@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using FutureReady.Models;
 using FutureReady.Models.School;
 using FutureReady.Services;
 using FutureReady.Services.EmergencyContacts;
@@ -10,7 +11,7 @@ using FutureReady.Services.Students;
 
 namespace FutureReady.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = Roles.Teacher)]
     public class EmergencyContactsController : Controller
     {
         private readonly IEmergencyContactService _emergencyContactService;

@@ -21,9 +21,13 @@ namespace FutureReady.Data
             {
                 var db = provider.GetRequiredService<ApplicationDbContext>();
                 var userManager = provider.GetRequiredService<UserManager<ApplicationUser>>();
+                var roleManager = provider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
 
                 // Apply pending migrations (safe in development; remove if you don't want automatic migrations)
                 await db.Database.MigrateAsync();
+
+                // Seed roles BEFORE creating users
+                await SeedRolesAsync(roleManager, logger);
 
                 // Insert a School named "Admin" if it doesn't exist
                 School? adminSchool = await db.Schools.FirstOrDefaultAsync(s => s.Name == "Admin");
@@ -57,7 +61,9 @@ namespace FutureReady.Data
 
                     if (result.Succeeded)
                     {
-                        logger.LogInformation("Seeded admin user 'adminsean'");
+                        // Assign Site Admin role to the default admin user
+                        await userManager.AddToRoleAsync(adminUser, Roles.SiteAdmin);
+                        logger.LogInformation("Seeded admin user 'adminsean' with Site Admin role");
                     }
                     else
                     {
@@ -72,6 +78,30 @@ namespace FutureReady.Data
             {
                 logger.LogError(ex, "An error occurred while seeding the database.");
                 throw;
+            }
+        }
+
+        private static async Task SeedRolesAsync(RoleManager<IdentityRole<Guid>> roleManager, ILogger logger)
+        {
+            foreach (var roleName in Roles.AllRoles)
+            {
+                if (!await roleManager.RoleExistsAsync(roleName))
+                {
+                    var role = new IdentityRole<Guid>(roleName);
+                    var result = await roleManager.CreateAsync(role);
+
+                    if (result.Succeeded)
+                    {
+                        logger.LogInformation("Created role: {RoleName}", roleName);
+                    }
+                    else
+                    {
+                        foreach (var error in result.Errors)
+                        {
+                            logger.LogError("Error creating role {RoleName}: {Error}", roleName, error.Description);
+                        }
+                    }
+                }
             }
         }
     }

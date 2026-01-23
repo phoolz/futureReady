@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using FutureReady.Models;
 using FutureReady.Models.School;
 using FutureReady.Services;
 using FutureReady.Services.Companies;
@@ -11,7 +12,7 @@ using FutureReady.Services.Placements;
 
 namespace FutureReady.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = Roles.Teacher)]
     public class CompaniesController : Controller
     {
         private readonly ICompanyService _companyService;

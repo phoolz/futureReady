@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FutureReady.Data;
+using FutureReady.Models;
 using FutureReady.Models.School;
 using FutureReady.Services;
 using FutureReady.Services.Schools;
@@ -10,7 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace FutureReady.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = Roles.SiteAdmin)]
     public class SchoolsController : Controller
     {
         private readonly ApplicationDbContext _context; // kept for now if other controllers/views depend on it

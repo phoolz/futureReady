@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using FutureReady.Models;
 using FutureReady.Models.School;
 using FutureReady.Services;
 using FutureReady.Services.Placements;
@@ -14,7 +15,7 @@ using FutureReady.Services.FormTokens;
 
 namespace FutureReady.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = Roles.Teacher)]
     public class PlacementsController : Controller
     {
         private readonly IPlacementService _placementService;

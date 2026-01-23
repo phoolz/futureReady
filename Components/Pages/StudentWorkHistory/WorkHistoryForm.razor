@@ -1,8 +1,12 @@
 @page "/student/work-history/{StudentId:guid}"
 @rendermode InteractiveServer
+@attribute [Authorize(Roles = "Teacher,Student")]
 @inject IStudentWorkHistoryService WorkHistoryService
+@inject IStudentAuthorizationService AuthorizationService
 @inject NavigationManager Navigation
 @using System.Text.Json
+@using Microsoft.AspNetCore.Authorization
+@using FutureReady.Models
 @using FutureReady.Models.School
 
 <PageTitle>Work History</PageTitle>
@@ -239,6 +243,15 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Check authorization before loading data
+        var canAccess = await AuthorizationService.CanAccessStudentDataAsync(StudentId);
+        if (!canAccess)
+        {
+            ErrorMessage = "You are not authorized to access this student's work history.";
+            IsLoading = false;
+            return;
+        }
+
         await LoadWorkHistory();
     }
 
@@ -304,6 +317,14 @@
 
         try
         {
+            // Re-check authorization before saving
+            var canAccess = await AuthorizationService.CanAccessStudentDataAsync(StudentId);
+            if (!canAccess)
+            {
+                SaveError = "You are not authorized to save this student's work history.";
+                return;
+            }
+
             var record = ExistingRecord ?? new FutureReady.Models.School.StudentWorkHistory
             {
                 StudentId = StudentId
