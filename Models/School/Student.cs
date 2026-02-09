@@ -31,6 +31,11 @@ namespace FutureReady.Models.School
         [MaxLength(20)]
         public string? Phone { get; set; }
 
+        [MaxLength(200)]
+        [EmailAddress]
+        [Display(Name = "Email")]
+        public string? Email { get; set; }
+
         public Guid? UserId { get; set; }
 
         [ForeignKey(nameof(UserId))]

@@ -36,6 +36,7 @@ namespace FutureReady.Data
         public DbSet<LogbookTask> LogbookTasks { get; set; } = null!;
         public DbSet<LogbookEvaluation> LogbookEvaluations { get; set; } = null!;
         public DbSet<StudentWorkHistory> StudentWorkHistories { get; set; } = null!;
+        public DbSet<StudentAccountToken> StudentAccountTokens { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -93,6 +94,7 @@ namespace FutureReady.Data
                 entity.Property(e => e.PreferredName).HasMaxLength(100);
                 entity.Property(e => e.StudentNumber).HasMaxLength(50);
                 entity.Property(e => e.Phone).HasMaxLength(20);
+                entity.Property(e => e.Email).HasMaxLength(200);
                 entity.Property(e => e.StudentType).HasMaxLength(20);
                 entity.Property(e => e.YearLevel).HasMaxLength(20);
                 entity.Property(e => e.MedicareNumber).HasMaxLength(100);
@@ -218,6 +220,14 @@ namespace FutureReady.Data
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.Student).WithMany().HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Cascade);
                 entity.HasIndex(e => e.StudentId).IsUnique();
+            });
+
+            modelBuilder.Entity<StudentAccountToken>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Token).IsRequired().HasMaxLength(100);
+                entity.HasIndex(e => e.Token).IsUnique();
+                entity.HasOne(e => e.Student).WithMany().HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Cascade);
             });
         }
 

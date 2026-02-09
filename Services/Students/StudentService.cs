@@ -58,10 +58,12 @@ namespace FutureReady.Services.Students
             existing.DateOfBirth = student.DateOfBirth;
             existing.StudentNumber = student.StudentNumber;
             existing.Phone = student.Phone;
+            existing.Email = student.Email;
             existing.StudentType = student.StudentType;
             existing.YearLevel = student.YearLevel;
             existing.GraduationYear = student.GraduationYear;
             existing.MedicareNumber = student.MedicareNumber;
+            existing.UserId = student.UserId;
 
             if (rowVersion != null)
                 _context.Entry(existing).Property("RowVersion").OriginalValue = rowVersion;

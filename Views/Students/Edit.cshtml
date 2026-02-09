@@ -53,6 +53,15 @@
             </div>
         </div>
 
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" type="email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+                <small class="form-text text-muted">Required for student account creation.</small>
+            </div>
+        </div>
+
         <hr class="my-4" />
 
         <h5 class="mb-3">Academic Information</h5>

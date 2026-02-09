@@ -1,0 +1,221 @@
+@page "/student/activate/{Token}"
+@layout StudentActivationLayout
+@rendermode InteractiveServer
+@inject IStudentActivationService ActivationService
+@inject NavigationManager Navigation
+
+<PageTitle>Activate Your Account</PageTitle>
+
+@if (IsLoading)
+{
+    <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>Loading...</p>
+    </div>
+}
+else if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <FormSection Title="Unable to Activate Account">
+        <div class="text-center py-4">
+            <div class="text-danger mb-3" style="font-size: 4rem;">&#10007;</div>
+            <h4>@ErrorMessage</h4>
+            <p class="text-muted">
+                Please contact your school if you believe this is an error.
+            </p>
+        </div>
+    </FormSection>
+}
+else if (IsSuccess)
+{
+    <FormSection Title="Account Created Successfully">
+        <div class="text-center py-4">
+            <div class="text-success mb-3" style="font-size: 4rem;">&#10003;</div>
+            <h4>Welcome, @FormData?.FirstName!</h4>
+            <p class="text-muted">
+                Your account has been created successfully. You can now log in with your email and password.
+            </p>
+            <a href="/Authentication/Login" class="btn btn-primary mt-3">
+                Go to Login
+            </a>
+        </div>
+    </FormSection>
+}
+else if (FormData != null)
+{
+    <EditForm Model="FormData" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+
+        <FormSection Title="Account Details">
+            <p class="text-muted mb-3">Please confirm your details below.</p>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">First Name</label>
+                    <input type="text" class="form-control" value="@FormData.FirstName" readonly />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" class="form-control" value="@FormData.LastName" readonly />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" value="@FormData.Email" readonly />
+                </div>
+            </div>
+        </FormSection>
+
+        <FormSection Title="Set Your Password">
+            <p class="text-muted mb-3">Create a secure password for your account.</p>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Password <span class="text-danger">*</span></label>
+                    <InputText type="password" class="form-control" @bind-Value="FormData.Password" />
+                    <ValidationMessage For="@(() => FormData.Password)" class="text-danger" />
+                    <small class="form-text text-muted">
+                        Must be at least 8 characters with uppercase, lowercase, and a number.
+                    </small>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                    <InputText type="password" class="form-control" @bind-Value="FormData.ConfirmPassword" />
+                    <ValidationMessage For="@(() => FormData.ConfirmPassword)" class="text-danger" />
+                </div>
+            </div>
+        </FormSection>
+
+        <FormSection Title="Personal Information">
+            <p class="text-muted mb-3">Update your personal information (optional).</p>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Preferred Name</label>
+                    <InputText class="form-control" @bind-Value="FormData.PreferredName" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Date of Birth</label>
+                    <InputDate class="form-control" @bind-Value="FormData.DateOfBirth" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Phone</label>
+                    <InputText class="form-control" @bind-Value="FormData.Phone" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Medicare Number</label>
+                    <InputText class="form-control" @bind-Value="FormData.MedicareNumber" />
+                </div>
+            </div>
+        </FormSection>
+
+        <FormSection Title="Academic Information">
+            <p class="text-muted mb-3">Update your academic information (optional).</p>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Student Number</label>
+                    <InputText class="form-control" @bind-Value="FormData.StudentNumber" />
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Student Type</label>
+                    <InputSelect class="form-select" @bind-Value="FormData.StudentType">
+                        <option value="">Select Type</option>
+                        <option value="day">Day</option>
+                        <option value="boarding">Boarding</option>
+                    </InputSelect>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Year Level</label>
+                    <InputText class="form-control" @bind-Value="FormData.YearLevel" />
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Graduation Year</label>
+                    <InputNumber class="form-control" @bind-Value="FormData.GraduationYear" />
+                </div>
+            </div>
+        </FormSection>
+
+        @if (!string.IsNullOrEmpty(SubmitError))
+        {
+            <div class="alert alert-danger mt-3">
+                @SubmitError
+            </div>
+        }
+
+        <div class="d-flex justify-content-end mt-4">
+            <button type="submit" class="btn btn-primary btn-lg" disabled="@IsSubmitting">
+                @if (IsSubmitting)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>Creating Account...</span>
+                }
+                else
+                {
+                    <span>Create Account</span>
+                }
+            </button>
+        </div>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public string Token { get; set; } = string.Empty;
+
+    private StudentActivationDto? FormData { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private bool IsSubmitting { get; set; }
+    private bool IsSuccess { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? SubmitError { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            FormData = await ActivationService.InitializeFormAsync(Token);
+
+            if (FormData == null)
+            {
+                ErrorMessage = "This activation link is invalid, has expired, or has already been used.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = "An error occurred while loading the form. Please try again later.";
+            Console.WriteLine($"Initialization error: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (FormData == null) return;
+
+        SubmitError = null;
+        IsSubmitting = true;
+        StateHasChanged();
+
+        try
+        {
+            var (success, errorMessage) = await ActivationService.ActivateAccountAsync(Token, FormData);
+
+            if (success)
+            {
+                IsSuccess = true;
+            }
+            else
+            {
+                SubmitError = errorMessage ?? "Failed to create account. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            SubmitError = "An error occurred while creating your account. Please try again.";
+            Console.WriteLine($"Submit error: {ex.Message}");
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+}

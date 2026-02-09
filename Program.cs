@@ -66,6 +66,8 @@ builder.Services.AddScoped<FutureReady.Services.LogbookEvaluations.ILogbookEvalu
 builder.Services.AddScoped<FutureReady.Services.StudentWorkHistories.IStudentWorkHistoryService, FutureReady.Services.StudentWorkHistories.StudentWorkHistoryService>();
 builder.Services.AddScoped<FutureReady.Services.LogbookEntries.ILogbookEntryService, FutureReady.Services.LogbookEntries.LogbookEntryService>();
 builder.Services.AddScoped<FutureReady.Services.LogbookTasks.ILogbookTaskService, FutureReady.Services.LogbookTasks.LogbookTaskService>();
+builder.Services.AddScoped<FutureReady.Services.StudentAccountTokens.IStudentAccountTokenService, FutureReady.Services.StudentAccountTokens.StudentAccountTokenService>();
+builder.Services.AddScoped<FutureReady.Services.StudentActivation.IStudentActivationService, FutureReady.Services.StudentActivation.StudentActivationService>();
 
 var app = builder.Build();
 

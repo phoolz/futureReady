@@ -10,6 +10,7 @@ using FutureReady.Models.School;
 using FutureReady.Services;
 using FutureReady.Services.Students;
 using FutureReady.Services.Placements;
+using FutureReady.Services.StudentAccountTokens;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 
@@ -22,13 +23,15 @@ namespace FutureReady.Controllers
         private readonly ITenantProvider? _tenantProvider;
         private readonly IStudentService _studentService;
         private readonly IPlacementService _placementService;
+        private readonly IStudentAccountTokenService _accountTokenService;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public StudentsController(ApplicationDbContext context, IStudentService studentService, IPlacementService placementService, UserManager<ApplicationUser> userManager, ITenantProvider? tenantProvider = null)
+        public StudentsController(ApplicationDbContext context, IStudentService studentService, IPlacementService placementService, IStudentAccountTokenService accountTokenService, UserManager<ApplicationUser> userManager, ITenantProvider? tenantProvider = null)
         {
             _context = context;
             _studentService = studentService;
             _placementService = placementService;
+            _accountTokenService = accountTokenService;
             _userManager = userManager;
             _tenantProvider = tenantProvider;
         }
@@ -54,6 +57,10 @@ namespace FutureReady.Controllers
             var placements = await _placementService.GetByStudentIdAsync(id.Value, tenantId);
             ViewData["Placements"] = placements;
 
+            // Get account tokens for this student
+            var accountTokens = await _accountTokenService.GetByStudentIdAsync(id.Value, tenantId);
+            ViewData["AccountTokens"] = accountTokens;
+
             return View(student);
         }
 
@@ -66,7 +73,7 @@ namespace FutureReady.Controllers
         // POST: Students/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("FirstName,LastName,PreferredName,DateOfBirth,StudentNumber,Phone,StudentType,YearLevel,GraduationYear,MedicareNumber")] Student student)
+        public async Task<IActionResult> Create([Bind("FirstName,LastName,PreferredName,DateOfBirth,StudentNumber,Phone,Email,StudentType,YearLevel,GraduationYear,MedicareNumber")] Student student)
         {
             if (!ModelState.IsValid)
             {
@@ -120,7 +127,7 @@ namespace FutureReady.Controllers
         // POST: Students/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,PreferredName,DateOfBirth,StudentNumber,Phone,StudentType,YearLevel,GraduationYear,MedicareNumber,UserId,RowVersion")] Student student)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,PreferredName,DateOfBirth,StudentNumber,Phone,Email,StudentType,YearLevel,GraduationYear,MedicareNumber,UserId,RowVersion")] Student student)
         {
             if (id != student.Id) return NotFound();
 
@@ -166,6 +173,69 @@ namespace FutureReady.Controllers
             var tenantId = _tenantProvider?.GetCurrentTenantId();
             await _studentService.DeleteAsync(id, tenantId);
             return RedirectToAction(nameof(Index));
+        }
+
+        // POST: Students/GenerateActivationLink/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GenerateActivationLink(Guid id)
+        {
+            var tenantId = _tenantProvider?.GetCurrentTenantId();
+            var student = await _studentService.GetByIdAsync(id, tenantId);
+            if (student == null) return NotFound();
+
+            if (string.IsNullOrWhiteSpace(student.Email))
+            {
+                TempData["ErrorMessage"] = "Student must have an email address to generate an activation link.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            if (student.UserId.HasValue)
+            {
+                TempData["ErrorMessage"] = "This student already has an account.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            try
+            {
+                var token = await _accountTokenService.GenerateTokenAsync(id, tenantId);
+                var activationLink = $"{Request.Scheme}://{Request.Host}/student/activate/{token.Token}";
+
+                TempData["ActivationLink"] = activationLink;
+                TempData["ActivationLinkMessage"] = $"Activation link generated for {student.Email}. Send this link to the student:";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        // POST: Students/ResendActivationLink
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResendActivationLink(Guid id, Guid tokenId)
+        {
+            var tenantId = _tenantProvider?.GetCurrentTenantId();
+
+            // Revoke the old token
+            await _accountTokenService.RevokeTokenByIdAsync(tokenId, tenantId);
+
+            // Generate a new one
+            return await GenerateActivationLink(id);
+        }
+
+        // POST: Students/DeleteActivationToken
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteActivationToken(Guid id, Guid tokenId)
+        {
+            var tenantId = _tenantProvider?.GetCurrentTenantId();
+            await _accountTokenService.RevokeTokenByIdAsync(tokenId, tenantId);
+
+            TempData["SuccessMessage"] = "Activation token has been deleted.";
+            return RedirectToAction(nameof(Details), new { id });
         }
     }
 }
