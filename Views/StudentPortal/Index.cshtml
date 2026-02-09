@@ -1,0 +1,73 @@
+@model FutureReady.Models.StudentPortal.StudentPortalViewModel
+
+@{
+    ViewData["Title"] = "My Dashboard";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Welcome, @Model.StudentDisplayName</h1>
+    <p class="page-subtitle">Your work placement dashboard</p>
+</div>
+
+@if (Model.HasConfirmedPlacements)
+{
+    <h5 class="mb-3">Current Placements</h5>
+    <div class="row g-4 mb-4">
+        @foreach (var placement in Model.ConfirmedPlacements)
+        {
+            <div class="col-lg-6">
+                @await Html.PartialAsync("_CurrentPlacementWidget", placement)
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-info mb-4">
+        <h5 class="alert-heading">No Confirmed Placements</h5>
+        <p class="mb-0">You don't have any confirmed placements yet. Once your placement is confirmed by your parent/guardian and employer, it will appear here.</p>
+    </div>
+}
+
+@if (Model.HasPendingPlacements)
+{
+    <h5 class="mb-3">Pending Placements</h5>
+    <div class="details-container mb-4">
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>Year</th>
+                        <th>Company</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var placement in Model.PendingPlacements)
+                    {
+                        <tr>
+                            <td>@(placement.Year?.ToString() ?? "N/A")</td>
+                            <td>@(placement.CompanyName ?? "Not assigned")</td>
+                            <td><span class="badge @placement.StatusDisplayClass">@placement.StatusDisplayText</span></td>
+                            <td>
+                                <a asp-controller="Placements" asp-action="Details" asp-route-id="@placement.PlacementId" class="btn btn-sm btn-outline-primary">
+                                    View Details
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<h5 class="mb-3">Quick Links</h5>
+<div class="details-container">
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="/student/work-history/@Model.StudentId" class="btn btn-outline-primary">
+            <span class="me-1">📝</span> Work History Form
+        </a>
+    </div>
+</div>

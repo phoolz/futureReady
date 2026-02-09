@@ -60,6 +60,13 @@ namespace FutureReady.Controllers
                 return Redirect(model.ReturnUrl);
             }
 
+            // Role-based redirect
+            var roles = await _userManager.GetRolesAsync(user);
+            if (roles.Contains(Roles.Student))
+            {
+                return RedirectToAction("Index", "StudentPortal");
+            }
+
             return RedirectToAction("Index", "Home");
         }
 

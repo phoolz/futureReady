@@ -87,6 +87,13 @@ namespace FutureReady.Services.Students
             tenantId ??= _tenantProvider?.GetCurrentTenantId();
             return await _context.Set<Student>().AnyAsync(s => s.Id == id && (!tenantId.HasValue || s.TenantId == tenantId.Value));
         }
+
+        public async Task<Student?> GetByUserIdAsync(Guid userId, Guid? tenantId = null)
+        {
+            tenantId ??= _tenantProvider?.GetCurrentTenantId();
+            return await _context.Set<Student>().AsNoTracking()
+                .FirstOrDefaultAsync(s => s.UserId == userId && (!tenantId.HasValue || s.TenantId == tenantId.Value));
+        }
     }
 }
 

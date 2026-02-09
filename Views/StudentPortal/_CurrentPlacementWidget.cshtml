@@ -1,0 +1,74 @@
+@model FutureReady.Models.StudentPortal.StudentPlacementViewModel
+
+<div class="card h-100">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">@(Model.CompanyName ?? "Unknown Company")</h5>
+        <span class="badge @Model.StatusDisplayClass">@Model.StatusDisplayText</span>
+    </div>
+    <div class="card-body">
+        @if (!string.IsNullOrEmpty(Model.CompanyIndustry))
+        {
+            <p class="text-muted mb-3">@Model.CompanyIndustry</p>
+        }
+
+        <div class="bg-light rounded p-3 mb-3 text-center">
+            <div class="fs-2 fw-bold text-primary">@Model.TotalHoursWorked.ToString("0.#")</div>
+            <div class="text-muted small">Hours Logged</div>
+        </div>
+
+        <h6 class="mb-2">Supervisor</h6>
+        <dl class="row mb-3">
+            @if (!string.IsNullOrEmpty(Model.SupervisorFullName))
+            {
+                <dt class="col-sm-4">Name</dt>
+                <dd class="col-sm-8">@Model.SupervisorFullName</dd>
+            }
+            @if (!string.IsNullOrEmpty(Model.SupervisorJobTitle))
+            {
+                <dt class="col-sm-4">Title</dt>
+                <dd class="col-sm-8">@Model.SupervisorJobTitle</dd>
+            }
+            @if (!string.IsNullOrEmpty(Model.SupervisorPhone))
+            {
+                <dt class="col-sm-4">Phone</dt>
+                <dd class="col-sm-8">
+                    <a href="tel:@Model.SupervisorPhone">@Model.SupervisorPhone</a>
+                </dd>
+            }
+            @if (!string.IsNullOrEmpty(Model.SupervisorEmail))
+            {
+                <dt class="col-sm-4">Email</dt>
+                <dd class="col-sm-8">
+                    <a href="mailto:@Model.SupervisorEmail">@Model.SupervisorEmail</a>
+                </dd>
+            }
+        </dl>
+
+        @if (!string.IsNullOrEmpty(Model.WorkStartTime) || !string.IsNullOrEmpty(Model.WorkEndTime))
+        {
+            <h6 class="mb-2">Work Hours</h6>
+            <p class="mb-3">
+                @(Model.WorkStartTime ?? "N/A") - @(Model.WorkEndTime ?? "N/A")
+            </p>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.DressRequirement))
+        {
+            <h6 class="mb-2">Dress Requirement</h6>
+            <p class="mb-3">@Model.DressRequirement</p>
+        }
+    </div>
+    <div class="card-footer">
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="#" class="btn btn-sm btn-primary" title="Coming soon">
+                Add Today's Entry
+            </a>
+            <a href="#" class="btn btn-sm btn-outline-secondary" title="Coming soon">
+                View Logbook
+            </a>
+            <a asp-controller="Placements" asp-action="Details" asp-route-id="@Model.PlacementId" class="btn btn-sm btn-outline-primary">
+                Placement Details
+            </a>
+        </div>
+    </div>
+</div>

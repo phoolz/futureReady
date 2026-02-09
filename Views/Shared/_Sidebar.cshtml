@@ -4,6 +4,7 @@
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
     var isSiteAdmin = User.IsInRole(Roles.SiteAdmin);
     var isTeacher = User.IsInRole(Roles.Teacher);
+    var isStudent = User.IsInRole(Roles.Student);
 }
 
 <nav id="sidebar" class="sidebar">
@@ -73,6 +74,22 @@
                    asp-controller="Supervisors" asp-action="Index">
                     <span class="nav-icon">👔</span>
                     <span class="nav-text">Supervisors</span>
+                </a>
+            </li>
+        }
+        else if (isStudent)
+        {
+            <li class="nav-item">
+                <a class="nav-link @(currentController == "StudentPortal" ? "active" : "")"
+                   asp-controller="StudentPortal" asp-action="Index">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">My Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/student/work-history">
+                    <span class="nav-icon">📝</span>
+                    <span class="nav-text">Work History</span>
                 </a>
             </li>
         }
