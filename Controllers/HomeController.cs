@@ -1,10 +1,15 @@
 using System.Diagnostics;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using FutureReady.Models;
+using FutureReady.Models.StudentPortal;
 using FutureReady.Data;
 using FutureReady.Services;
+using FutureReady.Services.Students;
+using FutureReady.Services.Placements;
+using FutureReady.Services.LogbookEntries;
 using Microsoft.EntityFrameworkCore;
 
 namespace FutureReady.Controllers;
@@ -16,12 +21,25 @@ public class HomeController : Controller
     private readonly ApplicationDbContext _context;
     private readonly ITenantProvider? _tenantProvider;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IStudentService _studentService;
+    private readonly IPlacementService _placementService;
+    private readonly ILogbookEntryService _logbookEntryService;
 
-    public HomeController(ILogger<HomeController> logger, ApplicationDbContext context, UserManager<ApplicationUser> userManager, ITenantProvider? tenantProvider = null)
+    public HomeController(
+        ILogger<HomeController> logger,
+        ApplicationDbContext context,
+        UserManager<ApplicationUser> userManager,
+        IStudentService studentService,
+        IPlacementService placementService,
+        ILogbookEntryService logbookEntryService,
+        ITenantProvider? tenantProvider = null)
     {
         _logger = logger;
         _context = context;
         _userManager = userManager;
+        _studentService = studentService;
+        _placementService = placementService;
+        _logbookEntryService = logbookEntryService;
         _tenantProvider = tenantProvider;
     }
 
@@ -39,6 +57,60 @@ public class HomeController : Controller
         var totalStudents = await studentsQuery.CountAsync();
 
         ViewData["TotalStudents"] = totalStudents;
+
+        // Load student placement data if user is a student
+        if (User.IsInRole(Roles.Student))
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var userId))
+            {
+                var student = await _studentService.GetByUserIdAsync(userId, tenantId);
+
+                if (student == null)
+                {
+                    ViewData["StudentNotLinked"] = true;
+                }
+                else
+                {
+                    var placements = await _placementService.GetByStudentIdAsync(student.Id, tenantId);
+
+                    var placementViewModels = new List<StudentPlacementViewModel>();
+
+                    foreach (var placement in placements)
+                    {
+                        var totalHours = await _logbookEntryService.GetTotalHoursAsync(placement.Id, tenantId);
+
+                        placementViewModels.Add(new StudentPlacementViewModel
+                        {
+                            PlacementId = placement.Id,
+                            Year = placement.Year,
+                            Status = placement.Status,
+                            CompanyName = placement.Company?.Name,
+                            CompanyIndustry = placement.Company?.Industry,
+                            SupervisorFullName = placement.Supervisor?.FullName,
+                            SupervisorJobTitle = placement.Supervisor?.JobTitle,
+                            SupervisorEmail = placement.Supervisor?.Email,
+                            SupervisorPhone = placement.Supervisor?.Phone,
+                            WorkStartTime = placement.WorkStartTime,
+                            WorkEndTime = placement.WorkEndTime,
+                            DressRequirement = placement.DressRequirement,
+                            TotalHoursWorked = totalHours
+                        });
+                    }
+
+                    var studentPortalModel = new StudentPortalViewModel
+                    {
+                        StudentId = student.Id,
+                        StudentDisplayName = student.DisplayName,
+                        StudentFullName = student.FullName,
+                        ConfirmedPlacements = placementViewModels.Where(p => p.IsConfirmed).ToList(),
+                        PendingPlacements = placementViewModels.Where(p => !p.IsConfirmed).ToList()
+                    };
+
+                    ViewData["StudentPortalModel"] = studentPortalModel;
+                }
+            }
+        }
 
         return View();
     }

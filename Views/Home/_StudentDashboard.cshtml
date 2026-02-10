@@ -1,0 +1,110 @@
+@using FutureReady.Models.StudentPortal
+@{
+    var viewModel = ViewData["StudentPortalModel"] as StudentPortalViewModel;
+    var studentNotLinked = ViewData["StudentNotLinked"] as bool? ?? false;
+}
+
+@if (studentNotLinked)
+{
+    <div class="page-header">
+        <h1 class="page-title">Account Not Linked</h1>
+    </div>
+
+    <div class="details-container">
+        <div class="alert alert-warning mb-4">
+            <h5 class="alert-heading">Your account is not linked to a student record</h5>
+            <p>Your user account has been created, but it hasn't been linked to a student profile in the system yet.</p>
+            <hr>
+            <p class="mb-0">Please contact your teacher or school administrator to have your account linked to your student record.</p>
+        </div>
+
+        <div class="text-center">
+            <form asp-controller="Authentication" asp-action="Logout" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-secondary">
+                    Logout
+                </button>
+            </form>
+        </div>
+    </div>
+}
+else if (viewModel != null)
+{
+    <div class="page-header">
+        <h1 class="page-title">Welcome, @viewModel.StudentDisplayName</h1>
+        <p class="page-subtitle">Your work placement dashboard</p>
+    </div>
+
+    @if (viewModel.HasConfirmedPlacements)
+    {
+        <h5 class="mb-3">Current Placements</h5>
+        <div class="row g-4 mb-4">
+            @foreach (var placement in viewModel.ConfirmedPlacements)
+            {
+                <div class="col-lg-6">
+                    @await Html.PartialAsync("_CurrentPlacementWidget", placement)
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info mb-4">
+            <h5 class="alert-heading">No Confirmed Placements</h5>
+            <p class="mb-0">You don't have any confirmed placements yet. Once your placement is confirmed by your parent/guardian and employer, it will appear here.</p>
+        </div>
+    }
+
+    @if (viewModel.HasPendingPlacements)
+    {
+        <h5 class="mb-3">Pending Placements</h5>
+        <div class="details-container mb-4">
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th>Company</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var placement in viewModel.PendingPlacements)
+                        {
+                            <tr>
+                                <td>@(placement.Year?.ToString() ?? "N/A")</td>
+                                <td>@(placement.CompanyName ?? "Not assigned")</td>
+                                <td><span class="badge @placement.StatusDisplayClass">@placement.StatusDisplayText</span></td>
+                                <td>
+                                    <a asp-controller="Placements" asp-action="Details" asp-route-id="@placement.PlacementId" class="btn btn-sm btn-outline-primary">
+                                        View Details
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <h5 class="mb-3">Quick Links</h5>
+    <div class="details-container">
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="/student/work-history/@viewModel.StudentId" class="btn btn-outline-primary">
+                <span class="me-1">📝</span> Work History Form
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="page-header">
+        <h1 class="page-title">Student Dashboard</h1>
+        <p class="page-subtitle">Your work placement dashboard</p>
+    </div>
+
+    <div class="alert alert-warning">
+        <p class="mb-0">Unable to load your dashboard. Please try refreshing the page or contact your administrator.</p>
+    </div>
+}

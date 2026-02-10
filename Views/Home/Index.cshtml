@@ -1,34 +1,27 @@
+@using FutureReady.Models
 @{
     ViewData["Title"] = "Dashboard";
+    var isSiteAdmin = User.IsInRole(Roles.SiteAdmin);
+    var isTeacher = User.IsInRole(Roles.Teacher);
+    var isStudent = User.IsInRole(Roles.Student);
 }
 
-<div class="page-header">
-    <h1 class="page-title">Dashboard</h1>
-    <p class="page-subtitle">Welcome to FutureReady</p>
-</div>
-
-<div class="row g-4 mb-4">
-    <div class="col-md-4">
-        <div class="stat-card">
-            <div class="stat-icon">👥</div>
-            <div class="stat-value">@ViewData["TotalStudents"]</div>
-            <div class="stat-label">Total Students</div>
-        </div>
+@if (isSiteAdmin)
+{
+    @await Html.PartialAsync("_AdminDashboard")
+}
+else if (isTeacher)
+{
+    @await Html.PartialAsync("_TeacherDashboard")
+}
+else if (isStudent)
+{
+    @await Html.PartialAsync("_StudentDashboard")
+}
+else
+{
+    <div class="alert alert-warning">
+        <h5>No Role Assigned</h5>
+        <p>Please contact your administrator.</p>
     </div>
-</div>
-
-<div class="row">
-    <div class="col-12">
-        <div class="stat-card">
-            <h5 class="mb-3">Quick Actions</h5>
-            <div class="quick-actions">
-                <a asp-controller="Students" asp-action="Create" class="btn btn-primary quick-action-btn">
-                    <span>+</span> Add Student
-                </a>
-                <a asp-controller="Students" asp-action="Index" class="btn btn-outline-secondary quick-action-btn">
-                    View All Students
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
+}
