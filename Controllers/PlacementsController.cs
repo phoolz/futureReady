@@ -12,6 +12,8 @@ using FutureReady.Services.Students;
 using FutureReady.Services.Companies;
 using FutureReady.Services.Supervisors;
 using FutureReady.Services.FormTokens;
+using FutureReady.Services.LogbookEntries;
+using FutureReady.Models.LogbookEntries;
 
 namespace FutureReady.Controllers
 {
@@ -24,6 +26,7 @@ namespace FutureReady.Controllers
         private readonly ISupervisorService _supervisorService;
         private readonly IFormTokenService _formTokenService;
         private readonly IStudentAuthorizationService _studentAuthService;
+        private readonly ILogbookEntryService _logbookService;
         private readonly ITenantProvider? _tenantProvider;
 
         public PlacementsController(
@@ -33,6 +36,7 @@ namespace FutureReady.Controllers
             ISupervisorService supervisorService,
             IFormTokenService formTokenService,
             IStudentAuthorizationService studentAuthService,
+            ILogbookEntryService logbookService,
             ITenantProvider? tenantProvider = null)
         {
             _placementService = placementService;
@@ -41,6 +45,7 @@ namespace FutureReady.Controllers
             _supervisorService = supervisorService;
             _formTokenService = formTokenService;
             _studentAuthService = studentAuthService;
+            _logbookService = logbookService;
             _tenantProvider = tenantProvider;
         }
 
@@ -82,6 +87,37 @@ namespace FutureReady.Controllers
             // Get form tokens for this placement
             var formTokens = await _formTokenService.GetByPlacementAsync(id.Value, tenantId);
             ViewData["FormTokens"] = formTokens;
+
+            // Get logbook entries for this placement
+            var logbookEntries = await _logbookService.GetByPlacementIdAsync(id.Value, tenantId);
+            var sortedEntries = logbookEntries.OrderBy(e => e.Date).ToList();
+
+            // Calculate cumulative hours
+            decimal cumulative = 0;
+            foreach (var entry in sortedEntries)
+            {
+                cumulative += entry.TotalHoursWorked;
+                entry.CumulativeHours = cumulative;
+            }
+
+            var logbookViewModel = new LogbookEntriesListViewModel
+            {
+                PlacementId = id.Value,
+                TotalHours = cumulative,
+                VerifiedCount = sortedEntries.Count(e => e.SupervisorVerified),
+                TotalEntries = sortedEntries.Count,
+                Entries = sortedEntries.OrderByDescending(e => e.Date).Take(5).Select(e => new LogbookEntryViewModel
+                {
+                    Id = e.Id,
+                    Date = e.Date,
+                    StartTime = e.StartTime,
+                    FinishTime = e.FinishTime,
+                    TotalHoursWorked = e.TotalHoursWorked,
+                    CumulativeHours = e.CumulativeHours,
+                    SupervisorVerified = e.SupervisorVerified
+                }).ToList()
+            };
+            ViewData["LogbookEntries"] = logbookViewModel;
 
             return View(placement);
         }

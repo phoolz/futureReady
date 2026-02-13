@@ -63,7 +63,7 @@
             <a href="/student/logbook/@Model.PlacementId" class="btn btn-sm btn-primary">
                 Add Today's Entry
             </a>
-            <a href="#" class="btn btn-sm btn-outline-secondary" title="Coming soon">
+            <a href="/LogbookEntries?placementId=@Model.PlacementId" class="btn btn-sm btn-outline-secondary">
                 View Logbook
             </a>
             <a asp-controller="Placements" asp-action="Details" asp-route-id="@Model.PlacementId" class="btn btn-sm btn-outline-primary">

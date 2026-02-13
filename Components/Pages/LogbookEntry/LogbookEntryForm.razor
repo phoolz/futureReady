@@ -6,8 +6,11 @@
 @inject IPlacementService PlacementService
 @inject IStudentAuthorizationService AuthorizationService
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.EntityFrameworkCore
+@using FutureReady.Models
 @using FutureReady.Models.School
 
 <PageTitle>Logbook Entry</PageTitle>
@@ -189,13 +192,20 @@
                 return;
             }
 
-            // Verify the student has access to this placement
-            var currentStudentId = await AuthorizationService.GetCurrentUserStudentIdAsync();
-            if (!currentStudentId.HasValue || currentStudentId.Value != placement.StudentId)
+            // Check if user is a teacher (teachers can edit any entry)
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var isTeacher = authState.User.IsInRole(Roles.Teacher);
+
+            // Verify the student has access to this placement (teachers bypass this check)
+            if (!isTeacher)
             {
-                ErrorMessage = "You do not have permission to access this placement.";
-                IsLoading = false;
-                return;
+                var currentStudentId = await AuthorizationService.GetCurrentUserStudentIdAsync();
+                if (!currentStudentId.HasValue || currentStudentId.Value != placement.StudentId)
+                {
+                    ErrorMessage = "You do not have permission to access this placement.";
+                    IsLoading = false;
+                    return;
+                }
             }
 
             PlacementInfo = $"{placement.Company?.Name ?? "Unknown Company"} - {placement.Year}";
