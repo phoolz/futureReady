@@ -15,7 +15,7 @@ using FutureReady.Services.FormTokens;
 
 namespace FutureReady.Controllers
 {
-    [Authorize(Roles = Roles.Teacher)]
+    [Authorize(Roles = Roles.TeacherOrStudent)]
     public class PlacementsController : Controller
     {
         private readonly IPlacementService _placementService;
@@ -23,6 +23,7 @@ namespace FutureReady.Controllers
         private readonly ICompanyService _companyService;
         private readonly ISupervisorService _supervisorService;
         private readonly IFormTokenService _formTokenService;
+        private readonly IStudentAuthorizationService _studentAuthService;
         private readonly ITenantProvider? _tenantProvider;
 
         public PlacementsController(
@@ -31,6 +32,7 @@ namespace FutureReady.Controllers
             ICompanyService companyService,
             ISupervisorService supervisorService,
             IFormTokenService formTokenService,
+            IStudentAuthorizationService studentAuthService,
             ITenantProvider? tenantProvider = null)
         {
             _placementService = placementService;
@@ -38,6 +40,7 @@ namespace FutureReady.Controllers
             _companyService = companyService;
             _supervisorService = supervisorService;
             _formTokenService = formTokenService;
+            _studentAuthService = studentAuthService;
             _tenantProvider = tenantProvider;
         }
 
@@ -45,8 +48,18 @@ namespace FutureReady.Controllers
         public async Task<IActionResult> Index()
         {
             var tenantId = _tenantProvider?.GetCurrentTenantId();
-            var placements = await _placementService.GetAllAsync(tenantId);
-            return View(placements);
+
+            if (User.IsInRole(Roles.Student))
+            {
+                var studentId = await _studentAuthService.GetCurrentUserStudentIdAsync();
+                if (!studentId.HasValue)
+                    return Forbid();
+                var placements = await _placementService.GetByStudentIdAsync(studentId.Value, tenantId);
+                return View(placements);
+            }
+
+            var allPlacements = await _placementService.GetAllAsync(tenantId);
+            return View(allPlacements);
         }
 
         // GET: Placements/Details/5
@@ -58,6 +71,14 @@ namespace FutureReady.Controllers
             var placement = await _placementService.GetByIdWithDetailsAsync(id.Value, tenantId);
             if (placement == null) return NotFound();
 
+            // Students can only view their own placement
+            if (User.IsInRole(Roles.Student))
+            {
+                var studentId = await _studentAuthService.GetCurrentUserStudentIdAsync();
+                if (!studentId.HasValue || placement.StudentId != studentId.Value)
+                    return Forbid();
+            }
+
             // Get form tokens for this placement
             var formTokens = await _formTokenService.GetByPlacementAsync(id.Value, tenantId);
             ViewData["FormTokens"] = formTokens;
@@ -66,6 +87,7 @@ namespace FutureReady.Controllers
         }
 
         // GET: Placements/Create
+        [Authorize(Roles = Roles.Teacher)]
         public async Task<IActionResult> Create()
         {
             await PopulateDropdowns();
@@ -75,6 +97,7 @@ namespace FutureReady.Controllers
         // POST: Placements/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = Roles.Teacher)]
         public async Task<IActionResult> Create([Bind("StudentId,CompanyId,SupervisorId,Year,Status")] Placement placement)
         {
             if (!ModelState.IsValid)
@@ -98,6 +121,7 @@ namespace FutureReady.Controllers
         }
 
         // GET: Placements/Edit/5
+        [Authorize(Roles = Roles.Teacher)]
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null) return NotFound();
@@ -113,6 +137,7 @@ namespace FutureReady.Controllers
         // POST: Placements/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = Roles.Teacher)]
         public async Task<IActionResult> Edit(Guid id, [Bind("Id,StudentId,CompanyId,SupervisorId,Year,Status,RowVersion")] Placement placement)
         {
             if (id != placement.Id) return NotFound();
@@ -145,6 +170,7 @@ namespace FutureReady.Controllers
         }
 
         // GET: Placements/Delete/5
+        [Authorize(Roles = Roles.Teacher)]
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null) return NotFound();
@@ -159,6 +185,7 @@ namespace FutureReady.Controllers
         // POST: Placements/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = Roles.Teacher)]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
             var tenantId = _tenantProvider?.GetCurrentTenantId();
@@ -169,6 +196,7 @@ namespace FutureReady.Controllers
         // POST: Placements/SendEmployerForm/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = Roles.Teacher)]
         public async Task<IActionResult> SendEmployerForm(Guid id)
         {
             var tenantId = _tenantProvider?.GetCurrentTenantId();
@@ -189,6 +217,7 @@ namespace FutureReady.Controllers
         // POST: Placements/DeleteEmployerFormToken
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = Roles.Teacher)]
         public async Task<IActionResult> DeleteEmployerFormToken(Guid id, Guid tokenId)
         {
             var tenantId = _tenantProvider?.GetCurrentTenantId();
@@ -200,6 +229,7 @@ namespace FutureReady.Controllers
         // POST: Placements/ResendEmployerForm
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = Roles.Teacher)]
         public async Task<IActionResult> ResendEmployerForm(Guid id, Guid tokenId)
         {
             var tenantId = _tenantProvider?.GetCurrentTenantId();
@@ -222,6 +252,7 @@ namespace FutureReady.Controllers
         }
 
         // GET: Placements/EmployerFormReview/5
+        [Authorize(Roles = Roles.Teacher)]
         public async Task<IActionResult> EmployerFormReview(Guid? id)
         {
             if (id == null) return NotFound();
@@ -236,6 +267,7 @@ namespace FutureReady.Controllers
         // POST: Placements/SendParentForm/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = Roles.Teacher)]
         public async Task<IActionResult> SendParentForm(Guid id)
         {
             var tenantId = _tenantProvider?.GetCurrentTenantId();
@@ -255,6 +287,7 @@ namespace FutureReady.Controllers
         // POST: Placements/DeleteParentFormToken
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = Roles.Teacher)]
         public async Task<IActionResult> DeleteParentFormToken(Guid id, Guid tokenId)
         {
             var tenantId = _tenantProvider?.GetCurrentTenantId();
@@ -266,6 +299,7 @@ namespace FutureReady.Controllers
         // POST: Placements/ResendParentForm
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = Roles.Teacher)]
         public async Task<IActionResult> ResendParentForm(Guid id, Guid tokenId)
         {
             var tenantId = _tenantProvider?.GetCurrentTenantId();

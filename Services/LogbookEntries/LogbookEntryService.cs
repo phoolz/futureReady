@@ -48,7 +48,7 @@ namespace FutureReady.Services.LogbookEntries
                 throw new InvalidOperationException("Tenant must be known when creating a logbook entry.");
 
             entry.TenantId = tenantId.Value;
-
+            
             _context.LogbookEntries.Add(entry);
             await _context.SaveChangesAsync();
         }
@@ -69,7 +69,6 @@ namespace FutureReady.Services.LogbookEntries
             existing.LunchEndTime = entry.LunchEndTime;
             existing.FinishTime = entry.FinishTime;
             existing.TotalHoursWorked = entry.TotalHoursWorked;
-            existing.CumulativeHours = entry.CumulativeHours;
             existing.SupervisorVerified = entry.SupervisorVerified;
             existing.SupervisorVerifiedAt = entry.SupervisorVerifiedAt;
 

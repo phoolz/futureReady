@@ -145,107 +145,111 @@ namespace FutureReady.Services.EmployerForm
                 return false;
             }
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
+            var strategy = _context.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
             {
-                // Get placement (bypass tenant filter)
-                var placement = await _context.Placements
-                    .IgnoreQueryFilters()
-                    .Include(p => p.Company)
-                    .Include(p => p.Supervisor)
-                    .Where(p => p.Id == formToken.PlacementId && !p.IsDeleted)
-                    .FirstOrDefaultAsync();
-
-                if (placement == null)
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                try
                 {
-                    return false;
-                }
+                    // Get placement (bypass tenant filter)
+                    var placement = await _context.Placements
+                        .IgnoreQueryFilters()
+                        .Include(p => p.Company)
+                        .Include(p => p.Supervisor)
+                        .Where(p => p.Id == formToken.PlacementId && !p.IsDeleted)
+                        .FirstOrDefaultAsync();
 
-                // Update Company
-                if (placement.Company != null)
+                    if (placement == null)
+                    {
+                        return false;
+                    }
+
+                    // Update Company
+                    if (placement.Company != null)
+                    {
+                        placement.Company.StreetAddress = formData.WorkplaceDetails.StreetAddress;
+                        placement.Company.StreetAddress2 = formData.WorkplaceDetails.StreetAddress2;
+                        placement.Company.Suburb = formData.WorkplaceDetails.Suburb;
+                        placement.Company.City = formData.WorkplaceDetails.City;
+                        placement.Company.State = formData.WorkplaceDetails.State;
+                        placement.Company.PostalCode = formData.WorkplaceDetails.PostalCode;
+                        placement.Company.PublicLiabilityInsurance5M = formData.Insurance.HasPublicLiabilityInsurance5M ?? false;
+                        placement.Company.InsuranceValue = formData.Insurance.InsuranceValue;
+                        placement.Company.HasPreviousWorkExperienceStudents = formData.Insurance.HasPreviousWorkExperienceStudents ?? false;
+                    }
+
+                    // Update Supervisor
+                    if (placement.Supervisor != null)
+                    {
+                        placement.Supervisor.FirstName = formData.SupervisorDetails.FirstName;
+                        placement.Supervisor.LastName = formData.SupervisorDetails.LastName;
+                        placement.Supervisor.JobTitle = formData.SupervisorDetails.JobTitle;
+                        placement.Supervisor.Email = formData.SupervisorDetails.Email;
+                        placement.Supervisor.Phone = formData.SupervisorDetails.Phone;
+                    }
+
+                    // Update Placement
+                    placement.DressRequirement = formData.WorkplaceDetails.DressCode;
+                    placement.WorkStartTime = formData.WorkplaceDetails.WorkStartTime;
+                    placement.WorkEndTime = formData.WorkplaceDetails.WorkEndTime;
+
+                    // OHS
+                    placement.HasOhsPolicy = formData.Ohs.HasOhsPolicy;
+                    placement.HasInductionProgram = formData.Ohs.HasInductionProgram;
+                    placement.SafetyBriefingMethod = formData.Ohs.SafetyBriefingMethod;
+                    placement.HasObviousHazards = formData.Ohs.HasObviousHazards;
+                    placement.HazardDetails = formData.Ohs.HazardDetails;
+                    placement.InjuryPreventionTraining = formData.Ohs.InjuryPreventionTraining;
+                    placement.ProvidesHazardReportingInstruction = formData.Ohs.ProvidesHazardReportingInstruction;
+                    placement.HasEmergencyProcedures = formData.Ohs.HasEmergencyProcedures;
+                    placement.HasFireExtinguishersChecked = formData.Ohs.HasFireExtinguishersChecked;
+                    placement.HasFirstAidKit = formData.Ohs.HasFirstAidKit;
+                    placement.HasSafeAmenities = formData.Ohs.HasSafeAmenities;
+
+                    // General/Travel
+                    placement.StaffInformedOfStudent = formData.GeneralTravel.StaffInformedOfStudent;
+                    placement.StaffMeetWorkingWithChildrenRequirements = formData.GeneralTravel.StaffMeetWorkingWithChildrenRequirements;
+                    placement.AdditionalInfoRequired = formData.GeneralTravel.AdditionalInfoRequired;
+                    placement.AdditionalInfoDetails = formData.GeneralTravel.AdditionalInfoDetails;
+                    placement.EmployerRequiresVehicleTravel = formData.GeneralTravel.RequiresVehicleTravel;
+                    placement.EmployerVehicleDetails = formData.GeneralTravel.VehicleDetails;
+                    placement.EmployerDriverExperience = formData.GeneralTravel.DriverExperience;
+                    placement.EmployerLicenceType = formData.GeneralTravel.LicenceType;
+
+                    // Hazards Appendix
+                    placement.HasChemicalHazards = formData.HazardsAppendix.HasChemicalHazards;
+                    placement.ChemicalDetails = formData.HazardsAppendix.ChemicalDetails;
+                    placement.HasPlantMachineryHazards = formData.HazardsAppendix.HasPlantMachineryHazards;
+                    placement.PlantMachineryDetails = formData.HazardsAppendix.PlantMachineryDetails;
+                    placement.HasBiologicalHazards = formData.HazardsAppendix.HasBiologicalHazards;
+                    placement.BiologicalDetails = formData.HazardsAppendix.BiologicalDetails;
+                    placement.HasErgonomicHazards = formData.HazardsAppendix.HasErgonomicHazards;
+                    placement.ErgonomicDetails = formData.HazardsAppendix.ErgonomicDetails;
+                    placement.HazardsAdditionalDetails = formData.HazardsAppendix.AdditionalDetails;
+
+                    // Set submission timestamp
+                    placement.EmployerSubmittedAt = DateTime.UtcNow;
+
+                    // Update status to pending_parent if it was pending_employer
+                    if (placement.Status == "pending_employer")
+                    {
+                        placement.Status = "pending_parent";
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    // Mark token as used
+                    await _formTokenService.MarkAsUsedAsync(token);
+
+                    await transaction.CommitAsync();
+                    return true;
+                }
+                catch
                 {
-                    placement.Company.StreetAddress = formData.WorkplaceDetails.StreetAddress;
-                    placement.Company.StreetAddress2 = formData.WorkplaceDetails.StreetAddress2;
-                    placement.Company.Suburb = formData.WorkplaceDetails.Suburb;
-                    placement.Company.City = formData.WorkplaceDetails.City;
-                    placement.Company.State = formData.WorkplaceDetails.State;
-                    placement.Company.PostalCode = formData.WorkplaceDetails.PostalCode;
-                    placement.Company.PublicLiabilityInsurance5M = formData.Insurance.HasPublicLiabilityInsurance5M ?? false;
-                    placement.Company.InsuranceValue = formData.Insurance.InsuranceValue;
-                    placement.Company.HasPreviousWorkExperienceStudents = formData.Insurance.HasPreviousWorkExperienceStudents ?? false;
+                    await transaction.RollbackAsync();
+                    throw;
                 }
-
-                // Update Supervisor
-                if (placement.Supervisor != null)
-                {
-                    placement.Supervisor.FirstName = formData.SupervisorDetails.FirstName;
-                    placement.Supervisor.LastName = formData.SupervisorDetails.LastName;
-                    placement.Supervisor.JobTitle = formData.SupervisorDetails.JobTitle;
-                    placement.Supervisor.Email = formData.SupervisorDetails.Email;
-                    placement.Supervisor.Phone = formData.SupervisorDetails.Phone;
-                }
-
-                // Update Placement
-                placement.DressRequirement = formData.WorkplaceDetails.DressCode;
-                placement.WorkStartTime = formData.WorkplaceDetails.WorkStartTime;
-                placement.WorkEndTime = formData.WorkplaceDetails.WorkEndTime;
-
-                // OHS
-                placement.HasOhsPolicy = formData.Ohs.HasOhsPolicy;
-                placement.HasInductionProgram = formData.Ohs.HasInductionProgram;
-                placement.SafetyBriefingMethod = formData.Ohs.SafetyBriefingMethod;
-                placement.HasObviousHazards = formData.Ohs.HasObviousHazards;
-                placement.HazardDetails = formData.Ohs.HazardDetails;
-                placement.InjuryPreventionTraining = formData.Ohs.InjuryPreventionTraining;
-                placement.ProvidesHazardReportingInstruction = formData.Ohs.ProvidesHazardReportingInstruction;
-                placement.HasEmergencyProcedures = formData.Ohs.HasEmergencyProcedures;
-                placement.HasFireExtinguishersChecked = formData.Ohs.HasFireExtinguishersChecked;
-                placement.HasFirstAidKit = formData.Ohs.HasFirstAidKit;
-                placement.HasSafeAmenities = formData.Ohs.HasSafeAmenities;
-
-                // General/Travel
-                placement.StaffInformedOfStudent = formData.GeneralTravel.StaffInformedOfStudent;
-                placement.StaffMeetWorkingWithChildrenRequirements = formData.GeneralTravel.StaffMeetWorkingWithChildrenRequirements;
-                placement.AdditionalInfoRequired = formData.GeneralTravel.AdditionalInfoRequired;
-                placement.AdditionalInfoDetails = formData.GeneralTravel.AdditionalInfoDetails;
-                placement.EmployerRequiresVehicleTravel = formData.GeneralTravel.RequiresVehicleTravel;
-                placement.EmployerVehicleDetails = formData.GeneralTravel.VehicleDetails;
-                placement.EmployerDriverExperience = formData.GeneralTravel.DriverExperience;
-                placement.EmployerLicenceType = formData.GeneralTravel.LicenceType;
-
-                // Hazards Appendix
-                placement.HasChemicalHazards = formData.HazardsAppendix.HasChemicalHazards;
-                placement.ChemicalDetails = formData.HazardsAppendix.ChemicalDetails;
-                placement.HasPlantMachineryHazards = formData.HazardsAppendix.HasPlantMachineryHazards;
-                placement.PlantMachineryDetails = formData.HazardsAppendix.PlantMachineryDetails;
-                placement.HasBiologicalHazards = formData.HazardsAppendix.HasBiologicalHazards;
-                placement.BiologicalDetails = formData.HazardsAppendix.BiologicalDetails;
-                placement.HasErgonomicHazards = formData.HazardsAppendix.HasErgonomicHazards;
-                placement.ErgonomicDetails = formData.HazardsAppendix.ErgonomicDetails;
-                placement.HazardsAdditionalDetails = formData.HazardsAppendix.AdditionalDetails;
-
-                // Set submission timestamp
-                placement.EmployerSubmittedAt = DateTime.UtcNow;
-
-                // Update status to pending_parent if it was pending_employer
-                if (placement.Status == "pending_employer")
-                {
-                    placement.Status = "pending_parent";
-                }
-
-                await _context.SaveChangesAsync();
-
-                // Mark token as used
-                await _formTokenService.MarkAsUsedAsync(token);
-
-                await transaction.CommitAsync();
-                return true;
-            }
-            catch
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
+            });
         }
     }
 }

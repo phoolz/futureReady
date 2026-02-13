@@ -35,6 +35,7 @@ namespace FutureReady.Models.School
         [Display(Name = "Total Hours Worked")]
         public decimal TotalHoursWorked { get; set; }
 
+        [NotMapped]
         [Display(Name = "Cumulative Hours")]
         public decimal CumulativeHours { get; set; }
 

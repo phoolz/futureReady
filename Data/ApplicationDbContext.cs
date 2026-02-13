@@ -194,7 +194,6 @@ namespace FutureReady.Data
                 entity.Property(e => e.LunchEndTime).HasMaxLength(10);
                 entity.Property(e => e.FinishTime).HasMaxLength(10);
                 entity.Property(e => e.TotalHoursWorked).HasPrecision(5, 2);
-                entity.Property(e => e.CumulativeHours).HasPrecision(6, 2);
                 entity.HasOne(e => e.Placement).WithMany().HasForeignKey(e => e.PlacementId).OnDelete(DeleteBehavior.Cascade);
                 entity.HasIndex(e => new { e.PlacementId, e.Date }).IsUnique();
             });

@@ -7,6 +7,6 @@ public static class Roles
     public const string Student = "Student";
 
     public static string[] AllRoles => new[] { SiteAdmin, Teacher, Student };
-    public static string TeacherOrStudent => $"{Teacher},{Student}";
-    public static string AnyRole => $"{SiteAdmin},{Teacher},{Student}";
+    public const string TeacherOrStudent = Teacher + "," + Student;
+    public const string AnyRole = SiteAdmin + "," + Teacher + "," + Student;
 }

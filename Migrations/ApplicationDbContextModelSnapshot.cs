@@ -372,10 +372,6 @@ namespace FutureReady.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<decimal>("CumulativeHours")
-                        .HasPrecision(6, 2)
-                        .HasColumnType("decimal(6,2)");
-
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
