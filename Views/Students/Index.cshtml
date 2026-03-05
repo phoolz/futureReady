@@ -4,44 +4,80 @@
     ViewData["Title"] = "Students";
 }
 
-<div class="page-header">
-    <h1 class="page-title">Students</h1>
-    <p class="page-subtitle">Manage student records</p>
+<div class="list-header">
+    <div class="list-header-content">
+        <h1>Students</h1>
+        <p>Manage student records and profiles</p>
+    </div>
+    <div class="list-header-actions">
+        <div class="search-input">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" id="searchInput" placeholder="Search students..." onkeyup="filterTable()">
+        </div>
+        <a asp-action="Create" class="btn-add">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Add Student
+        </a>
+    </div>
 </div>
 
-<div class="table-container">
-    <div class="table-header">
-        <div class="table-actions">
-            <div class="search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text" class="form-control" id="searchInput" placeholder="Search students..." onkeyup="filterTable()">
-            </div>
-            <a asp-action="Create" class="btn btn-primary">+ Add Student</a>
-        </div>
-    </div>
-    <table class="table table-hover" id="studentsTable">
+<div class="list-table">
+    <table id="studentsTable">
         <thead>
             <tr>
                 <th>Name</th>
                 <th>Student Number</th>
                 <th>Year Level</th>
-                <th>Student Type</th>
-                <th>Graduation Year</th>
+                <th>Type</th>
+                <th>Graduation</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
         @foreach (var student in Model)
         {
-            <tr onclick="window.location='@Url.Action("Details", new { id = student.Id })'" style="cursor: pointer;">
-                <td>@student.FullName</td>
-                <td>@(student.StudentNumber ?? "N/A")</td>
-                <td>@(student.YearLevel ?? "N/A")</td>
-                <td>@(student.StudentType ?? "N/A")</td>
-                <td>@(student.GraduationYear?.ToString() ?? "N/A")</td>
+            <tr class="clickable" onclick="window.location='@Url.Action("Details", new { id = student.Id })'">
+                <td class="cell-primary">@student.FullName</td>
+                <td class="cell-secondary">@(student.StudentNumber ?? "—")</td>
+                <td>@(student.YearLevel ?? "—")</td>
+                <td>@(student.StudentType ?? "—")</td>
+                <td class="cell-secondary">@(student.GraduationYear?.ToString() ?? "—")</td>
+                <td>
+                    <div class="row-actions">
+                        <a asp-action="Details" asp-route-id="@student.Id" class="row-action action-view" title="View" onclick="event.stopPropagation()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </a>
+                        <a asp-action="Edit" asp-route-id="@student.Id" class="row-action action-edit" title="Edit" onclick="event.stopPropagation()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </td>
             </tr>
         }
         </tbody>
     </table>
+    @if (!Model.Any())
+    {
+        <div class="list-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <p>No students found. Add your first student to get started.</p>
+        </div>
+    }
 </div>
 
 @section Scripts {
