@@ -1,0 +1,107 @@
+# Apiary Design Refresh - Sidebar & Dashboard
+
+## Design System from apiaryeducation.com
+
+### Color Palette
+| Name | Hex | Usage |
+|------|-----|-------|
+| Honey | `#c9944a` | Primary accent, active states, CTAs |
+| Honey Light | `#e3b97a` | Hover states |
+| Honey Glow | `#f4d4a3` | Subtle highlights |
+| Amber | `#a67235` | Darker accent |
+| Charcoal | `#1a1a2e` | Sidebar background |
+| Slate | `#2d2d44` | Sidebar borders, dividers |
+| Cream | `#fef9f3` | Page background |
+| Cream Dark | `#f5ede3` | Card backgrounds, table headers |
+| Text Dark | `#1a1a2e` | Headings, primary text |
+| Text Muted | `#5c5c72` | Secondary text |
+| Green | `#22c55e` | Success states |
+
+### Typography
+- **Display/Headings**: `'Fraunces'` (serif) - weight 500-600
+- **Body/UI**: `'DM Sans'` (sans-serif) - weight 400-600
+
+---
+
+## Implementation Plan
+
+### Step 1: Add Google Fonts
+Update both layout files to include Fraunces and DM Sans:
+- `Views/Shared/_Layout.cshtml` - MVC layout for authenticated pages
+- `Components/App.razor` - Blazor layout for forms
+
+### Step 2: Update CSS Variables & Base Styles (`wwwroot/css/site.css`)
+
+**Base styles:**
+- Body background: `#f8f9fa` → `#fef9f3` (Cream)
+- Add font-family: DM Sans for body, Fraunces for headings
+- Auth body background: `#f1f5f9` → `#fef9f3`
+
+**Sidebar styles (lines 38-160):**
+- `.sidebar` background: `#1e293b` → `#1a1a2e` (Charcoal)
+- `.sidebar-header` border: `#334155` → `#2d2d44` (Slate)
+- `.sidebar-nav .nav-link:hover` background: `#334155` → `#2d2d44`
+- `.sidebar-nav .nav-link.active` background: `#3b82f6` → `#c9944a` (Honey)
+- `.sidebar-footer` border: `#334155` → `#2d2d44`
+
+**Dashboard components:**
+- `.stat-value` color: keep `#1e293b` → `#1a1a2e`
+- Table header background: `#f8fafc` → `#f5ede3` (Cream Dark)
+- Card hover effects: update shadows with honey tint
+- Focus ring: `#258cfb` → `#c9944a`
+
+**Page header:**
+- `.page-title` color: keep charcoal
+- Add Fraunces font for headings
+
+### Step 3: Update Placement Widget Card (`Views/Shared/_CurrentPlacementWidget.cshtml`)
+- Stats badge: use honey color for primary stats
+- Update `.text-primary` usage to reference honey color
+- Card header styling with subtle honey accent
+
+### Step 4: Update Dashboard Quick Links
+- Primary buttons: honey-based gradient/color
+- Outline buttons: honey border color
+
+---
+
+## Files to Modify
+
+1. **`Views/Shared/_Layout.cshtml`** - Add Google Fonts link
+2. **`Components/App.razor`** - Add Google Fonts link
+3. **`wwwroot/css/site.css`** - Main styling updates:
+   - CSS custom properties for colors
+   - Typography rules
+   - Sidebar color updates
+   - Dashboard component updates
+4. **`Views/Shared/_CurrentPlacementWidget.cshtml`** - Update stats styling
+
+---
+
+## Preview of Key Changes
+
+### Sidebar (Before → After)
+```css
+/* Before */
+.sidebar { background-color: #1e293b; }
+.sidebar-nav .nav-link.active { background-color: #3b82f6; }
+
+/* After */
+.sidebar { background-color: #1a1a2e; }
+.sidebar-nav .nav-link.active { background-color: #c9944a; }
+```
+
+### Body Background
+```css
+/* Before */
+body { background-color: #f8f9fa; }
+
+/* After */
+body { background-color: #fef9f3; }
+```
+
+### Typography
+```css
+body { font-family: 'DM Sans', sans-serif; }
+h1, h2, h3, h4, h5, h6, .page-title { font-family: 'Fraunces', serif; }
+```
