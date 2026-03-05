@@ -1,7 +1,7 @@
 using System;
 using Microsoft.AspNetCore.Identity;
 
-namespace FutureReady.Models
+namespace Apiary.Models
 {
     public class ApplicationUser : IdentityUser<Guid>
     {

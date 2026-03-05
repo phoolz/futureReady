@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace FutureReady.Models.LogbookEntries
+namespace Apiary.Models.LogbookEntries
 {
     public class LogbookEntriesListViewModel
     {

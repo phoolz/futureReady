@@ -7,10 +7,10 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Moq;
 using Xunit;
-using FutureReady.Controllers;
-using FutureReady.Models;
+using Apiary.Controllers;
+using Apiary.Models;
 
-namespace FutureReady.Tests
+namespace Apiary.Tests
 {
     public class AuthenticationControllerTests
     {

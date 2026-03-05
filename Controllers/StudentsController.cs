@@ -4,17 +4,17 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Identity;
-using FutureReady.Data;
-using FutureReady.Models;
-using FutureReady.Models.School;
-using FutureReady.Services;
-using FutureReady.Services.Students;
-using FutureReady.Services.Placements;
-using FutureReady.Services.StudentAccountTokens;
+using Apiary.Data;
+using Apiary.Models;
+using Apiary.Models.School;
+using Apiary.Services;
+using Apiary.Services.Students;
+using Apiary.Services.Placements;
+using Apiary.Services.StudentAccountTokens;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 
-namespace FutureReady.Controllers
+namespace Apiary.Controllers
 {
     [Authorize(Roles = Roles.Teacher)]
     public class StudentsController : Controller

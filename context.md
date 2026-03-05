@@ -1,4 +1,4 @@
-# FutureReady Codebase Context
+# Apiary Codebase Context
 
 A comprehensive reference for AI assistants working with this codebase.
 
@@ -6,7 +6,7 @@ A comprehensive reference for AI assistants working with this codebase.
 
 ## 1. Project Overview
 
-**FutureReady** is a Blazor Server application for managing student work placements in schools. It handles:
+**Apiary** is a Blazor Server application for managing student work placements in schools. It handles:
 - Student management and medical records
 - Work placement coordination with companies
 - Parent/guardian permission workflows
@@ -31,7 +31,7 @@ A comprehensive reference for AI assistants working with this codebase.
 ## 3. Directory Structure
 
 ```
-FutureReady/
+Apiary/
 ├── Controllers/           # MVC controllers (13 total)
 ├── Components/
 │   ├── Layout/           # MainLayout.razor
@@ -646,7 +646,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         options.LoginPath = "/Authentication/Login";
         options.LogoutPath = "/Authentication/Logout";
-        options.Cookie.Name = "FutureReadyAuth";
+        options.Cookie.Name = "ApiaryAuth";
         options.ExpireTimeSpan = TimeSpan.FromDays(7);
     });
 ```

@@ -1,4 +1,4 @@
-@model FutureReady.Models.School.Company
+@model Apiary.Models.School.Company
 
 @{
     ViewData["Title"] = "Company Details";
@@ -131,7 +131,7 @@
             </div>
             <div class="card-body">
                 @{
-                    var supervisors = ViewData["Supervisors"] as IEnumerable<FutureReady.Models.School.Supervisor>;
+                    var supervisors = ViewData["Supervisors"] as IEnumerable<Apiary.Models.School.Supervisor>;
                 }
                 @if (supervisors != null && supervisors.Any())
                 {
@@ -174,7 +174,7 @@
             </div>
             <div class="card-body">
                 @{
-                    var placements = ViewData["Placements"] as IEnumerable<FutureReady.Models.School.Placement>;
+                    var placements = ViewData["Placements"] as IEnumerable<Apiary.Models.School.Placement>;
                 }
                 @if (placements != null && placements.Any())
                 {

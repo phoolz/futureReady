@@ -4,18 +4,18 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
-using FutureReady.Models;
-using FutureReady.Models.School;
-using FutureReady.Services;
-using FutureReady.Services.Placements;
-using FutureReady.Services.Students;
-using FutureReady.Services.Companies;
-using FutureReady.Services.Supervisors;
-using FutureReady.Services.FormTokens;
-using FutureReady.Services.LogbookEntries;
-using FutureReady.Models.LogbookEntries;
+using Apiary.Models;
+using Apiary.Models.School;
+using Apiary.Services;
+using Apiary.Services.Placements;
+using Apiary.Services.Students;
+using Apiary.Services.Companies;
+using Apiary.Services.Supervisors;
+using Apiary.Services.FormTokens;
+using Apiary.Services.LogbookEntries;
+using Apiary.Models.LogbookEntries;
 
-namespace FutureReady.Controllers
+namespace Apiary.Controllers
 {
     [Authorize(Roles = Roles.TeacherOrStudent)]
     public class PlacementsController : Controller

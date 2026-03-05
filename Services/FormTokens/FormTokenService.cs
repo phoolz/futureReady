@@ -4,10 +4,10 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using FutureReady.Data;
-using FutureReady.Models.School;
+using Apiary.Data;
+using Apiary.Models.School;
 
-namespace FutureReady.Services.FormTokens
+namespace Apiary.Services.FormTokens
 {
     public class FormTokenService : IFormTokenService
     {

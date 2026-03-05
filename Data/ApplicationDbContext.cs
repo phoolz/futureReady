@@ -1,15 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using FutureReady.Models;
+using Apiary.Models;
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using FutureReady.Services;
-using FutureReady.Models.School;
+using Apiary.Services;
+using Apiary.Models.School;
 
-namespace FutureReady.Data
+namespace Apiary.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
     {

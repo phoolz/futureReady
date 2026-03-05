@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using FutureReady.Data;
-using FutureReady.Services;
+using Apiary.Data;
+using Apiary.Services;
 using Microsoft.Data.Sqlite;
 
-namespace FutureReady.Tests
+namespace Apiary.Tests
 {
     public static class TestDbContextFactory
     {

@@ -3,14 +3,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using FutureReady.Models;
-using FutureReady.Models.LogbookEntries;
-using FutureReady.Services;
-using FutureReady.Services.LogbookEntries;
-using FutureReady.Services.Placements;
-using FutureReady.Services.Students;
+using Apiary.Models;
+using Apiary.Models.LogbookEntries;
+using Apiary.Services;
+using Apiary.Services.LogbookEntries;
+using Apiary.Services.Placements;
+using Apiary.Services.Students;
 
-namespace FutureReady.Controllers
+namespace Apiary.Controllers
 {
     [Authorize(Roles = Roles.TeacherOrStudent)]
     public class LogbookEntriesController : Controller

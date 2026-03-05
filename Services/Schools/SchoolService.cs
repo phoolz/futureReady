@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using FutureReady.Data;
-using FutureReady.Models.School;
+using Apiary.Data;
+using Apiary.Models.School;
 
-namespace FutureReady.Services.Schools
+namespace Apiary.Services.Schools
 {
     public class SchoolService : ISchoolService
     {

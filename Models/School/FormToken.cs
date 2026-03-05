@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace FutureReady.Models.School
+namespace Apiary.Models.School
 {
     public class FormToken : TenantEntity
     {

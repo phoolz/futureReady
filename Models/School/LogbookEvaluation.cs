@@ -1,9 +1,9 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using FutureReady.Models.School.Enums;
+using Apiary.Models.School.Enums;
 
-namespace FutureReady.Models.School
+namespace Apiary.Models.School
 {
     public class LogbookEvaluation : TenantEntity
     {

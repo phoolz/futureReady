@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using FutureReady.Data;
-using FutureReady.Models;
-using FutureReady.Services;
+using Apiary.Data;
+using Apiary.Models;
+using Apiary.Services;
 
-namespace FutureReady.Controllers
+namespace Apiary.Controllers
 {
     [Authorize(Roles = Roles.SiteAdmin)]
     public class UsersController : Controller

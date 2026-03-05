@@ -1,9 +1,9 @@
-@using FutureReady.Models
-@using FutureReady.Models.LogbookEntries
-@model FutureReady.Models.School.Placement
+@using Apiary.Models
+@using Apiary.Models.LogbookEntries
+@model Apiary.Models.School.Placement
 @{
     ViewData["Title"] = "Placement Details";
-    var formTokens = ViewData["FormTokens"] as List<FutureReady.Models.School.FormToken> ?? new List<FutureReady.Models.School.FormToken>();
+    var formTokens = ViewData["FormTokens"] as List<Apiary.Models.School.FormToken> ?? new List<Apiary.Models.School.FormToken>();
     var employerTokens = formTokens.Where(t => t.FormType == "employer_acceptance").ToList();
     var parentTokens = formTokens.Where(t => t.FormType == "parent_permission").ToList();
     var logbookData = ViewData["LogbookEntries"] as LogbookEntriesListViewModel;

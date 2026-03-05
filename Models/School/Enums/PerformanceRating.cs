@@ -1,4 +1,4 @@
-namespace FutureReady.Models.School.Enums
+namespace Apiary.Models.School.Enums
 {
     public enum PerformanceRating
     {

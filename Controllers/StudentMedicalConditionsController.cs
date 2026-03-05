@@ -3,13 +3,13 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
-using FutureReady.Models;
-using FutureReady.Models.School;
-using FutureReady.Services;
-using FutureReady.Services.StudentMedicalConditions;
-using FutureReady.Services.Students;
+using Apiary.Models;
+using Apiary.Models.School;
+using Apiary.Services;
+using Apiary.Services.StudentMedicalConditions;
+using Apiary.Services.Students;
 
-namespace FutureReady.Controllers
+namespace Apiary.Controllers
 {
     [Authorize(Roles = Roles.Teacher)]
     public class StudentMedicalConditionsController : Controller

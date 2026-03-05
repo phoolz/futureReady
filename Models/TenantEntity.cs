@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace FutureReady.Models
+namespace Apiary.Models
 {
     public abstract class TenantEntity : BaseEntity
     {

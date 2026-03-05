@@ -2,14 +2,14 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using FutureReady.Data;
-using FutureReady.Models;
-using FutureReady.Models.School;
-using FutureReady.Services;
-using FutureReady.Services.Schools;
+using Apiary.Data;
+using Apiary.Models;
+using Apiary.Models.School;
+using Apiary.Services;
+using Apiary.Services.Schools;
 using Microsoft.AspNetCore.Authorization;
 
-namespace FutureReady.Controllers
+namespace Apiary.Controllers
 {
     [Authorize(Roles = Roles.SiteAdmin)]
     public class SchoolsController : Controller

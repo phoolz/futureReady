@@ -11,12 +11,12 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Xunit;
-using FutureReady.Controllers;
-using FutureReady.Data;
-using FutureReady.Models;
-using FutureReady.Services;
+using Apiary.Controllers;
+using Apiary.Data;
+using Apiary.Models;
+using Apiary.Services;
 
-namespace FutureReady.Tests
+namespace Apiary.Tests
 {
     public class UsersControllerTests : IDisposable
     {
@@ -34,7 +34,7 @@ namespace FutureReady.Tests
             (_context, _connection) = TestDbContextFactory.CreateSqliteInMemoryContext(userProvider, tenantProvider);
 
             // Seed a school for SelectList tests
-            var school = new FutureReady.Models.School.School
+            var school = new Apiary.Models.School.School
             {
                 Id = _tenantId,
                 Name = "Test School",

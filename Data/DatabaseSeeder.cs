@@ -4,10 +4,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using FutureReady.Models;
-using FutureReady.Models.School;
+using Apiary.Models;
+using Apiary.Models.School;
 
-namespace FutureReady.Data
+namespace Apiary.Data
 {
     public static class DatabaseSeeder
     {

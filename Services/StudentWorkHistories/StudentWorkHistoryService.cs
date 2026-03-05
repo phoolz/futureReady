@@ -1,10 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using FutureReady.Data;
-using FutureReady.Models.School;
+using Apiary.Data;
+using Apiary.Models.School;
 
-namespace FutureReady.Services.StudentWorkHistories
+namespace Apiary.Services.StudentWorkHistories
 {
     public class StudentWorkHistoryService : IStudentWorkHistoryService
     {

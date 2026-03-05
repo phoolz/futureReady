@@ -1,6 +1,6 @@
 using System;
 
-namespace FutureReady.Services
+namespace Apiary.Services
 {
     public interface ITenantProvider
     {

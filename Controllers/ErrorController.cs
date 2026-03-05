@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace FutureReady.Controllers
+namespace Apiary.Controllers
 {
     public class ErrorController : Controller
     {

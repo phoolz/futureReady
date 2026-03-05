@@ -1,9 +1,9 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using FutureReady.Models;
+using Apiary.Models;
 
-namespace FutureReady.Models.School
+namespace Apiary.Models.School
 {
     public class Student : TenantEntity
     {

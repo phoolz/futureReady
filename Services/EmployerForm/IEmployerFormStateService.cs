@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
-using FutureReady.Models.EmployerForm;
+using Apiary.Models.EmployerForm;
 
-namespace FutureReady.Services.EmployerForm
+namespace Apiary.Services.EmployerForm
 {
     public interface IEmployerFormStateService
     {

@@ -1,4 +1,4 @@
-namespace FutureReady.Models.StudentWorkHistory
+namespace Apiary.Models.StudentWorkHistory
 {
     public class WorkHistoryFormDto
     {

@@ -1,8 +1,8 @@
-# FutureReady - Project Context
+# Apiary - Project Context
 
 ## Overview
 
-FutureReady is a Work Experience Placement Management SaaS application for schools. It manages student work placements at companies, including forms for employers, parents, and student logbooks.
+Apiary is a Work Experience Placement Management SaaS application for schools. It manages student work placements at companies, including forms for employers, parents, and student logbooks.
 
 ## Tech Stack
 
@@ -14,7 +14,7 @@ FutureReady is a Work Experience Placement Management SaaS application for schoo
 ## Project Structure
 
 ```
-FutureReady/
+Apiary/
 ├── Models/
 │   ├── BaseEntity.cs              # Audit fields (CreatedAt/By, UpdatedAt/By, IsDeleted, etc.)
 │   ├── TenantEntity.cs            # Extends BaseEntity, adds TenantId

@@ -1,9 +1,9 @@
-@model FutureReady.Models.School.Student
+@model Apiary.Models.School.Student
 
 @{
     ViewData["Title"] = "Student Details";
-    var placements = ViewData["Placements"] as List<FutureReady.Models.School.Placement> ?? new List<FutureReady.Models.School.Placement>();
-    var accountTokens = ViewData["AccountTokens"] as List<FutureReady.Models.School.StudentAccountToken> ?? new List<FutureReady.Models.School.StudentAccountToken>();
+    var placements = ViewData["Placements"] as List<Apiary.Models.School.Placement> ?? new List<Apiary.Models.School.Placement>();
+    var accountTokens = ViewData["AccountTokens"] as List<Apiary.Models.School.StudentAccountToken> ?? new List<Apiary.Models.School.StudentAccountToken>();
 }
 
 <div class="d-flex justify-content-between align-items-start mb-4">

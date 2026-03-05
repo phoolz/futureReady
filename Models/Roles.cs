@@ -1,4 +1,4 @@
-namespace FutureReady.Models;
+namespace Apiary.Models;
 
 public static class Roles
 {

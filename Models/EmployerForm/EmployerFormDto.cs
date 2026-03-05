@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace FutureReady.Models.EmployerForm
+namespace Apiary.Models.EmployerForm
 {
     public class EmployerFormDto
     {

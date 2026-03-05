@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
-using FutureReady.Data;
-using FutureReady.Models;
-using FutureReady.Services;
+using Apiary.Data;
+using Apiary.Models;
+using Apiary.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,7 +39,7 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LoginPath = "/Authentication/Login";
     options.LogoutPath = "/Authentication/Logout";
     options.AccessDeniedPath = "/Error/AccessDenied";
-    options.Cookie.Name = "FutureReadyAuth";
+    options.Cookie.Name = "ApiaryAuth";
     options.ExpireTimeSpan = TimeSpan.FromDays(7);
 });
 
@@ -49,25 +49,25 @@ builder.Services.AddScoped<IUserProvider, HttpContextUserProvider>();
 builder.Services.AddScoped<ITenantProvider, HttpContextTenantProvider>();
 
 // Register application services
-builder.Services.AddScoped<FutureReady.Services.Schools.ISchoolService, FutureReady.Services.Schools.SchoolService>();
-builder.Services.AddScoped<FutureReady.Services.Students.IStudentService, FutureReady.Services.Students.StudentService>();
-builder.Services.AddScoped<FutureReady.Services.Students.IStudentAuthorizationService, FutureReady.Services.Students.StudentAuthorizationService>();
-builder.Services.AddScoped<FutureReady.Services.EmergencyContacts.IEmergencyContactService, FutureReady.Services.EmergencyContacts.EmergencyContactService>();
-builder.Services.AddScoped<FutureReady.Services.StudentMedicalConditions.IStudentMedicalConditionService, FutureReady.Services.StudentMedicalConditions.StudentMedicalConditionService>();
-builder.Services.AddScoped<FutureReady.Services.Companies.ICompanyService, FutureReady.Services.Companies.CompanyService>();
-builder.Services.AddScoped<FutureReady.Services.Supervisors.ISupervisorService, FutureReady.Services.Supervisors.SupervisorService>();
-builder.Services.AddScoped<FutureReady.Services.Placements.IPlacementService, FutureReady.Services.Placements.PlacementService>();
-builder.Services.AddScoped<FutureReady.Services.FormTokens.IFormTokenService, FutureReady.Services.FormTokens.FormTokenService>();
-builder.Services.AddScoped<FutureReady.Services.EmployerForm.IEmployerFormService, FutureReady.Services.EmployerForm.EmployerFormService>();
-builder.Services.AddScoped<FutureReady.Services.EmployerForm.IEmployerFormStateService, FutureReady.Services.EmployerForm.EmployerFormStateService>();
-builder.Services.AddScoped<FutureReady.Services.ParentForm.IParentFormService, FutureReady.Services.ParentForm.ParentFormService>();
-builder.Services.AddScoped<FutureReady.Services.ParentForm.IParentFormStateService, FutureReady.Services.ParentForm.ParentFormStateService>();
-builder.Services.AddScoped<FutureReady.Services.LogbookEvaluations.ILogbookEvaluationService, FutureReady.Services.LogbookEvaluations.LogbookEvaluationService>();
-builder.Services.AddScoped<FutureReady.Services.StudentWorkHistories.IStudentWorkHistoryService, FutureReady.Services.StudentWorkHistories.StudentWorkHistoryService>();
-builder.Services.AddScoped<FutureReady.Services.LogbookEntries.ILogbookEntryService, FutureReady.Services.LogbookEntries.LogbookEntryService>();
-builder.Services.AddScoped<FutureReady.Services.LogbookTasks.ILogbookTaskService, FutureReady.Services.LogbookTasks.LogbookTaskService>();
-builder.Services.AddScoped<FutureReady.Services.StudentAccountTokens.IStudentAccountTokenService, FutureReady.Services.StudentAccountTokens.StudentAccountTokenService>();
-builder.Services.AddScoped<FutureReady.Services.StudentActivation.IStudentActivationService, FutureReady.Services.StudentActivation.StudentActivationService>();
+builder.Services.AddScoped<Apiary.Services.Schools.ISchoolService, Apiary.Services.Schools.SchoolService>();
+builder.Services.AddScoped<Apiary.Services.Students.IStudentService, Apiary.Services.Students.StudentService>();
+builder.Services.AddScoped<Apiary.Services.Students.IStudentAuthorizationService, Apiary.Services.Students.StudentAuthorizationService>();
+builder.Services.AddScoped<Apiary.Services.EmergencyContacts.IEmergencyContactService, Apiary.Services.EmergencyContacts.EmergencyContactService>();
+builder.Services.AddScoped<Apiary.Services.StudentMedicalConditions.IStudentMedicalConditionService, Apiary.Services.StudentMedicalConditions.StudentMedicalConditionService>();
+builder.Services.AddScoped<Apiary.Services.Companies.ICompanyService, Apiary.Services.Companies.CompanyService>();
+builder.Services.AddScoped<Apiary.Services.Supervisors.ISupervisorService, Apiary.Services.Supervisors.SupervisorService>();
+builder.Services.AddScoped<Apiary.Services.Placements.IPlacementService, Apiary.Services.Placements.PlacementService>();
+builder.Services.AddScoped<Apiary.Services.FormTokens.IFormTokenService, Apiary.Services.FormTokens.FormTokenService>();
+builder.Services.AddScoped<Apiary.Services.EmployerForm.IEmployerFormService, Apiary.Services.EmployerForm.EmployerFormService>();
+builder.Services.AddScoped<Apiary.Services.EmployerForm.IEmployerFormStateService, Apiary.Services.EmployerForm.EmployerFormStateService>();
+builder.Services.AddScoped<Apiary.Services.ParentForm.IParentFormService, Apiary.Services.ParentForm.ParentFormService>();
+builder.Services.AddScoped<Apiary.Services.ParentForm.IParentFormStateService, Apiary.Services.ParentForm.ParentFormStateService>();
+builder.Services.AddScoped<Apiary.Services.LogbookEvaluations.ILogbookEvaluationService, Apiary.Services.LogbookEvaluations.LogbookEvaluationService>();
+builder.Services.AddScoped<Apiary.Services.StudentWorkHistories.IStudentWorkHistoryService, Apiary.Services.StudentWorkHistories.StudentWorkHistoryService>();
+builder.Services.AddScoped<Apiary.Services.LogbookEntries.ILogbookEntryService, Apiary.Services.LogbookEntries.LogbookEntryService>();
+builder.Services.AddScoped<Apiary.Services.LogbookTasks.ILogbookTaskService, Apiary.Services.LogbookTasks.LogbookTaskService>();
+builder.Services.AddScoped<Apiary.Services.StudentAccountTokens.IStudentAccountTokenService, Apiary.Services.StudentAccountTokens.StudentAccountTokenService>();
+builder.Services.AddScoped<Apiary.Services.StudentActivation.IStudentActivationService, Apiary.Services.StudentActivation.StudentActivationService>();
 
 var app = builder.Build();
 
@@ -102,7 +102,7 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
-app.MapRazorComponents<FutureReady.Components.App>()
+app.MapRazorComponents<Apiary.Components.App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using FutureReady.Models.School;
+using Apiary.Models.School;
 
-namespace FutureReady.Services.LogbookEntries
+namespace Apiary.Services.LogbookEntries
 {
     public interface ILogbookEntryService
     {

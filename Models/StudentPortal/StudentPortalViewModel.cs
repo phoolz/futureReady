@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FutureReady.Models.StudentPortal
+namespace Apiary.Models.StudentPortal
 {
     public class StudentPortalViewModel
     {

@@ -2,9 +2,9 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
-using FutureReady.Models;
+using Apiary.Models;
 
-namespace FutureReady.Services.Students
+namespace Apiary.Services.Students
 {
     public class StudentAuthorizationService : IStudentAuthorizationService
     {

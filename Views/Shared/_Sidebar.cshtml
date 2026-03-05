@@ -1,4 +1,4 @@
-@using FutureReady.Models
+@using Apiary.Models
 @{
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
@@ -11,7 +11,7 @@
     <div class="sidebar-header">
         <a asp-controller="Home" asp-action="Index" class="sidebar-brand">
             <span class="brand-icon">🎓</span>
-            <span class="brand-text">FutureReady</span>
+            <span class="brand-text">Apiary</span>
         </a>
         <button class="sidebar-toggle d-lg-none" type="button" onclick="toggleSidebar()">
             <span>&times;</span>

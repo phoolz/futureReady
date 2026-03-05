@@ -2,7 +2,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace FutureReady.Models.Address
+namespace Apiary.Models.Address
 {
     public class Address : TenantEntity
     {
