@@ -239,6 +239,13 @@ namespace Apiary.Controllers
             var placement = await _placementService.GetByIdWithDetailsAsync(id, tenantId);
             if (placement == null) return NotFound();
 
+            // Revoke all existing active employer form tokens
+            var existingTokens = await _formTokenService.GetByPlacementAsync(id, tenantId);
+            foreach (var existingToken in existingTokens.Where(t => t.FormType == "employer_acceptance" && t.IsValid))
+            {
+                await _formTokenService.RevokeTokenByIdAsync(existingToken.Id, tenantId);
+            }
+
             var email = placement.Supervisor?.Email;
             var formToken = await _formTokenService.GenerateTokenAsync(id, "employer_acceptance", email, tenantId);
 
@@ -309,6 +316,13 @@ namespace Apiary.Controllers
             var tenantId = _tenantProvider?.GetCurrentTenantId();
             var placement = await _placementService.GetByIdWithDetailsAsync(id, tenantId);
             if (placement == null) return NotFound();
+
+            // Revoke all existing active parent form tokens
+            var existingTokens = await _formTokenService.GetByPlacementAsync(id, tenantId);
+            foreach (var existingToken in existingTokens.Where(t => t.FormType == "parent_permission" && t.IsValid))
+            {
+                await _formTokenService.RevokeTokenByIdAsync(existingToken.Id, tenantId);
+            }
 
             var formToken = await _formTokenService.GenerateTokenAsync(id, "parent_permission", null, tenantId);
 
