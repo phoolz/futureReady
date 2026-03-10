@@ -1,10 +1,36 @@
+using System;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Apiary.Data;
 using Apiary.Services;
 using Microsoft.Data.Sqlite;
 
 namespace Apiary.Tests
 {
+    /// <summary>
+    /// Test-specific DbContext that adds SQLite DateTimeOffset support.
+    /// SQLite does not natively support DateTimeOffset in ORDER BY clauses,
+    /// so we convert DateTimeOffset to ticks for sorting compatibility.
+    /// </summary>
+    public class TestApplicationDbContext : ApplicationDbContext
+    {
+        public TestApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IUserProvider? userProvider = null, ITenantProvider? tenantProvider = null)
+            : base(options, userProvider, tenantProvider)
+        {
+        }
+
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            base.ConfigureConventions(configurationBuilder);
+
+            // Configure DateTimeOffset to store as ticks for SQLite compatibility in ORDER BY clauses
+            configurationBuilder.Properties<DateTimeOffset>()
+                .HaveConversion<DateTimeOffsetToBinaryConverter>();
+            configurationBuilder.Properties<DateTimeOffset?>()
+                .HaveConversion<DateTimeOffsetToBinaryConverter>();
+        }
+    }
+
     public static class TestDbContextFactory
     {
         // Creates an ApplicationDbContext backed by a single open SQLite in-memory connection.
@@ -18,7 +44,7 @@ namespace Apiary.Tests
                 .UseSqlite(connection)
                 .Options;
 
-            var context = new ApplicationDbContext(options, user, tenant);
+            var context = new TestApplicationDbContext(options, user, tenant);
             context.Database.EnsureCreated();
 
             return (context, connection);
@@ -31,7 +57,7 @@ namespace Apiary.Tests
                 .UseSqlite(connection)
                 .Options;
 
-            var context = new ApplicationDbContext(options, user, tenant);
+            var context = new TestApplicationDbContext(options, user, tenant);
             context.Database.EnsureCreated();
 
             return context;

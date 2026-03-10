@@ -28,6 +28,9 @@
     <_ContentIncludedByDefault Remove="Views\SchoolCohorts\Details.cshtml" />
     <_ContentIncludedByDefault Remove="Views\SchoolCohorts\Edit.cshtml" />
     <_ContentIncludedByDefault Remove="Views\SchoolCohorts\Index.cshtml" />
+    <_ContentIncludedByDefault Remove="newLayout\package.json" />
+    <_ContentIncludedByDefault Remove="newLayout\tsconfig.json" />
+    <_ContentIncludedByDefault Remove="newLayout\tsconfig.node.json" />
   </ItemGroup>
 
 </Project>
