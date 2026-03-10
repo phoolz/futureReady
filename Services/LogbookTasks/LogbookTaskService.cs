@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Apiary.Data;
 using Apiary.Models.School;
+
 namespace Apiary.Services.LogbookTasks
 {
     public class LogbookTaskService : ILogbookTaskService
@@ -23,17 +24,18 @@ namespace Apiary.Services.LogbookTasks
             tenantId ??= _tenantProvider?.GetCurrentTenantId();
             return await _context.LogbookTasks
                 .AsNoTracking()
-                .Include(t => t.Placement)
+                .Include(t => t.PlacementStudent)
+                    .ThenInclude(ps => ps!.Placement)
                 .FirstOrDefaultAsync(t => t.Id == id && (!tenantId.HasValue || t.TenantId == tenantId.Value));
         }
 
-        public async Task<List<LogbookTask>> GetByPlacementIdAsync(Guid placementId, Guid? tenantId = null)
+        public async Task<List<LogbookTask>> GetByPlacementStudentIdAsync(Guid placementStudentId, Guid? tenantId = null)
         {
             tenantId ??= _tenantProvider?.GetCurrentTenantId();
             var query = _context.LogbookTasks
                 .AsNoTracking()
-                .Include(t => t.Placement)
-                .Where(t => t.PlacementId == placementId);
+                .Include(t => t.PlacementStudent)
+                .Where(t => t.PlacementStudentId == placementStudentId);
 
             if (tenantId.HasValue)
                 query = query.Where(t => t.TenantId == tenantId.Value);
@@ -41,13 +43,13 @@ namespace Apiary.Services.LogbookTasks
             return await query.OrderByDescending(t => t.DatePerformed).ToListAsync();
         }
 
-        public async Task<List<LogbookTask>> GetByDateAsync(Guid placementId, DateOnly date, Guid? tenantId = null)
+        public async Task<List<LogbookTask>> GetByDateAsync(Guid placementStudentId, DateOnly date, Guid? tenantId = null)
         {
             tenantId ??= _tenantProvider?.GetCurrentTenantId();
             var query = _context.LogbookTasks
                 .AsNoTracking()
-                .Include(t => t.Placement)
-                .Where(t => t.PlacementId == placementId && t.DatePerformed == date);
+                .Include(t => t.PlacementStudent)
+                .Where(t => t.PlacementStudentId == placementStudentId && t.DatePerformed == date);
 
             if (tenantId.HasValue)
                 query = query.Where(t => t.TenantId == tenantId.Value);
@@ -76,7 +78,7 @@ namespace Apiary.Services.LogbookTasks
             if (existing == null)
                 throw new InvalidOperationException("Logbook task not found");
 
-            existing.PlacementId = task.PlacementId;
+            existing.PlacementStudentId = task.PlacementStudentId;
             existing.Description = task.Description;
             existing.DatePerformed = task.DatePerformed;
 

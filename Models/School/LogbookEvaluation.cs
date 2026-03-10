@@ -8,10 +8,10 @@ namespace Apiary.Models.School
     public class LogbookEvaluation : TenantEntity
     {
         [Required]
-        public Guid PlacementId { get; set; }
+        public Guid PlacementStudentId { get; set; }
 
-        [ForeignKey(nameof(PlacementId))]
-        public Placement? Placement { get; set; }
+        [ForeignKey(nameof(PlacementStudentId))]
+        public PlacementStudent? PlacementStudent { get; set; }
 
         // Performance ratings (8 fields using PerformanceRating enum)
         [Required]

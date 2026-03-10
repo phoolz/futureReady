@@ -57,6 +57,7 @@ builder.Services.AddScoped<Apiary.Services.StudentMedicalConditions.IStudentMedi
 builder.Services.AddScoped<Apiary.Services.Companies.ICompanyService, Apiary.Services.Companies.CompanyService>();
 builder.Services.AddScoped<Apiary.Services.Supervisors.ISupervisorService, Apiary.Services.Supervisors.SupervisorService>();
 builder.Services.AddScoped<Apiary.Services.Placements.IPlacementService, Apiary.Services.Placements.PlacementService>();
+builder.Services.AddScoped<Apiary.Services.PlacementStudents.IPlacementStudentService, Apiary.Services.PlacementStudents.PlacementStudentService>();
 builder.Services.AddScoped<Apiary.Services.FormTokens.IFormTokenService, Apiary.Services.FormTokens.FormTokenService>();
 builder.Services.AddScoped<Apiary.Services.EmployerForm.IEmployerFormService, Apiary.Services.EmployerForm.EmployerFormService>();
 builder.Services.AddScoped<Apiary.Services.EmployerForm.IEmployerFormStateService, Apiary.Services.EmployerForm.EmployerFormStateService>();

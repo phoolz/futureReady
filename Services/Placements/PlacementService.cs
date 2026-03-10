@@ -24,7 +24,8 @@ namespace Apiary.Services.Placements
             tenantId ??= _tenantProvider?.GetCurrentTenantId();
             var query = _context.Placements
                 .AsNoTracking()
-                .Include(p => p.Student)
+                .Include(p => p.PlacementStudents)
+                    .ThenInclude(ps => ps.Student)
                 .Include(p => p.Company)
                 .Include(p => p.Supervisor)
                 .AsQueryable();
@@ -40,9 +41,11 @@ namespace Apiary.Services.Placements
             tenantId ??= _tenantProvider?.GetCurrentTenantId();
             var query = _context.Placements
                 .AsNoTracking()
+                .Include(p => p.PlacementStudents)
+                    .ThenInclude(ps => ps.Student)
                 .Include(p => p.Company)
                 .Include(p => p.Supervisor)
-                .Where(p => p.StudentId == studentId);
+                .Where(p => p.PlacementStudents.Any(ps => ps.StudentId == studentId));
 
             if (tenantId.HasValue)
                 query = query.Where(p => p.TenantId == tenantId.Value);
@@ -55,7 +58,8 @@ namespace Apiary.Services.Placements
             tenantId ??= _tenantProvider?.GetCurrentTenantId();
             var query = _context.Placements
                 .AsNoTracking()
-                .Include(p => p.Student)
+                .Include(p => p.PlacementStudents)
+                    .ThenInclude(ps => ps.Student)
                 .Include(p => p.Supervisor)
                 .Where(p => p.CompanyId == companyId);
 
@@ -78,7 +82,8 @@ namespace Apiary.Services.Placements
             tenantId ??= _tenantProvider?.GetCurrentTenantId();
             return await _context.Placements
                 .AsNoTracking()
-                .Include(p => p.Student)
+                .Include(p => p.PlacementStudents)
+                    .ThenInclude(ps => ps.Student)
                 .Include(p => p.Company)
                 .Include(p => p.Supervisor)
                 .FirstOrDefaultAsync(p => p.Id == id && (!tenantId.HasValue || p.TenantId == tenantId.Value));
@@ -105,7 +110,6 @@ namespace Apiary.Services.Placements
             if (existing == null)
                 throw new InvalidOperationException("Placement not found");
 
-            existing.StudentId = placement.StudentId;
             existing.CompanyId = placement.CompanyId;
             existing.SupervisorId = placement.SupervisorId;
             existing.Year = placement.Year;
@@ -142,7 +146,6 @@ namespace Apiary.Services.Placements
             existing.ErgonomicDetails = placement.ErgonomicDetails;
             existing.HazardsAdditionalDetails = placement.HazardsAdditionalDetails;
             existing.EmployerSubmittedAt = placement.EmployerSubmittedAt;
-            existing.ParentSubmittedAt = placement.ParentSubmittedAt;
 
             if (rowVersion != null)
                 _context.Entry(existing).Property("RowVersion").OriginalValue = rowVersion;
@@ -168,6 +171,47 @@ namespace Apiary.Services.Placements
             tenantId ??= _tenantProvider?.GetCurrentTenantId();
             return await _context.Placements
                 .AnyAsync(p => p.Id == id && (!tenantId.HasValue || p.TenantId == tenantId.Value));
+        }
+
+        public async Task RecalculateStatusAsync(Guid placementId, Guid? tenantId = null)
+        {
+            tenantId ??= _tenantProvider?.GetCurrentTenantId();
+            var placement = await _context.Placements
+                .Include(p => p.PlacementStudents)
+                .FirstOrDefaultAsync(p => p.Id == placementId && (!tenantId.HasValue || p.TenantId == tenantId.Value));
+
+            if (placement == null)
+                return;
+
+            var placementStudents = placement.PlacementStudents.Where(ps => !ps.IsDeleted).ToList();
+
+            if (!placementStudents.Any())
+            {
+                placement.Status = "draft";
+            }
+            else if (!placement.EmployerSubmittedAt.HasValue)
+            {
+                placement.Status = "pending_employer";
+            }
+            else
+            {
+                var confirmedCount = placementStudents.Count(ps => ps.Status == "confirmed");
+
+                if (confirmedCount == placementStudents.Count)
+                {
+                    placement.Status = "confirmed";
+                }
+                else if (confirmedCount > 0)
+                {
+                    placement.Status = "partial";
+                }
+                else
+                {
+                    placement.Status = "pending_parents";
+                }
+            }
+
+            await _context.SaveChangesAsync();
         }
     }
 }

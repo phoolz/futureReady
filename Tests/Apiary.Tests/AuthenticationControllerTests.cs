@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -139,6 +140,8 @@ namespace Apiary.Tests
             _mockUserManager.Setup(m => m.FindByNameAsync("testuser")).ReturnsAsync(user);
             _mockSignInManager.Setup(m => m.PasswordSignInAsync(user, "Password123!", false, false))
                 .ReturnsAsync(Microsoft.AspNetCore.Identity.SignInResult.Success);
+            _mockUserManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(new List<string>());
 
             // Act
             var result = await _controller.Login(model);
@@ -164,6 +167,8 @@ namespace Apiary.Tests
             _mockUserManager.Setup(m => m.FindByNameAsync("testuser")).ReturnsAsync(user);
             _mockSignInManager.Setup(m => m.PasswordSignInAsync(user, "Password123!", false, false))
                 .ReturnsAsync(Microsoft.AspNetCore.Identity.SignInResult.Success);
+            _mockUserManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(new List<string>());
 
             // Act
             var result = await _controller.Login(model);
@@ -189,6 +194,8 @@ namespace Apiary.Tests
             _mockUserManager.Setup(m => m.FindByNameAsync("testuser")).ReturnsAsync(user);
             _mockSignInManager.Setup(m => m.PasswordSignInAsync(user, "Password123!", true, false))
                 .ReturnsAsync(Microsoft.AspNetCore.Identity.SignInResult.Success);
+            _mockUserManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(new List<string>());
 
             // Act
             var result = await _controller.Login(model);
@@ -212,6 +219,8 @@ namespace Apiary.Tests
             _mockUserManager.Setup(m => m.FindByEmailAsync("testuser@example.com")).ReturnsAsync(user);
             _mockSignInManager.Setup(m => m.PasswordSignInAsync(user, "Password123!", false, false))
                 .ReturnsAsync(Microsoft.AspNetCore.Identity.SignInResult.Success);
+            _mockUserManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(new List<string>());
 
             // Act
             var result = await _controller.Login(model);

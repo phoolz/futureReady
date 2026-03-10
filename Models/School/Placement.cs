@@ -1,13 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace Apiary.Models.School
 {
     public class Placement : TenantEntity
     {
-        [Required]
-        public Guid StudentId { get; set; }
-
         public Guid? CompanyId { get; set; }
 
         public Guid? SupervisorId { get; set; }
@@ -125,12 +123,9 @@ namespace Apiary.Models.School
         [Display(Name = "Employer Submitted At")]
         public DateTime? EmployerSubmittedAt { get; set; }
 
-        [Display(Name = "Parent Submitted At")]
-        public DateTime? ParentSubmittedAt { get; set; }
-
         // Navigation properties
-        public Student? Student { get; set; }
         public Company? Company { get; set; }
         public Supervisor? Supervisor { get; set; }
+        public ICollection<PlacementStudent> PlacementStudents { get; set; } = [];
     }
 }

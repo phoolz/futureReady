@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -8,6 +9,7 @@ using Apiary.Models;
 using Apiary.Models.School;
 using Apiary.Services;
 using Apiary.Services.Placements;
+using Apiary.Services.PlacementStudents;
 using Apiary.Services.Students;
 using Apiary.Services.Companies;
 using Apiary.Services.Supervisors;
@@ -21,6 +23,7 @@ namespace Apiary.Controllers
     public class PlacementsController : Controller
     {
         private readonly IPlacementService _placementService;
+        private readonly IPlacementStudentService _placementStudentService;
         private readonly IStudentService _studentService;
         private readonly ICompanyService _companyService;
         private readonly ISupervisorService _supervisorService;
@@ -31,6 +34,7 @@ namespace Apiary.Controllers
 
         public PlacementsController(
             IPlacementService placementService,
+            IPlacementStudentService placementStudentService,
             IStudentService studentService,
             ICompanyService companyService,
             ISupervisorService supervisorService,
@@ -40,6 +44,7 @@ namespace Apiary.Controllers
             ITenantProvider? tenantProvider = null)
         {
             _placementService = placementService;
+            _placementStudentService = placementStudentService;
             _studentService = studentService;
             _companyService = companyService;
             _supervisorService = supervisorService;
@@ -76,11 +81,11 @@ namespace Apiary.Controllers
             var placement = await _placementService.GetByIdWithDetailsAsync(id.Value, tenantId);
             if (placement == null) return NotFound();
 
-            // Students can only view their own placement
+            // Students can only view placements they're assigned to
             if (User.IsInRole(Roles.Student))
             {
                 var studentId = await _studentAuthService.GetCurrentUserStudentIdAsync();
-                if (!studentId.HasValue || placement.StudentId != studentId.Value)
+                if (!studentId.HasValue || !placement.PlacementStudents.Any(ps => ps.StudentId == studentId.Value))
                     return Forbid();
             }
 
@@ -88,36 +93,41 @@ namespace Apiary.Controllers
             var formTokens = await _formTokenService.GetByPlacementAsync(id.Value, tenantId);
             ViewData["FormTokens"] = formTokens;
 
-            // Get logbook entries for this placement
-            var logbookEntries = await _logbookService.GetByPlacementIdAsync(id.Value, tenantId);
-            var sortedEntries = logbookEntries.OrderBy(e => e.Date).ToList();
-
-            // Calculate cumulative hours
-            decimal cumulative = 0;
-            foreach (var entry in sortedEntries)
+            // Get logbook entries for the first student (for student view) or summary
+            var placementStudents = placement.PlacementStudents.Where(ps => !ps.IsDeleted).ToList();
+            if (placementStudents.Any())
             {
-                cumulative += entry.TotalHoursWorked;
-                entry.CumulativeHours = cumulative;
-            }
+                var firstPlacementStudent = placementStudents.First();
+                var logbookEntries = await _logbookService.GetByPlacementStudentIdAsync(firstPlacementStudent.Id, tenantId);
+                var sortedEntries = logbookEntries.OrderBy(e => e.Date).ToList();
 
-            var logbookViewModel = new LogbookEntriesListViewModel
-            {
-                PlacementId = id.Value,
-                TotalHours = cumulative,
-                VerifiedCount = sortedEntries.Count(e => e.SupervisorVerified),
-                TotalEntries = sortedEntries.Count,
-                Entries = sortedEntries.OrderByDescending(e => e.Date).Take(5).Select(e => new LogbookEntryViewModel
+                // Calculate cumulative hours
+                decimal cumulative = 0;
+                foreach (var entry in sortedEntries)
                 {
-                    Id = e.Id,
-                    Date = e.Date,
-                    StartTime = e.StartTime,
-                    FinishTime = e.FinishTime,
-                    TotalHoursWorked = e.TotalHoursWorked,
-                    CumulativeHours = e.CumulativeHours,
-                    SupervisorVerified = e.SupervisorVerified
-                }).ToList()
-            };
-            ViewData["LogbookEntries"] = logbookViewModel;
+                    cumulative += entry.TotalHoursWorked;
+                    entry.CumulativeHours = cumulative;
+                }
+
+                var logbookViewModel = new LogbookEntriesListViewModel
+                {
+                    PlacementId = id.Value,
+                    TotalHours = cumulative,
+                    VerifiedCount = sortedEntries.Count(e => e.SupervisorVerified),
+                    TotalEntries = sortedEntries.Count,
+                    Entries = sortedEntries.OrderByDescending(e => e.Date).Take(5).Select(e => new LogbookEntryViewModel
+                    {
+                        Id = e.Id,
+                        Date = e.Date,
+                        StartTime = e.StartTime,
+                        FinishTime = e.FinishTime,
+                        TotalHoursWorked = e.TotalHoursWorked,
+                        CumulativeHours = e.CumulativeHours,
+                        SupervisorVerified = e.SupervisorVerified
+                    }).ToList()
+                };
+                ViewData["LogbookEntries"] = logbookViewModel;
+            }
 
             return View(placement);
         }
@@ -134,11 +144,11 @@ namespace Apiary.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = Roles.Teacher)]
-        public async Task<IActionResult> Create([Bind("StudentId,CompanyId,SupervisorId,Year,Status")] Placement placement)
+        public async Task<IActionResult> Create([Bind("CompanyId,SupervisorId,Year,Status")] Placement placement)
         {
             if (!ModelState.IsValid)
             {
-                await PopulateDropdowns(placement.StudentId, placement.CompanyId, placement.SupervisorId);
+                await PopulateDropdowns(placement.CompanyId, placement.SupervisorId);
                 return View(placement);
             }
 
@@ -149,11 +159,11 @@ namespace Apiary.Controllers
             catch (InvalidOperationException ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
-                await PopulateDropdowns(placement.StudentId, placement.CompanyId, placement.SupervisorId);
+                await PopulateDropdowns(placement.CompanyId, placement.SupervisorId);
                 return View(placement);
             }
 
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Edit), new { id = placement.Id });
         }
 
         // GET: Placements/Edit/5
@@ -163,10 +173,19 @@ namespace Apiary.Controllers
             if (id == null) return NotFound();
 
             var tenantId = _tenantProvider?.GetCurrentTenantId();
-            var placement = await _placementService.GetByIdAsync(id.Value, tenantId);
+            var placement = await _placementService.GetByIdWithDetailsAsync(id.Value, tenantId);
             if (placement == null) return NotFound();
 
-            await PopulateDropdowns(placement.StudentId, placement.CompanyId, placement.SupervisorId);
+            await PopulateDropdowns(placement.CompanyId, placement.SupervisorId);
+
+            // Get all students for dropdown
+            var students = await _studentService.GetAllAsync(tenantId);
+            var assignedStudentIds = placement.PlacementStudents.Where(ps => !ps.IsDeleted).Select(ps => ps.StudentId).ToList();
+            var availableStudents = students.Where(s => !assignedStudentIds.Contains(s.Id)).ToList();
+            ViewData["AvailableStudents"] = new SelectList(
+                availableStudents.Select(s => new { s.Id, FullName = $"{s.FirstName} {s.LastName}" }),
+                "Id", "FullName");
+
             return View(placement);
         }
 
@@ -174,13 +193,13 @@ namespace Apiary.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = Roles.Teacher)]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,StudentId,CompanyId,SupervisorId,Year,Status,RowVersion")] Placement placement)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,CompanyId,SupervisorId,Year,Status,RowVersion")] Placement placement)
         {
             if (id != placement.Id) return NotFound();
 
             if (!ModelState.IsValid)
             {
-                await PopulateDropdowns(placement.StudentId, placement.CompanyId, placement.SupervisorId);
+                await PopulateDropdowns(placement.CompanyId, placement.SupervisorId);
                 return View(placement);
             }
 
@@ -200,9 +219,46 @@ namespace Apiary.Controllers
             catch (InvalidOperationException ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
-                await PopulateDropdowns(placement.StudentId, placement.CompanyId, placement.SupervisorId);
+                await PopulateDropdowns(placement.CompanyId, placement.SupervisorId);
                 return View(placement);
             }
+        }
+
+        // POST: Placements/AddStudent
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = Roles.Teacher)]
+        public async Task<IActionResult> AddStudent(Guid id, Guid studentId)
+        {
+            var tenantId = _tenantProvider?.GetCurrentTenantId();
+
+            try
+            {
+                await _placementStudentService.AddStudentToPlacementAsync(id, studentId, tenantId);
+                await _placementService.RecalculateStatusAsync(id, tenantId);
+                TempData["SuccessMessage"] = "Student added to placement successfully.";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+
+            return RedirectToAction(nameof(Edit), new { id });
+        }
+
+        // POST: Placements/RemoveStudent
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = Roles.Teacher)]
+        public async Task<IActionResult> RemoveStudent(Guid id, Guid studentId)
+        {
+            var tenantId = _tenantProvider?.GetCurrentTenantId();
+
+            await _placementStudentService.RemoveStudentFromPlacementAsync(id, studentId, tenantId);
+            await _placementService.RecalculateStatusAsync(id, tenantId);
+            TempData["SuccessMessage"] = "Student removed from placement successfully.";
+
+            return RedirectToAction(nameof(Edit), new { id });
         }
 
         // GET: Placements/Delete/5
@@ -247,7 +303,7 @@ namespace Apiary.Controllers
             }
 
             var email = placement.Supervisor?.Email;
-            var formToken = await _formTokenService.GenerateTokenAsync(id, "employer_acceptance", email, tenantId);
+            var formToken = await _formTokenService.GenerateTokenAsync(id, "employer_acceptance", email, null, tenantId);
 
             var baseUrl = $"{Request.Scheme}://{Request.Host}";
             var formUrl = $"{baseUrl}/employer/form/{formToken.Token}";
@@ -284,7 +340,7 @@ namespace Apiary.Controllers
 
             // Generate a new token
             var email = placement.Supervisor?.Email;
-            var formToken = await _formTokenService.GenerateTokenAsync(id, "employer_acceptance", email, tenantId);
+            var formToken = await _formTokenService.GenerateTokenAsync(id, "employer_acceptance", email, null, tenantId);
 
             var baseUrl = $"{Request.Scheme}://{Request.Host}";
             var formUrl = $"{baseUrl}/employer/form/{formToken.Token}";
@@ -307,7 +363,43 @@ namespace Apiary.Controllers
             return View(placement);
         }
 
-        // POST: Placements/SendParentForm/5
+        // POST: Placements/SendParentFormForStudent
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = Roles.Teacher)]
+        public async Task<IActionResult> SendParentFormForStudent(Guid id, Guid studentId)
+        {
+            var tenantId = _tenantProvider?.GetCurrentTenantId();
+            var placement = await _placementService.GetByIdWithDetailsAsync(id, tenantId);
+            if (placement == null) return NotFound();
+
+            // Verify student is in this placement
+            var placementStudent = placement.PlacementStudents.FirstOrDefault(ps => ps.StudentId == studentId && !ps.IsDeleted);
+            if (placementStudent == null)
+            {
+                TempData["ErrorMessage"] = "Student is not assigned to this placement.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Revoke all existing active parent form tokens for this student
+            var existingTokens = await _formTokenService.GetByPlacementAsync(id, tenantId);
+            foreach (var existingToken in existingTokens.Where(t => t.FormType == "parent_permission" && t.StudentId == studentId && t.IsValid))
+            {
+                await _formTokenService.RevokeTokenByIdAsync(existingToken.Id, tenantId);
+            }
+
+            // Generate new token with StudentId
+            var formToken = await _formTokenService.GenerateTokenAsync(id, "parent_permission", null, studentId, tenantId);
+
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            var formUrl = $"{baseUrl}/parent/form/{formToken.Token}";
+            TempData["ParentFormLink"] = formUrl;
+            TempData["ParentFormLinkMessage"] = $"Parent permission form link generated for {placementStudent.Student?.FullName ?? "student"}. Copy and send to the parent/guardian:";
+
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        // POST: Placements/SendParentForm/5 - Sends parent forms for ALL students
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = Roles.Teacher)]
@@ -317,19 +409,28 @@ namespace Apiary.Controllers
             var placement = await _placementService.GetByIdWithDetailsAsync(id, tenantId);
             if (placement == null) return NotFound();
 
-            // Revoke all existing active parent form tokens
-            var existingTokens = await _formTokenService.GetByPlacementAsync(id, tenantId);
-            foreach (var existingToken in existingTokens.Where(t => t.FormType == "parent_permission" && t.IsValid))
+            var placementStudents = placement.PlacementStudents.Where(ps => !ps.IsDeleted && ps.Status == "pending_parent").ToList();
+            if (!placementStudents.Any())
             {
-                await _formTokenService.RevokeTokenByIdAsync(existingToken.Id, tenantId);
+                TempData["ErrorMessage"] = "No students pending parent permission in this placement.";
+                return RedirectToAction(nameof(Details), new { id });
             }
 
-            var formToken = await _formTokenService.GenerateTokenAsync(id, "parent_permission", null, tenantId);
+            var existingTokens = await _formTokenService.GetByPlacementAsync(id, tenantId);
 
-            var baseUrl = $"{Request.Scheme}://{Request.Host}";
-            var formUrl = $"{baseUrl}/parent/form/{formToken.Token}";
-            TempData["ParentFormLink"] = formUrl;
-            TempData["ParentFormLinkMessage"] = "Parent permission form link generated. Copy and send to the parent/guardian:";
+            foreach (var ps in placementStudents)
+            {
+                // Revoke existing tokens for this student
+                foreach (var existingToken in existingTokens.Where(t => t.FormType == "parent_permission" && t.StudentId == ps.StudentId && t.IsValid))
+                {
+                    await _formTokenService.RevokeTokenByIdAsync(existingToken.Id, tenantId);
+                }
+
+                // Generate new token for this student
+                await _formTokenService.GenerateTokenAsync(id, "parent_permission", null, ps.StudentId, tenantId);
+            }
+
+            TempData["SuccessMessage"] = $"Parent form links generated for {placementStudents.Count} student(s). View student list for individual links.";
 
             return RedirectToAction(nameof(Details), new { id });
         }
@@ -356,11 +457,16 @@ namespace Apiary.Controllers
             var placement = await _placementService.GetByIdWithDetailsAsync(id, tenantId);
             if (placement == null) return NotFound();
 
+            // Get the old token to find the StudentId
+            var existingTokens = await _formTokenService.GetByPlacementAsync(id, tenantId);
+            var oldToken = existingTokens.FirstOrDefault(t => t.Id == tokenId);
+            var studentId = oldToken?.StudentId;
+
             // Revoke the old token
             await _formTokenService.RevokeTokenByIdAsync(tokenId, tenantId);
 
             // Generate a new token
-            var formToken = await _formTokenService.GenerateTokenAsync(id, "parent_permission", null, tenantId);
+            var formToken = await _formTokenService.GenerateTokenAsync(id, "parent_permission", null, studentId, tenantId);
 
             var baseUrl = $"{Request.Scheme}://{Request.Host}";
             var formUrl = $"{baseUrl}/parent/form/{formToken.Token}";
@@ -370,14 +476,9 @@ namespace Apiary.Controllers
             return RedirectToAction(nameof(Details), new { id });
         }
 
-        private async Task PopulateDropdowns(Guid? studentId = null, Guid? companyId = null, Guid? supervisorId = null)
+        private async Task PopulateDropdowns(Guid? companyId = null, Guid? supervisorId = null)
         {
             var tenantId = _tenantProvider?.GetCurrentTenantId();
-
-            var students = await _studentService.GetAllAsync(tenantId);
-            ViewData["StudentId"] = new SelectList(
-                students.Select(s => new { s.Id, FullName = $"{s.FirstName} {s.LastName}" }),
-                "Id", "FullName", studentId);
 
             var companies = await _companyService.GetAllAsync(tenantId);
             ViewData["CompanyId"] = new SelectList(companies, "Id", "Name", companyId);

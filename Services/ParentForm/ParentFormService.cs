@@ -28,16 +28,34 @@ namespace Apiary.Services.ParentForm
                 return null;
             }
 
+            // Parent form tokens must have a StudentId
+            if (!formToken.StudentId.HasValue)
+            {
+                return null;
+            }
+
+            var studentId = formToken.StudentId.Value;
+
             // Get placement with related data (bypass tenant filter for public form)
             var placement = await _context.Placements
                 .IgnoreQueryFilters()
-                .Include(p => p.Student)
                 .Include(p => p.Company)
                 .Include(p => p.Supervisor)
                 .Where(p => p.Id == formToken.PlacementId && !p.IsDeleted)
                 .FirstOrDefaultAsync();
 
-            if (placement == null || placement.Student == null)
+            if (placement == null)
+            {
+                return null;
+            }
+
+            // Get the student from the token
+            var student = await _context.Students
+                .IgnoreQueryFilters()
+                .Where(s => s.Id == studentId && !s.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            if (student == null)
             {
                 return null;
             }
@@ -51,26 +69,26 @@ namespace Apiary.Services.ParentForm
             // Get existing emergency contacts for this student
             var emergencyContacts = await _context.EmergencyContacts
                 .IgnoreQueryFilters()
-                .Where(ec => ec.StudentId == placement.StudentId && !ec.IsDeleted)
+                .Where(ec => ec.StudentId == studentId && !ec.IsDeleted)
                 .OrderByDescending(ec => ec.IsPrimary)
                 .ToListAsync();
 
             // Get existing medical conditions
             var medicalConditions = await _context.StudentMedicalConditions
                 .IgnoreQueryFilters()
-                .Where(mc => mc.StudentId == placement.StudentId && !mc.IsDeleted)
+                .Where(mc => mc.StudentId == studentId && !mc.IsDeleted)
                 .ToListAsync();
 
-            // Get existing parent permission if any
+            // Get existing parent permission if any (now keyed by PlacementId + StudentId)
             var parentPermission = await _context.ParentPermissions
                 .IgnoreQueryFilters()
-                .Where(pp => pp.PlacementId == placement.Id && !pp.IsDeleted)
+                .Where(pp => pp.PlacementId == placement.Id && pp.StudentId == studentId && !pp.IsDeleted)
                 .FirstOrDefaultAsync();
 
             var dto = new ParentFormDto
             {
                 PlacementId = placement.Id,
-                StudentName = placement.Student.FullName,
+                StudentName = student.FullName,
                 SchoolName = school?.Name ?? "Unknown School",
                 CurrentStep = 1
             };
@@ -78,8 +96,8 @@ namespace Apiary.Services.ParentForm
             // Pre-fill Student Details
             dto.StudentDetails = new StudentDetailsDto
             {
-                StudentType = placement.Student.StudentType ?? string.Empty,
-                MobileNumber = placement.Student.Phone ?? string.Empty
+                StudentType = student.StudentType ?? string.Empty,
+                MobileNumber = student.Phone ?? string.Empty
             };
 
             // Pre-fill Emergency Contact (use primary if exists)
@@ -187,6 +205,14 @@ namespace Apiary.Services.ParentForm
                 return false;
             }
 
+            // Parent form tokens must have a StudentId
+            if (!formToken.StudentId.HasValue)
+            {
+                return false;
+            }
+
+            var studentId = formToken.StudentId.Value;
+
             var strategy = _context.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
             {
@@ -196,25 +222,46 @@ namespace Apiary.Services.ParentForm
                     // Get placement (bypass tenant filter)
                     var placement = await _context.Placements
                         .IgnoreQueryFilters()
-                        .Include(p => p.Student)
                         .Include(p => p.Company)
                         .Include(p => p.Supervisor)
                         .Where(p => p.Id == formToken.PlacementId && !p.IsDeleted)
                         .FirstOrDefaultAsync();
 
-                    if (placement == null || placement.Student == null)
+                    if (placement == null)
+                    {
+                        return false;
+                    }
+
+                    // Get the student
+                    var student = await _context.Students
+                        .IgnoreQueryFilters()
+                        .Where(s => s.Id == studentId && !s.IsDeleted)
+                        .FirstOrDefaultAsync();
+
+                    if (student == null)
+                    {
+                        return false;
+                    }
+
+                    // Get the PlacementStudent record
+                    var placementStudent = await _context.PlacementStudents
+                        .IgnoreQueryFilters()
+                        .Where(ps => ps.PlacementId == placement.Id && ps.StudentId == studentId && !ps.IsDeleted)
+                        .FirstOrDefaultAsync();
+
+                    if (placementStudent == null)
                     {
                         return false;
                     }
 
                     // 1. Update Student
-                    placement.Student.StudentType = formData.StudentDetails.StudentType;
-                    placement.Student.Phone = formData.StudentDetails.MobileNumber;
+                    student.StudentType = formData.StudentDetails.StudentType;
+                    student.Phone = formData.StudentDetails.MobileNumber;
 
                     // 2. Delete existing EmergencyContacts for student, insert new
                     var existingContacts = await _context.EmergencyContacts
                         .IgnoreQueryFilters()
-                        .Where(ec => ec.StudentId == placement.StudentId && !ec.IsDeleted)
+                        .Where(ec => ec.StudentId == studentId && !ec.IsDeleted)
                         .ToListAsync();
 
                     foreach (var contact in existingContacts)
@@ -227,7 +274,7 @@ namespace Apiary.Services.ParentForm
                     {
                         Id = Guid.NewGuid(),
                         TenantId = placement.TenantId,
-                        StudentId = placement.StudentId,
+                        StudentId = studentId,
                         FirstName = formData.EmergencyContact.FirstName,
                         LastName = formData.EmergencyContact.LastName,
                         MobileNumber = formData.EmergencyContact.MobileNumber,
@@ -282,7 +329,7 @@ namespace Apiary.Services.ParentForm
                     // 5. Delete existing StudentMedicalConditions, insert new for checked conditions
                     var existingConditions = await _context.StudentMedicalConditions
                         .IgnoreQueryFilters()
-                        .Where(mc => mc.StudentId == placement.StudentId && !mc.IsDeleted)
+                        .Where(mc => mc.StudentId == studentId && !mc.IsDeleted)
                         .ToListAsync();
 
                     foreach (var condition in existingConditions)
@@ -294,50 +341,50 @@ namespace Apiary.Services.ParentForm
                     if (formData.MedicalDetails.HasAsthma)
                     {
                         _context.StudentMedicalConditions.Add(CreateMedicalCondition(
-                            placement.TenantId, placement.StudentId,
+                            placement.TenantId, studentId,
                             MedicalConditionTypes.Asthma, formData.MedicalDetails.AsthmaDetails));
                     }
                     if (formData.MedicalDetails.HasDiabetes)
                     {
                         _context.StudentMedicalConditions.Add(CreateMedicalCondition(
-                            placement.TenantId, placement.StudentId,
+                            placement.TenantId, studentId,
                             MedicalConditionTypes.Diabetes, formData.MedicalDetails.DiabetesDetails));
                     }
                     if (formData.MedicalDetails.HasEpilepsy)
                     {
                         _context.StudentMedicalConditions.Add(CreateMedicalCondition(
-                            placement.TenantId, placement.StudentId,
+                            placement.TenantId, studentId,
                             MedicalConditionTypes.Epilepsy, formData.MedicalDetails.EpilepsyDetails));
                     }
                     if (formData.MedicalDetails.HasAllergies)
                     {
                         _context.StudentMedicalConditions.Add(CreateMedicalCondition(
-                            placement.TenantId, placement.StudentId,
+                            placement.TenantId, studentId,
                             MedicalConditionTypes.Allergies, formData.MedicalDetails.AllergiesDetails));
                     }
                     if (formData.MedicalDetails.HasLearningDifficulties)
                     {
                         _context.StudentMedicalConditions.Add(CreateMedicalCondition(
-                            placement.TenantId, placement.StudentId,
+                            placement.TenantId, studentId,
                             MedicalConditionTypes.LearningDifficulties, formData.MedicalDetails.LearningDifficultiesDetails));
                     }
                     if (formData.MedicalDetails.HasMedication)
                     {
                         _context.StudentMedicalConditions.Add(CreateMedicalCondition(
-                            placement.TenantId, placement.StudentId,
+                            placement.TenantId, studentId,
                             MedicalConditionTypes.Medication, formData.MedicalDetails.MedicationDetails));
                     }
                     if (formData.MedicalDetails.HasOther)
                     {
                         _context.StudentMedicalConditions.Add(CreateMedicalCondition(
-                            placement.TenantId, placement.StudentId,
+                            placement.TenantId, studentId,
                             MedicalConditionTypes.Other, formData.MedicalDetails.OtherDetails));
                     }
 
-                    // 6. Create/update ParentPermission
+                    // 6. Create/update ParentPermission (now keyed by PlacementId + StudentId)
                     var parentPermission = await _context.ParentPermissions
                         .IgnoreQueryFilters()
-                        .Where(pp => pp.PlacementId == placement.Id && !pp.IsDeleted)
+                        .Where(pp => pp.PlacementId == placement.Id && pp.StudentId == studentId && !pp.IsDeleted)
                         .FirstOrDefaultAsync();
 
                     if (parentPermission == null)
@@ -347,6 +394,7 @@ namespace Apiary.Services.ParentForm
                             Id = Guid.NewGuid(),
                             TenantId = placement.TenantId,
                             PlacementId = placement.Id,
+                            StudentId = studentId,
                             CreatedAt = DateTime.UtcNow
                         };
                         _context.ParentPermissions.Add(parentPermission);
@@ -374,18 +422,16 @@ namespace Apiary.Services.ParentForm
                         parentPermission.MedicalNotesForEmployer = null;
                     }
 
-                    // 7. Set Placement.ParentSubmittedAt
-                    placement.ParentSubmittedAt = DateTime.UtcNow;
+                    // 7. Update PlacementStudent status
+                    placementStudent.Status = "confirmed";
+                    placementStudent.ParentSubmittedAt = DateTime.UtcNow;
 
-                    // Update status if it was pending_parent
-                    if (placement.Status == "pending_parent")
-                    {
-                        placement.Status = "confirmed";
-                    }
+                    // 8. Recalculate overall placement status
+                    await RecalculatePlacementStatusAsync(placement);
 
                     await _context.SaveChangesAsync();
 
-                    // 8. Mark token as used
+                    // 9. Mark token as used
                     await _formTokenService.MarkAsUsedAsync(token);
 
                     await transaction.CommitAsync();
@@ -397,6 +443,44 @@ namespace Apiary.Services.ParentForm
                     throw;
                 }
             });
+        }
+
+        private async Task RecalculatePlacementStatusAsync(Placement placement)
+        {
+            // Get all PlacementStudent records for this placement
+            var placementStudents = await _context.PlacementStudents
+                .IgnoreQueryFilters()
+                .Where(ps => ps.PlacementId == placement.Id && !ps.IsDeleted)
+                .ToListAsync();
+
+            if (!placementStudents.Any())
+            {
+                placement.Status = "draft";
+                return;
+            }
+
+            // If employer form not submitted, stay at pending_employer
+            if (!placement.EmployerSubmittedAt.HasValue)
+            {
+                placement.Status = "pending_employer";
+                return;
+            }
+
+            var confirmedCount = placementStudents.Count(ps => ps.Status == "confirmed");
+            var pendingCount = placementStudents.Count(ps => ps.Status == "pending_parent");
+
+            if (confirmedCount == placementStudents.Count)
+            {
+                placement.Status = "confirmed";
+            }
+            else if (confirmedCount > 0)
+            {
+                placement.Status = "partial";
+            }
+            else
+            {
+                placement.Status = "pending_parents";
+            }
         }
 
         private StudentMedicalCondition CreateMedicalCondition(Guid tenantId, Guid studentId, string type, string? details)

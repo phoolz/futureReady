@@ -30,6 +30,7 @@ namespace Apiary.Data
         public DbSet<Company> Companies { get; set; } = null!;
         public DbSet<Supervisor> Supervisors { get; set; } = null!;
         public DbSet<Placement> Placements { get; set; } = null!;
+        public DbSet<PlacementStudent> PlacementStudents { get; set; } = null!;
         public DbSet<ParentPermission> ParentPermissions { get; set; } = null!;
         public DbSet<FormToken> FormTokens { get; set; } = null!;
         public DbSet<LogbookEntry> LogbookEntries { get; set; } = null!;
@@ -160,9 +161,18 @@ namespace Apiary.Data
                 entity.Property(e => e.SafetyBriefingMethod).HasMaxLength(500);
                 entity.Property(e => e.EmployerDriverExperience).HasMaxLength(500);
                 entity.Property(e => e.EmployerLicenceType).HasMaxLength(100);
-                entity.HasOne(e => e.Student).WithMany().HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Cascade);
                 entity.HasOne(e => e.Company).WithMany().HasForeignKey(e => e.CompanyId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne(e => e.Supervisor).WithMany().HasForeignKey(e => e.SupervisorId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasMany(e => e.PlacementStudents).WithOne(ps => ps.Placement).HasForeignKey(ps => ps.PlacementId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<PlacementStudent>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Status).HasMaxLength(50);
+                entity.HasOne(e => e.Placement).WithMany(p => p.PlacementStudents).HasForeignKey(e => e.PlacementId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Student).WithMany().HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(e => new { e.PlacementId, e.StudentId }).IsUnique();
             });
 
             modelBuilder.Entity<ParentPermission>(entity =>
@@ -174,6 +184,8 @@ namespace Apiary.Data
                 entity.Property(e => e.ParentFirstName).HasMaxLength(100);
                 entity.Property(e => e.ParentLastName).HasMaxLength(100);
                 entity.HasOne(e => e.Placement).WithMany().HasForeignKey(e => e.PlacementId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Student).WithMany().HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasIndex(e => new { e.PlacementId, e.StudentId }).IsUnique();
             });
 
             modelBuilder.Entity<FormToken>(entity =>
@@ -184,6 +196,7 @@ namespace Apiary.Data
                 entity.Property(e => e.Email).HasMaxLength(200);
                 entity.HasIndex(e => e.Token).IsUnique();
                 entity.HasOne(e => e.Placement).WithMany().HasForeignKey(e => e.PlacementId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Student).WithMany().HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<LogbookEntry>(entity =>
@@ -194,24 +207,24 @@ namespace Apiary.Data
                 entity.Property(e => e.LunchEndTime).HasMaxLength(10);
                 entity.Property(e => e.FinishTime).HasMaxLength(10);
                 entity.Property(e => e.TotalHoursWorked).HasPrecision(5, 2);
-                entity.HasOne(e => e.Placement).WithMany().HasForeignKey(e => e.PlacementId).OnDelete(DeleteBehavior.Cascade);
-                entity.HasIndex(e => new { e.PlacementId, e.Date }).IsUnique();
+                entity.HasOne(e => e.PlacementStudent).WithMany(ps => ps.LogbookEntries).HasForeignKey(e => e.PlacementStudentId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(e => new { e.PlacementStudentId, e.Date }).IsUnique();
             });
 
             modelBuilder.Entity<LogbookTask>(entity =>
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Description).IsRequired().HasMaxLength(2000);
-                entity.HasOne(e => e.Placement).WithMany().HasForeignKey(e => e.PlacementId).OnDelete(DeleteBehavior.Cascade);
-                entity.HasIndex(e => new { e.PlacementId, e.DatePerformed });
+                entity.HasOne(e => e.PlacementStudent).WithMany(ps => ps.LogbookTasks).HasForeignKey(e => e.PlacementStudentId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(e => new { e.PlacementStudentId, e.DatePerformed });
             });
 
             modelBuilder.Entity<LogbookEvaluation>(entity =>
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.SupervisorName).HasMaxLength(200);
-                entity.HasOne(e => e.Placement).WithMany().HasForeignKey(e => e.PlacementId).OnDelete(DeleteBehavior.Cascade);
-                entity.HasIndex(e => e.PlacementId);
+                entity.HasOne(e => e.PlacementStudent).WithMany(ps => ps.LogbookEvaluations).HasForeignKey(e => e.PlacementStudentId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(e => e.PlacementStudentId);
             });
 
             modelBuilder.Entity<StudentWorkHistory>(entity =>

@@ -54,8 +54,15 @@
             </div>
             <div class="card-body">
                 <dl class="row mb-0">
-                    <dt class="col-sm-4">Student</dt>
-                    <dd class="col-sm-8">@(Model.Student != null ? $"{Model.Student.FirstName} {Model.Student.LastName}" : "Not assigned")</dd>
+                    <dt class="col-sm-4">Students</dt>
+                    <dd class="col-sm-8">
+                        @{
+                            var reviewStudentNames = string.Join(", ", Model.PlacementStudents
+                                .Where(ps => !ps.IsDeleted && ps.Student != null)
+                                .Select(ps => $"{ps.Student!.FirstName} {ps.Student.LastName}"));
+                        }
+                        @(string.IsNullOrEmpty(reviewStudentNames) ? "No students assigned" : reviewStudentNames)
+                    </dd>
 
                     <dt class="col-sm-4">Company</dt>
                     <dd class="col-sm-8">@(Model.Company?.Name ?? "Not assigned")</dd>

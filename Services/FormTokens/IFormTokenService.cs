@@ -10,7 +10,12 @@ namespace Apiary.Services.FormTokens
         /// <summary>
         /// Creates a new form token for a placement (14-day expiry)
         /// </summary>
-        Task<FormToken> GenerateTokenAsync(Guid placementId, string formType, string? email = null, Guid? tenantId = null);
+        /// <param name="placementId">The placement ID</param>
+        /// <param name="formType">The form type (e.g., "employer_acceptance", "parent_permission")</param>
+        /// <param name="email">Optional email for the recipient</param>
+        /// <param name="studentId">Student ID for parent forms (null for employer forms)</param>
+        /// <param name="tenantId">Optional tenant ID override</param>
+        Task<FormToken> GenerateTokenAsync(Guid placementId, string formType, string? email = null, Guid? studentId = null, Guid? tenantId = null);
 
         /// <summary>
         /// Validates a token and returns it if valid (exists, not expired, not used)

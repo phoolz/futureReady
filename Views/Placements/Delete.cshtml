@@ -17,12 +17,14 @@
     </div>
     <div class="card-body">
         <dl class="row">
-            <dt class="col-sm-4">Student</dt>
+            <dt class="col-sm-4">Students</dt>
             <dd class="col-sm-8">
-                @if (Model.Student != null)
-                {
-                    @Model.Student.FirstName @Model.Student.LastName
+                @{
+                    var deleteStudentNames = string.Join(", ", Model.PlacementStudents
+                        .Where(ps => !ps.IsDeleted && ps.Student != null)
+                        .Select(ps => $"{ps.Student!.FirstName} {ps.Student.LastName}"));
                 }
+                @(string.IsNullOrEmpty(deleteStudentNames) ? "No students assigned" : deleteStudentNames)
             </dd>
 
             <dt class="col-sm-4">Company</dt>

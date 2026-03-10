@@ -8,6 +8,7 @@ using Apiary.Models.LogbookEntries;
 using Apiary.Services;
 using Apiary.Services.LogbookEntries;
 using Apiary.Services.Placements;
+using Apiary.Services.PlacementStudents;
 using Apiary.Services.Students;
 
 namespace Apiary.Controllers
@@ -17,17 +18,20 @@ namespace Apiary.Controllers
     {
         private readonly ILogbookEntryService _logbookService;
         private readonly IPlacementService _placementService;
+        private readonly IPlacementStudentService _placementStudentService;
         private readonly IStudentAuthorizationService _studentAuthService;
         private readonly ITenantProvider? _tenantProvider;
 
         public LogbookEntriesController(
             ILogbookEntryService logbookService,
             IPlacementService placementService,
+            IPlacementStudentService placementStudentService,
             IStudentAuthorizationService studentAuthService,
             ITenantProvider? tenantProvider = null)
         {
             _logbookService = logbookService;
             _placementService = placementService;
+            _placementStudentService = placementStudentService;
             _studentAuthService = studentAuthService;
             _tenantProvider = tenantProvider;
         }
@@ -42,16 +46,46 @@ namespace Apiary.Controllers
             if (placement == null)
                 return NotFound();
 
+            // Get the PlacementStudent for the current user (if student)
+            Guid? placementStudentId = null;
+
             // Authorization check: students can only see their own placements
             if (User.IsInRole(Roles.Student))
             {
                 var studentId = await _studentAuthService.GetCurrentUserStudentIdAsync();
-                if (!studentId.HasValue || placement.StudentId != studentId.Value)
+                if (!studentId.HasValue)
                     return Forbid();
+
+                var placementStudent = placement.PlacementStudents.FirstOrDefault(ps => ps.StudentId == studentId.Value && !ps.IsDeleted);
+                if (placementStudent == null)
+                    return Forbid();
+
+                placementStudentId = placementStudent.Id;
+            }
+            else
+            {
+                // For teachers, show entries for the first student (or could aggregate)
+                var firstPlacementStudent = placement.PlacementStudents.FirstOrDefault(ps => !ps.IsDeleted);
+                placementStudentId = firstPlacementStudent?.Id;
             }
 
-            // Load entries for this placement
-            var entries = await _logbookService.GetByPlacementIdAsync(placementId, tenantId);
+            if (!placementStudentId.HasValue)
+            {
+                // No students in placement
+                var emptyViewModel = new LogbookEntriesListViewModel
+                {
+                    PlacementId = placementId,
+                    PlacementInfo = $"{placement.Company?.Name ?? "Unknown Company"} - {placement.Year}",
+                    TotalHours = 0,
+                    VerifiedCount = 0,
+                    TotalEntries = 0,
+                    Entries = new()
+                };
+                return View(emptyViewModel);
+            }
+
+            // Load entries for this placement student
+            var entries = await _logbookService.GetByPlacementStudentIdAsync(placementStudentId.Value, tenantId);
 
             // Calculate cumulative hours
             // Entries come ordered by Date descending, so sort ascending for calculation

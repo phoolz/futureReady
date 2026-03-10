@@ -29,7 +29,8 @@ namespace Apiary.Services.EmployerForm
             // Get placement with related data (bypass tenant filter for public form)
             var placement = await _context.Placements
                 .IgnoreQueryFilters()
-                .Include(p => p.Student)
+                .Include(p => p.PlacementStudents.Where(ps => !ps.IsDeleted))
+                    .ThenInclude(ps => ps.Student)
                 .Include(p => p.Company)
                 .Include(p => p.Supervisor)
                 .Where(p => p.Id == formToken.PlacementId && !p.IsDeleted)
@@ -46,10 +47,15 @@ namespace Apiary.Services.EmployerForm
                 .Where(s => s.Id == placement.TenantId && !s.IsDeleted)
                 .FirstOrDefaultAsync();
 
+            // Build student name from PlacementStudents
+            var studentNames = string.Join(", ", placement.PlacementStudents
+                .Where(ps => ps.Student != null)
+                .Select(ps => ps.Student!.FullName));
+
             var dto = new EmployerFormDto
             {
                 PlacementId = placement.Id,
-                StudentName = placement.Student?.FullName ?? "Unknown Student",
+                StudentName = string.IsNullOrEmpty(studentNames) ? "No students assigned" : studentNames,
                 SchoolName = school?.Name ?? "Unknown School",
                 CompanyName = placement.Company?.Name ?? "Unknown Company",
                 CurrentStep = 1
@@ -230,10 +236,10 @@ namespace Apiary.Services.EmployerForm
                     // Set submission timestamp
                     placement.EmployerSubmittedAt = DateTime.UtcNow;
 
-                    // Update status to pending_parent if it was pending_employer
+                    // Update status to pending_parents if it was pending_employer
                     if (placement.Status == "pending_employer")
                     {
-                        placement.Status = "pending_parent";
+                        placement.Status = "pending_parents";
                     }
 
                     await _context.SaveChangesAsync();

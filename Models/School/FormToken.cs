@@ -8,6 +8,11 @@ namespace Apiary.Models.School
         [Required]
         public Guid PlacementId { get; set; }
 
+        /// <summary>
+        /// StudentId is set for parent form tokens (per-student), null for employer form tokens (placement-wide)
+        /// </summary>
+        public Guid? StudentId { get; set; }
+
         [Required]
         [MaxLength(100)]
         public string Token { get; set; } = string.Empty;
@@ -29,7 +34,8 @@ namespace Apiary.Models.School
         /// </summary>
         public bool IsValid => UsedAt == null && ExpiresAt > DateTime.UtcNow && !IsDeleted;
 
-        // Navigation property
+        // Navigation properties
         public Placement? Placement { get; set; }
+        public Student? Student { get; set; }
     }
 }

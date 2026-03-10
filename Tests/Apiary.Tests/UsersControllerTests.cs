@@ -91,13 +91,15 @@ namespace Apiary.Tests
             };
 
             _mockUserManager.Setup(m => m.Users).Returns(new TestAsyncEnumerableQueryable<ApplicationUser>(users));
+            _mockUserManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(new List<string> { "Teacher" });
 
             // Act
             var result = await _controller.Index();
 
             // Assert
             var viewResult = Assert.IsType<ViewResult>(result);
-            var model = Assert.IsAssignableFrom<List<ApplicationUser>>(viewResult.Model);
+            var model = Assert.IsAssignableFrom<List<UserIndexViewModel>>(viewResult.Model);
             Assert.Equal(2, model.Count);
         }
 
@@ -112,15 +114,17 @@ namespace Apiary.Tests
             };
 
             _mockUserManager.Setup(m => m.Users).Returns(new TestAsyncEnumerableQueryable<ApplicationUser>(users));
+            _mockUserManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(new List<string> { "Teacher" });
 
             // Act
             var result = await _controller.Index();
 
             // Assert
             var viewResult = Assert.IsType<ViewResult>(result);
-            var model = Assert.IsAssignableFrom<List<ApplicationUser>>(viewResult.Model);
+            var model = Assert.IsAssignableFrom<List<UserIndexViewModel>>(viewResult.Model);
             Assert.Single(model);
-            Assert.Equal("user1", model[0].UserName);
+            Assert.Equal("user1", model[0].User.UserName);
         }
 
         #endregion
@@ -281,6 +285,8 @@ namespace Apiary.Tests
             var userId = Guid.NewGuid();
             var user = CreateTestUser(id: userId, userName: "existinguser");
             _mockUserManager.Setup(m => m.FindByIdAsync(userId.ToString())).ReturnsAsync(user);
+            _mockUserManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(new List<string> { "Teacher" });
 
             // Act
             var result = await _controller.Edit(userId);
@@ -335,6 +341,8 @@ namespace Apiary.Tests
             _mockUserManager.Setup(m => m.FindByIdAsync(userId.ToString())).ReturnsAsync(existingUser);
             _mockUserManager.Setup(m => m.UpdateAsync(It.IsAny<ApplicationUser>()))
                 .ReturnsAsync(IdentityResult.Success);
+            _mockUserManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(new List<string> { "Teacher" });
 
             // Act
             var result = await _controller.Edit(userId, model);
@@ -380,6 +388,8 @@ namespace Apiary.Tests
                 .ReturnsAsync("reset-token");
             _mockUserManager.Setup(m => m.ResetPasswordAsync(existingUser, "reset-token", "NewPassword123!"))
                 .ReturnsAsync(IdentityResult.Success);
+            _mockUserManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(new List<string> { "Teacher" });
 
             // Act
             var result = await _controller.Edit(userId, model);
@@ -416,6 +426,8 @@ namespace Apiary.Tests
                 .ReturnsAsync("reset-token");
             _mockUserManager.Setup(m => m.ResetPasswordAsync(existingUser, "reset-token", "weak"))
                 .ReturnsAsync(IdentityResult.Failed(identityErrors.ToArray()));
+            _mockUserManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(new List<string> { "Teacher" });
 
             // Act
             var result = await _controller.Edit(userId, model);

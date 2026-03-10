@@ -24,17 +24,18 @@ namespace Apiary.Services.LogbookEvaluations
             tenantId ??= _tenantProvider?.GetCurrentTenantId();
             return await _context.LogbookEvaluations
                 .AsNoTracking()
-                .Include(e => e.Placement)
+                .Include(e => e.PlacementStudent)
+                    .ThenInclude(ps => ps!.Placement)
                 .FirstOrDefaultAsync(e => e.Id == id && (!tenantId.HasValue || e.TenantId == tenantId.Value));
         }
 
-        public async Task<List<LogbookEvaluation>> GetByPlacementIdAsync(Guid placementId, Guid? tenantId = null)
+        public async Task<List<LogbookEvaluation>> GetByPlacementStudentIdAsync(Guid placementStudentId, Guid? tenantId = null)
         {
             tenantId ??= _tenantProvider?.GetCurrentTenantId();
             var query = _context.LogbookEvaluations
                 .AsNoTracking()
-                .Include(e => e.Placement)
-                .Where(e => e.PlacementId == placementId);
+                .Include(e => e.PlacementStudent)
+                .Where(e => e.PlacementStudentId == placementStudentId);
 
             if (tenantId.HasValue)
                 query = query.Where(e => e.TenantId == tenantId.Value);
@@ -63,7 +64,7 @@ namespace Apiary.Services.LogbookEvaluations
             if (existing == null)
                 throw new InvalidOperationException("Logbook evaluation not found");
 
-            existing.PlacementId = evaluation.PlacementId;
+            existing.PlacementStudentId = evaluation.PlacementStudentId;
             existing.AttendancePunctuality = evaluation.AttendancePunctuality;
             existing.Appearance = evaluation.Appearance;
             existing.CommunicationSkills = evaluation.CommunicationSkills;

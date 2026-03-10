@@ -7,10 +7,10 @@ namespace Apiary.Models.School
     public class LogbookTask : TenantEntity
     {
         [Required]
-        public Guid PlacementId { get; set; }
+        public Guid PlacementStudentId { get; set; }
 
-        [ForeignKey(nameof(PlacementId))]
-        public Placement? Placement { get; set; }
+        [ForeignKey(nameof(PlacementStudentId))]
+        public PlacementStudent? PlacementStudent { get; set; }
 
         [Required]
         [MaxLength(2000)]

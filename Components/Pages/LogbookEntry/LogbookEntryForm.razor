@@ -4,6 +4,7 @@
 @attribute [Authorize(Roles = "Teacher,Student")]
 @inject ILogbookEntryService LogbookService
 @inject IPlacementService PlacementService
+@inject IPlacementStudentService PlacementStudentService
 @inject IStudentAuthorizationService AuthorizationService
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -12,6 +13,7 @@
 @using Microsoft.EntityFrameworkCore
 @using Apiary.Models
 @using Apiary.Models.School
+@using Apiary.Services.PlacementStudents
 
 <PageTitle>Logbook Entry</PageTitle>
 
@@ -93,7 +95,7 @@
                 @if (Entry.SupervisorVerified)
                 {
                     <div class="alert alert-success">
-                        ✓ This entry has been verified by your supervisor
+                        This entry has been verified by your supervisor
                         @if (Entry.SupervisorVerifiedAt.HasValue)
                         {
                             <span> on @Entry.SupervisorVerifiedAt.Value.ToString("d")</span>
@@ -178,13 +180,14 @@
     private string? ErrorMessage { get; set; }
     private string? SubmitError { get; set; }
     private decimal PreviousCumulativeHours { get; set; } = 0;
+    private Guid? PlacementStudentId { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            // Get placement info
-            var placement = await PlacementService.GetByIdAsync(PlacementId);
+            // Get placement info with students
+            var placement = await PlacementService.GetByIdWithDetailsAsync(PlacementId);
             if (placement == null)
             {
                 ErrorMessage = "Placement not found.";
@@ -196,16 +199,43 @@
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var isTeacher = authState.User.IsInRole(Roles.Teacher);
 
-            // Verify the student has access to this placement (teachers bypass this check)
-            if (!isTeacher)
+            // Find the PlacementStudent for authorization and logbook entries
+            if (isTeacher)
             {
+                // For teachers, use the first student's PlacementStudent record
+                var firstPlacementStudent = placement.PlacementStudents.FirstOrDefault(ps => !ps.IsDeleted);
+                if (firstPlacementStudent != null)
+                {
+                    PlacementStudentId = firstPlacementStudent.Id;
+                }
+            }
+            else
+            {
+                // For students, verify they have access to this placement
                 var currentStudentId = await AuthorizationService.GetCurrentUserStudentIdAsync();
-                if (!currentStudentId.HasValue || currentStudentId.Value != placement.StudentId)
+                if (!currentStudentId.HasValue)
                 {
                     ErrorMessage = "You do not have permission to access this placement.";
                     IsLoading = false;
                     return;
                 }
+
+                var placementStudent = placement.PlacementStudents.FirstOrDefault(ps => ps.StudentId == currentStudentId.Value && !ps.IsDeleted);
+                if (placementStudent == null)
+                {
+                    ErrorMessage = "You do not have permission to access this placement.";
+                    IsLoading = false;
+                    return;
+                }
+
+                PlacementStudentId = placementStudent.Id;
+            }
+
+            if (!PlacementStudentId.HasValue)
+            {
+                ErrorMessage = "No student assigned to this placement.";
+                IsLoading = false;
+                return;
             }
 
             PlacementInfo = $"{placement.Company?.Name ?? "Unknown Company"} - {placement.Year}";
@@ -214,7 +244,7 @@
             if (!string.IsNullOrEmpty(Date) && DateOnly.TryParse(Date, out var entryDate))
             {
                 // Try to load existing entry for this date
-                var entries = await LogbookService.GetByPlacementIdAsync(PlacementId);
+                var entries = await LogbookService.GetByPlacementStudentIdAsync(PlacementStudentId.Value);
                 var existingEntry = entries.FirstOrDefault(e => e.Date == entryDate);
 
                 if (existingEntry != null)
@@ -227,7 +257,7 @@
                 {
                     // New entry with specified date
                     Entry.Date = entryDate;
-                    Entry.PlacementId = PlacementId;
+                    Entry.PlacementStudentId = PlacementStudentId.Value;
                     await LoadCumulativeHours();
                 }
             }
@@ -235,7 +265,7 @@
             {
                 // New entry with today's date
                 Entry.Date = DateOnly.FromDateTime(DateTime.Today);
-                Entry.PlacementId = PlacementId;
+                Entry.PlacementStudentId = PlacementStudentId.Value;
                 await LoadCumulativeHours();
             }
         }
@@ -253,8 +283,11 @@
     {
         try
         {
-            PreviousCumulativeHours = await LogbookService.GetTotalHoursAsync(PlacementId);
-            Entry.CumulativeHours = PreviousCumulativeHours;
+            if (PlacementStudentId.HasValue)
+            {
+                PreviousCumulativeHours = await LogbookService.GetTotalHoursAsync(PlacementStudentId.Value);
+                Entry.CumulativeHours = PreviousCumulativeHours;
+            }
         }
         catch
         {

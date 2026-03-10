@@ -30,7 +30,7 @@
     <table id="dataTable">
         <thead>
             <tr>
-                <th>Student</th>
+                <th>Students</th>
                 <th>Company</th>
                 <th>Supervisor</th>
                 <th>Year</th>
@@ -46,6 +46,8 @@
                 "confirmed" => "status-success",
                 "pending_employer" => "status-warning",
                 "pending_parent" => "status-info",
+                "pending_parents" => "status-info",
+                "partial" => "status-info",
                 _ => "status-neutral"
             };
             var statusText = item.Status switch
@@ -53,17 +55,46 @@
                 "confirmed" => "Confirmed",
                 "pending_employer" => "Pending Employer",
                 "pending_parent" => "Pending Parent",
+                "pending_parents" => "Pending Parents",
+                "partial" => "Partial",
                 _ => item.Status ?? "Draft"
             };
+
+            var placementStudents = item.PlacementStudents?.Where(ps => !ps.IsDeleted).ToList() ?? new List<Apiary.Models.School.PlacementStudent>();
+            var studentCount = placementStudents.Count;
+            var studentNames = string.Empty;
+
+            if (studentCount == 0)
+            {
+                studentNames = "No students assigned";
+            }
+            else if (studentCount == 1)
+            {
+                var student = placementStudents.First().Student;
+                studentNames = student != null ? $"{student.FirstName} {student.LastName}" : "Unknown";
+            }
+            else if (studentCount == 2)
+            {
+                studentNames = string.Join(", ", placementStudents.Take(2).Select(ps => ps.Student?.FirstName ?? "Unknown"));
+            }
+            else
+            {
+                studentNames = string.Join(", ", placementStudents.Take(2).Select(ps => ps.Student?.FirstName ?? "Unknown")) + $" +{studentCount - 2} more";
+            }
+
             <tr class="clickable" onclick="window.location='@Url.Action("Details", new { id = item.Id })'">
                 <td class="cell-primary">
-                    @if (item.Student != null)
+                    @if (studentCount > 0)
                     {
-                        @($"{item.Student.FirstName} {item.Student.LastName}")
+                        <span>@studentNames</span>
+                        @if (studentCount > 1)
+                        {
+                            <span class="badge bg-secondary ms-1">@studentCount</span>
+                        }
                     }
                     else
                     {
-                        <span class="cell-secondary">—</span>
+                        <span class="cell-secondary">No students</span>
                     }
                 </td>
                 <td>@(item.Company?.Name ?? "—")</td>

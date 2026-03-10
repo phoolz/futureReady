@@ -16,5 +16,6 @@ namespace Apiary.Services.Placements
         Task UpdateAsync(Placement placement, byte[]? rowVersion = null, Guid? tenantId = null);
         Task DeleteAsync(Guid id, Guid? tenantId = null);
         Task<bool> ExistsAsync(Guid id, Guid? tenantId = null);
+        Task RecalculateStatusAsync(Guid placementId, Guid? tenantId = null);
     }
 }
