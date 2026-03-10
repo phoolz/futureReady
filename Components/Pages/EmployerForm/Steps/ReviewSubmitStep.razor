@@ -44,6 +44,13 @@
                     <span class="review-label">Work Hours</span>
                     <span class="review-value">@FormData.WorkplaceDetails.WorkStartTime - @FormData.WorkplaceDetails.WorkEndTime</span>
                 </div>
+                @if (!string.IsNullOrEmpty(FormData.WorkplaceDetails.PlacementRole))
+                {
+                    <div class="review-item">
+                        <span class="review-label">Placement Role</span>
+                        <span class="review-value">@FormData.WorkplaceDetails.PlacementRole</span>
+                    </div>
+                }
                 @if (!string.IsNullOrEmpty(FormData.WorkplaceDetails.DressCode))
                 {
                     <div class="review-item">

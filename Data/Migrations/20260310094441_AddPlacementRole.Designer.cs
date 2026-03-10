@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Apiary.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260310090935_MultiStudentPlacements")]
-    partial class MultiStudentPlacements
+    [Migration("20260310094441_AddPlacementRole")]
+    partial class AddPlacementRole
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -778,6 +778,10 @@ namespace Apiary.Data.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<string>("PlacementRole")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("PlantMachineryDetails")
                         .HasColumnType("nvarchar(max)");

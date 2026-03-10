@@ -776,6 +776,10 @@ namespace Apiary.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<string>("PlacementRole")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<string>("PlantMachineryDetails")
                         .HasColumnType("nvarchar(max)");
 
@@ -1630,7 +1634,7 @@ namespace Apiary.Migrations
                     b.HasOne("Apiary.Models.School.Student", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Placement");

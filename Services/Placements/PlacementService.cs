@@ -114,6 +114,7 @@ namespace Apiary.Services.Placements
             existing.SupervisorId = placement.SupervisorId;
             existing.Year = placement.Year;
             existing.Status = placement.Status;
+            existing.PlacementRole = placement.PlacementRole;
             existing.DressRequirement = placement.DressRequirement;
             existing.WorkStartTime = placement.WorkStartTime;
             existing.WorkEndTime = placement.WorkEndTime;

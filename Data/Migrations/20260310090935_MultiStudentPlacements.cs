@@ -76,7 +76,7 @@ namespace Apiary.Data.Migrations
                         column: x => x.StudentId,
                         principalTable: "Students",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -171,7 +171,7 @@ namespace Apiary.Data.Migrations
                 SET ft.StudentId = p.StudentId
                 FROM FormTokens ft
                 INNER JOIN Placements p ON p.Id = ft.PlacementId
-                WHERE ft.TokenType = 'parent' AND p.StudentId IS NOT NULL AND p.StudentId != '00000000-0000-0000-0000-000000000000'
+                WHERE ft.FormType = 'parent' AND p.StudentId IS NOT NULL AND p.StudentId != '00000000-0000-0000-0000-000000000000'
             ");
 
             // Step 9: Drop old PlacementId columns from logbook tables

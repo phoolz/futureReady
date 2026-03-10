@@ -50,6 +50,10 @@ namespace Apiary.Models.EmployerForm
         [Display(Name = "Postal Code")]
         public string PostalCode { get; set; } = string.Empty;
 
+        [MaxLength(200)]
+        [Display(Name = "Placement Role/Position")]
+        public string? PlacementRole { get; set; }
+
         [MaxLength(500)]
         [Display(Name = "Dress Code Requirements")]
         public string? DressCode { get; set; }

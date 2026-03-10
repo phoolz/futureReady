@@ -30,7 +30,7 @@
     <table id="dataTable">
         <thead>
             <tr>
-                <th>Students</th>
+                <th>Role</th>
                 <th>Company</th>
                 <th>Supervisor</th>
                 <th>Year</th>
@@ -84,17 +84,17 @@
 
             <tr class="clickable" onclick="window.location='@Url.Action("Details", new { id = item.Id })'">
                 <td class="cell-primary">
-                    @if (studentCount > 0)
+                    @if (!string.IsNullOrEmpty(item.PlacementRole))
                     {
-                        <span>@studentNames</span>
-                        @if (studentCount > 1)
-                        {
-                            <span class="badge bg-secondary ms-1">@studentCount</span>
-                        }
+                        <span>@item.PlacementRole</span>
                     }
                     else
                     {
-                        <span class="cell-secondary">No students</span>
+                        <span class="cell-secondary">No role specified</span>
+                    }
+                    @if (studentCount > 0)
+                    {
+                        <span class="badge bg-secondary ms-1">@studentCount</span>
                     }
                 </td>
                 <td>@(item.Company?.Name ?? "—")</td>

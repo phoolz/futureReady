@@ -15,6 +15,10 @@ namespace Apiary.Models.School
         [MaxLength(50)]
         public string Status { get; set; } = "draft";  // 'draft', 'pending_parent', 'pending_employer', 'confirmed'
 
+        [MaxLength(200)]
+        [Display(Name = "Placement Role")]
+        public string? PlacementRole { get; set; }  // e.g., "Retail Assistant", "Office Admin"
+
         // Placement details
         [MaxLength(500)]
         [Display(Name = "Dress Requirement")]

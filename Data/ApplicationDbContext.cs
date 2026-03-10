@@ -171,7 +171,7 @@ namespace Apiary.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Status).HasMaxLength(50);
                 entity.HasOne(e => e.Placement).WithMany(p => p.PlacementStudents).HasForeignKey(e => e.PlacementId).OnDelete(DeleteBehavior.Cascade);
-                entity.HasOne(e => e.Student).WithMany().HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Student).WithMany().HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasIndex(e => new { e.PlacementId, e.StudentId }).IsUnique();
             });
 

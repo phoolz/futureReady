@@ -193,7 +193,7 @@ namespace Apiary.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = Roles.Teacher)]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,CompanyId,SupervisorId,Year,Status,RowVersion")] Placement placement)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,CompanyId,SupervisorId,Year,Status,PlacementRole,RowVersion")] Placement placement)
         {
             if (id != placement.Id) return NotFound();
 
@@ -207,7 +207,7 @@ namespace Apiary.Controllers
             {
                 var tenantId = _tenantProvider?.GetCurrentTenantId();
                 await _placementService.UpdateAsync(placement, placement.RowVersion, tenantId);
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Details), new { id });
             }
             catch (DbUpdateConcurrencyException)
             {

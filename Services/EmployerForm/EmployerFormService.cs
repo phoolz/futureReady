@@ -72,6 +72,7 @@ namespace Apiary.Services.EmployerForm
                     City = placement.Company.City ?? string.Empty,
                     State = placement.Company.State ?? string.Empty,
                     PostalCode = placement.Company.PostalCode ?? string.Empty,
+                    PlacementRole = placement.PlacementRole,
                     DressCode = placement.DressRequirement,
                     WorkStartTime = placement.WorkStartTime ?? string.Empty,
                     WorkEndTime = placement.WorkEndTime ?? string.Empty
@@ -195,6 +196,7 @@ namespace Apiary.Services.EmployerForm
                     }
 
                     // Update Placement
+                    placement.PlacementRole = formData.WorkplaceDetails.PlacementRole;
                     placement.DressRequirement = formData.WorkplaceDetails.DressCode;
                     placement.WorkStartTime = formData.WorkplaceDetails.WorkStartTime;
                     placement.WorkEndTime = formData.WorkplaceDetails.WorkEndTime;
