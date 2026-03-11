@@ -1,5 +1,5 @@
 
-namespace FutureReady.Models.Address
+namespace Apiary.Models.Address
 {
     public enum AddressType
     {

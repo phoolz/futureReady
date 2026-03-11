@@ -1,4 +1,4 @@
-namespace FutureReady.Services
+namespace Apiary.Services
 {
     public interface IUserProvider
     {

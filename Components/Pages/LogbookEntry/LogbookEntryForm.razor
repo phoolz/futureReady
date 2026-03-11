@@ -1,0 +1,397 @@
+@page "/student/logbook/{PlacementId:guid}"
+@page "/student/logbook/{PlacementId:guid}/{Date}"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Teacher,Student")]
+@inject ILogbookEntryService LogbookService
+@inject IPlacementService PlacementService
+@inject IPlacementStudentService PlacementStudentService
+@inject IStudentAuthorizationService AuthorizationService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@using Apiary.Models
+@using Apiary.Models.School
+@using Apiary.Services.PlacementStudents
+
+<PageTitle>Logbook Entry</PageTitle>
+
+<div class="logbook-entry-form">
+    @if (IsLoading)
+    {
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>Loading logbook entry...</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger">
+            <strong>Error:</strong> @ErrorMessage
+            <div class="mt-3">
+                <button type="button" class="btn btn-secondary" @onclick="NavigateBack">Go Back</button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="form-header mb-4">
+            <h1>@(IsEditMode ? "Edit" : "Add") Logbook Entry</h1>
+            @if (!string.IsNullOrEmpty(PlacementInfo))
+            {
+                <p class="text-muted">@PlacementInfo</p>
+            }
+        </div>
+
+        <div class="details-container">
+            <EditForm Model="@Entry" OnValidSubmit="@HandleSubmit">
+                <DataAnnotationsValidator />
+
+                <div class="mb-3">
+                    <label class="form-label">Date</label>
+                    <InputDate class="form-control" @bind-Value="Entry.Date" />
+                    <ValidationMessage For="@(() => Entry.Date)" />
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Start Time</label>
+                        <input type="time" class="form-control" value="@Entry.StartTime" @onchange="@(e => { Entry.StartTime = e.Value?.ToString(); CalculateHours(); })" />
+                        <ValidationMessage For="@(() => Entry.StartTime)" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Finish Time</label>
+                        <input type="time" class="form-control" value="@Entry.FinishTime" @onchange="@(e => { Entry.FinishTime = e.Value?.ToString(); CalculateHours(); })" />
+                        <ValidationMessage For="@(() => Entry.FinishTime)" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Lunch Start Time (optional)</label>
+                        <input type="time" class="form-control" value="@Entry.LunchStartTime" @onchange="@(e => { Entry.LunchStartTime = e.Value?.ToString(); CalculateHours(); })" />
+                        <ValidationMessage For="@(() => Entry.LunchStartTime)" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Lunch End Time (optional)</label>
+                        <input type="time" class="form-control" value="@Entry.LunchEndTime" @onchange="@(e => { Entry.LunchEndTime = e.Value?.ToString(); CalculateHours(); })" />
+                        <ValidationMessage For="@(() => Entry.LunchEndTime)" />
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <h6 class="mb-2">Hours Summary</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Today's Hours:</strong> @Entry.TotalHoursWorked.ToString("0.##")
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Total Hours:</strong> @Entry.CumulativeHours.ToString("0.##")
+                        </div>
+                    </div>
+                </div>
+
+                @if (Entry.SupervisorVerified)
+                {
+                    <div class="alert alert-success">
+                        This entry has been verified by your supervisor
+                        @if (Entry.SupervisorVerifiedAt.HasValue)
+                        {
+                            <span> on @Entry.SupervisorVerifiedAt.Value.ToString("d")</span>
+                        }
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(SubmitError))
+                {
+                    <div class="alert alert-danger">@SubmitError</div>
+                }
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary" disabled="@IsSaving">
+                        @if (IsSaving)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                        }
+                        @(IsEditMode ? "Update Entry" : "Save Entry")
+                    </button>
+                    <button type="button" class="btn btn-secondary" @onclick="NavigateBack" disabled="@IsSaving">
+                        Cancel
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    }
+</div>
+
+<style>
+    .logbook-entry-form {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .form-header h1 {
+        font-size: 1.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .loading-container {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .loading-spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #007bff;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @@keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .details-container {
+        background: #fff;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+</style>
+
+@code {
+    [Parameter]
+    public Guid PlacementId { get; set; }
+
+    [Parameter]
+    public string? Date { get; set; }
+
+    private LogbookEntry Entry { get; set; } = new();
+    private string? PlacementInfo { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private bool IsSaving { get; set; } = false;
+    private bool IsEditMode { get; set; } = false;
+    private string? ErrorMessage { get; set; }
+    private string? SubmitError { get; set; }
+    private decimal PreviousCumulativeHours { get; set; } = 0;
+    private Guid? PlacementStudentId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Get placement info with students
+            var placement = await PlacementService.GetByIdWithDetailsAsync(PlacementId);
+            if (placement == null)
+            {
+                ErrorMessage = "Placement not found.";
+                IsLoading = false;
+                return;
+            }
+
+            // Check if user is a teacher (teachers can edit any entry)
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var isTeacher = authState.User.IsInRole(Roles.Teacher);
+
+            // Find the PlacementStudent for authorization and logbook entries
+            if (isTeacher)
+            {
+                // For teachers, use the first student's PlacementStudent record
+                var firstPlacementStudent = placement.PlacementStudents.FirstOrDefault(ps => !ps.IsDeleted);
+                if (firstPlacementStudent != null)
+                {
+                    PlacementStudentId = firstPlacementStudent.Id;
+                }
+            }
+            else
+            {
+                // For students, verify they have access to this placement
+                var currentStudentId = await AuthorizationService.GetCurrentUserStudentIdAsync();
+                if (!currentStudentId.HasValue)
+                {
+                    ErrorMessage = "You do not have permission to access this placement.";
+                    IsLoading = false;
+                    return;
+                }
+
+                var placementStudent = placement.PlacementStudents.FirstOrDefault(ps => ps.StudentId == currentStudentId.Value && !ps.IsDeleted);
+                if (placementStudent == null)
+                {
+                    ErrorMessage = "You do not have permission to access this placement.";
+                    IsLoading = false;
+                    return;
+                }
+
+                PlacementStudentId = placementStudent.Id;
+            }
+
+            if (!PlacementStudentId.HasValue)
+            {
+                ErrorMessage = "No student assigned to this placement.";
+                IsLoading = false;
+                return;
+            }
+
+            PlacementInfo = $"{placement.Company?.Name ?? "Unknown Company"} - {placement.Year}";
+
+            // Check if we're editing an existing entry
+            if (!string.IsNullOrEmpty(Date) && DateOnly.TryParse(Date, out var entryDate))
+            {
+                // Try to load existing entry for this date
+                var entries = await LogbookService.GetByPlacementStudentIdAsync(PlacementStudentId.Value);
+                var existingEntry = entries.FirstOrDefault(e => e.Date == entryDate);
+
+                if (existingEntry != null)
+                {
+                    Entry = existingEntry;
+                    IsEditMode = true;
+                    PreviousCumulativeHours = Entry.CumulativeHours - Entry.TotalHoursWorked;
+                }
+                else
+                {
+                    // New entry with specified date
+                    Entry.Date = entryDate;
+                    Entry.PlacementStudentId = PlacementStudentId.Value;
+                    await LoadCumulativeHours();
+                }
+            }
+            else
+            {
+                // New entry with today's date
+                Entry.Date = DateOnly.FromDateTime(DateTime.Today);
+                Entry.PlacementStudentId = PlacementStudentId.Value;
+                await LoadCumulativeHours();
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"An error occurred while loading the logbook entry: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task LoadCumulativeHours()
+    {
+        try
+        {
+            if (PlacementStudentId.HasValue)
+            {
+                PreviousCumulativeHours = await LogbookService.GetTotalHoursAsync(PlacementStudentId.Value);
+                Entry.CumulativeHours = PreviousCumulativeHours;
+            }
+        }
+        catch
+        {
+            PreviousCumulativeHours = 0;
+            Entry.CumulativeHours = 0;
+        }
+    }
+
+    private void CalculateHours()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(Entry.StartTime) || string.IsNullOrWhiteSpace(Entry.FinishTime))
+            {
+                Entry.TotalHoursWorked = 0;
+                Entry.CumulativeHours = PreviousCumulativeHours;
+                return;
+            }
+
+            // Parse times
+            if (!TimeOnly.TryParse(Entry.StartTime, out var startTime) ||
+                !TimeOnly.TryParse(Entry.FinishTime, out var finishTime))
+            {
+                Entry.TotalHoursWorked = 0;
+                Entry.CumulativeHours = PreviousCumulativeHours;
+                return;
+            }
+
+            // Calculate work duration
+            var workDuration = finishTime - startTime;
+            var totalMinutes = workDuration.TotalMinutes;
+
+            // Subtract lunch break if provided
+            if (!string.IsNullOrWhiteSpace(Entry.LunchStartTime) && !string.IsNullOrWhiteSpace(Entry.LunchEndTime))
+            {
+                if (TimeOnly.TryParse(Entry.LunchStartTime, out var lunchStart) &&
+                    TimeOnly.TryParse(Entry.LunchEndTime, out var lunchEnd))
+                {
+                    var lunchDuration = lunchEnd - lunchStart;
+                    totalMinutes -= lunchDuration.TotalMinutes;
+                }
+            }
+
+            Entry.TotalHoursWorked = (decimal)(totalMinutes / 60.0);
+            Entry.CumulativeHours = PreviousCumulativeHours + Entry.TotalHoursWorked;
+        }
+        catch
+        {
+            Entry.TotalHoursWorked = 0;
+            Entry.CumulativeHours = PreviousCumulativeHours;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        IsSaving = true;
+        SubmitError = null;
+
+        try
+        {
+            // Recalculate hours before saving
+            CalculateHours();
+
+            if (IsEditMode)
+            {
+                await LogbookService.UpdateAsync(Entry);
+            }
+            else
+            {
+                Entry.Id = Guid.NewGuid();
+                await LogbookService.CreateAsync(Entry);
+            }
+
+            // Navigate back to dashboard
+            Navigation.NavigateTo("/", forceLoad: true);
+        }
+        catch (DbUpdateException ex)
+        {
+            // Check for duplicate key error
+            if (ex.InnerException != null && ex.InnerException.Message.Contains("duplicate key"))
+            {
+                SubmitError = $"An entry already exists for {Entry.Date:d}. Please choose a different date or edit the existing entry.";
+            }
+            else
+            {
+                // Show the most detailed error message available
+                var errorMessage = ex.InnerException?.Message ?? ex.Message;
+                SubmitError = $"Failed to save logbook entry: {errorMessage}";
+            }
+        }
+        catch (Exception ex)
+        {
+            // Show the most detailed error message available
+            var errorMessage = ex.InnerException?.Message ?? ex.Message;
+            SubmitError = $"Failed to save logbook entry: {errorMessage}";
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/");
+    }
+}

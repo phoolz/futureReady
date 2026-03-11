@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace FutureReady.Models.School
+namespace Apiary.Models.School
 {
     public class SchoolAddress : TenantEntity
     {
@@ -13,7 +13,7 @@ namespace FutureReady.Models.School
         public Guid AddressId { get; set; }
 
         [ForeignKey(nameof(AddressId))]
-        public virtual FutureReady.Models.Address.Address? Address { get; set; }
+        public virtual Apiary.Models.Address.Address? Address { get; set; }
 
         public string AddressType { get; set; } = string.Empty;
     }

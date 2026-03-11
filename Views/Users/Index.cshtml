@@ -1,41 +1,120 @@
-@model IEnumerable<FutureReady.Controllers.UserIndexViewModel>
+@model IEnumerable<Apiary.Controllers.UserIndexViewModel>
 
 @{
     ViewData["Title"] = "Users";
 }
 
-<h1>Users</h1>
+<div class="list-header">
+    <div class="list-header-content">
+        <h1>Users</h1>
+        <p>Manage system users and permissions</p>
+    </div>
+    <div class="list-header-actions">
+        <div class="search-input">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" id="searchInput" placeholder="Search users..." onkeyup="filterTable()">
+        </div>
+        <a asp-action="Create" class="btn-add">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Add User
+        </a>
+    </div>
+</div>
 
-<p>
-    <a class="btn btn-primary" asp-action="Create">Create New User</a>
-</p>
-
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>UserName</th>
-            <th>DisplayName</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>IsActive</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-    @foreach (var item in Model)
+<div class="list-table">
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Display Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model)
+        {
+            <tr class="clickable" onclick="window.location='@Url.Action("Details", new { id = item.User.Id })'">
+                <td class="cell-primary">@item.User.UserName</td>
+                <td>@(item.User.DisplayName ?? "—")</td>
+                <td class="cell-secondary">@(item.User.Email ?? "—")</td>
+                <td>
+                    <span class="status-badge status-neutral">@(item.RoleName ?? "—")</span>
+                </td>
+                <td>
+                    @if (item.User.IsActive)
+                    {
+                        <span class="status-badge status-success">Active</span>
+                    }
+                    else
+                    {
+                        <span class="status-badge status-neutral">Inactive</span>
+                    }
+                </td>
+                <td>
+                    <div class="row-actions">
+                        <a asp-action="Details" asp-route-id="@item.User.Id" class="row-action action-view" title="View" onclick="event.stopPropagation()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </a>
+                        <a asp-action="Edit" asp-route-id="@item.User.Id" class="row-action action-edit" title="Edit" onclick="event.stopPropagation()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                            </svg>
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@item.User.Id" class="row-action action-delete" title="Delete" onclick="event.stopPropagation()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    @if (!Model.Any())
     {
-        <tr>
-            <td>@item.User.UserName</td>
-            <td>@item.User.DisplayName</td>
-            <td>@item.User.Email</td>
-            <td>@item.RoleName</td>
-            <td>@item.User.IsActive</td>
-            <td>
-                <a class="btn btn-sm btn-secondary" asp-action="Edit" asp-route-id="@item.User.Id">Edit</a>
-                <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@item.User.Id">Details</a>
-                <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@item.User.Id">Delete</a>
-            </td>
-        </tr>
+        <div class="list-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>
+                <circle cx="17" cy="7" r="3"/>
+                <path d="M21 21v-2a3 3 0 0 0-2-2.83"/>
+            </svg>
+            <p>No users found. Add your first user to get started.</p>
+        </div>
     }
-    </tbody>
-</table>
+</div>
+
+@section Scripts {
+<script>
+    function filterTable() {
+        var input = document.getElementById("searchInput");
+        var filter = input.value.toLowerCase();
+        var table = document.getElementById("dataTable");
+        var rows = table.getElementsByTagName("tr");
+
+        for (var i = 1; i < rows.length; i++) {
+            var cells = rows[i].getElementsByTagName("td");
+            var match = false;
+            for (var j = 0; j < cells.length; j++) {
+                if (cells[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                    match = true;
+                    break;
+                }
+            }
+            rows[i].style.display = match ? "" : "none";
+        }
+    }
+</script>
+}

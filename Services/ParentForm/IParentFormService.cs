@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
-using FutureReady.Models.ParentForm;
+using Apiary.Models.ParentForm;
 
-namespace FutureReady.Services.ParentForm
+namespace Apiary.Services.ParentForm
 {
     public interface IParentFormService
     {

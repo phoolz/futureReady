@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using FutureReady.Models.School;
+using Apiary.Models.School;
 
-namespace FutureReady.Services.StudentAccountTokens
+namespace Apiary.Services.StudentAccountTokens
 {
     public interface IStudentAccountTokenService
     {

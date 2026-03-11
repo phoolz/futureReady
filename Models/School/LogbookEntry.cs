@@ -2,15 +2,15 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace FutureReady.Models.School
+namespace Apiary.Models.School
 {
     public class LogbookEntry : TenantEntity
     {
         [Required]
-        public Guid PlacementId { get; set; }
+        public Guid PlacementStudentId { get; set; }
 
-        [ForeignKey(nameof(PlacementId))]
-        public Placement? Placement { get; set; }
+        [ForeignKey(nameof(PlacementStudentId))]
+        public PlacementStudent? PlacementStudent { get; set; }
 
         [Required]
         [Display(Name = "Date")]
@@ -35,6 +35,7 @@ namespace FutureReady.Models.School
         [Display(Name = "Total Hours Worked")]
         public decimal TotalHoursWorked { get; set; }
 
+        [NotMapped]
         [Display(Name = "Cumulative Hours")]
         public decimal CumulativeHours { get; set; }
 

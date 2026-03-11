@@ -1,17 +1,17 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using FutureReady.Models.School.Enums;
+using Apiary.Models.School.Enums;
 
-namespace FutureReady.Models.School
+namespace Apiary.Models.School
 {
     public class LogbookEvaluation : TenantEntity
     {
         [Required]
-        public Guid PlacementId { get; set; }
+        public Guid PlacementStudentId { get; set; }
 
-        [ForeignKey(nameof(PlacementId))]
-        public Placement? Placement { get; set; }
+        [ForeignKey(nameof(PlacementStudentId))]
+        public PlacementStudent? PlacementStudent { get; set; }
 
         // Performance ratings (8 fields using PerformanceRating enum)
         [Required]

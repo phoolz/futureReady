@@ -11,12 +11,12 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Xunit;
-using FutureReady.Controllers;
-using FutureReady.Data;
-using FutureReady.Models;
-using FutureReady.Services;
+using Apiary.Controllers;
+using Apiary.Data;
+using Apiary.Models;
+using Apiary.Services;
 
-namespace FutureReady.Tests
+namespace Apiary.Tests
 {
     public class UsersControllerTests : IDisposable
     {
@@ -34,7 +34,7 @@ namespace FutureReady.Tests
             (_context, _connection) = TestDbContextFactory.CreateSqliteInMemoryContext(userProvider, tenantProvider);
 
             // Seed a school for SelectList tests
-            var school = new FutureReady.Models.School.School
+            var school = new Apiary.Models.School.School
             {
                 Id = _tenantId,
                 Name = "Test School",
@@ -91,13 +91,15 @@ namespace FutureReady.Tests
             };
 
             _mockUserManager.Setup(m => m.Users).Returns(new TestAsyncEnumerableQueryable<ApplicationUser>(users));
+            _mockUserManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(new List<string> { "Teacher" });
 
             // Act
             var result = await _controller.Index();
 
             // Assert
             var viewResult = Assert.IsType<ViewResult>(result);
-            var model = Assert.IsAssignableFrom<List<ApplicationUser>>(viewResult.Model);
+            var model = Assert.IsAssignableFrom<List<UserIndexViewModel>>(viewResult.Model);
             Assert.Equal(2, model.Count);
         }
 
@@ -112,15 +114,17 @@ namespace FutureReady.Tests
             };
 
             _mockUserManager.Setup(m => m.Users).Returns(new TestAsyncEnumerableQueryable<ApplicationUser>(users));
+            _mockUserManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(new List<string> { "Teacher" });
 
             // Act
             var result = await _controller.Index();
 
             // Assert
             var viewResult = Assert.IsType<ViewResult>(result);
-            var model = Assert.IsAssignableFrom<List<ApplicationUser>>(viewResult.Model);
+            var model = Assert.IsAssignableFrom<List<UserIndexViewModel>>(viewResult.Model);
             Assert.Single(model);
-            Assert.Equal("user1", model[0].UserName);
+            Assert.Equal("user1", model[0].User.UserName);
         }
 
         #endregion
@@ -281,6 +285,8 @@ namespace FutureReady.Tests
             var userId = Guid.NewGuid();
             var user = CreateTestUser(id: userId, userName: "existinguser");
             _mockUserManager.Setup(m => m.FindByIdAsync(userId.ToString())).ReturnsAsync(user);
+            _mockUserManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(new List<string> { "Teacher" });
 
             // Act
             var result = await _controller.Edit(userId);
@@ -335,6 +341,8 @@ namespace FutureReady.Tests
             _mockUserManager.Setup(m => m.FindByIdAsync(userId.ToString())).ReturnsAsync(existingUser);
             _mockUserManager.Setup(m => m.UpdateAsync(It.IsAny<ApplicationUser>()))
                 .ReturnsAsync(IdentityResult.Success);
+            _mockUserManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(new List<string> { "Teacher" });
 
             // Act
             var result = await _controller.Edit(userId, model);
@@ -380,6 +388,8 @@ namespace FutureReady.Tests
                 .ReturnsAsync("reset-token");
             _mockUserManager.Setup(m => m.ResetPasswordAsync(existingUser, "reset-token", "NewPassword123!"))
                 .ReturnsAsync(IdentityResult.Success);
+            _mockUserManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(new List<string> { "Teacher" });
 
             // Act
             var result = await _controller.Edit(userId, model);
@@ -416,6 +426,8 @@ namespace FutureReady.Tests
                 .ReturnsAsync("reset-token");
             _mockUserManager.Setup(m => m.ResetPasswordAsync(existingUser, "reset-token", "weak"))
                 .ReturnsAsync(IdentityResult.Failed(identityErrors.ToArray()));
+            _mockUserManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(new List<string> { "Teacher" });
 
             // Act
             var result = await _controller.Edit(userId, model);

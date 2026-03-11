@@ -4,10 +4,10 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using FutureReady.Data;
-using FutureReady.Models.School;
+using Apiary.Data;
+using Apiary.Models.School;
 
-namespace FutureReady.Services.FormTokens
+namespace Apiary.Services.FormTokens
 {
     public class FormTokenService : IFormTokenService
     {
@@ -22,7 +22,7 @@ namespace FutureReady.Services.FormTokens
             _tenantProvider = tenantProvider;
         }
 
-        public async Task<FormToken> GenerateTokenAsync(Guid placementId, string formType, string? email = null, Guid? tenantId = null)
+        public async Task<FormToken> GenerateTokenAsync(Guid placementId, string formType, string? email = null, Guid? studentId = null, Guid? tenantId = null)
         {
             tenantId ??= _tenantProvider?.GetCurrentTenantId();
             if (!tenantId.HasValue)
@@ -32,6 +32,7 @@ namespace FutureReady.Services.FormTokens
             var formToken = new FormToken
             {
                 PlacementId = placementId,
+                StudentId = studentId,
                 Token = token,
                 FormType = formType,
                 Email = email,
@@ -51,6 +52,7 @@ namespace FutureReady.Services.FormTokens
             var formToken = await _context.FormTokens
                 .IgnoreQueryFilters()
                 .Include(ft => ft.Placement)
+                .Include(ft => ft.Student)
                 .FirstOrDefaultAsync(ft => ft.Token == token);
 
             if (formToken == null)

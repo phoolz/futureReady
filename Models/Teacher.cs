@@ -1,9 +1,9 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using FutureReady.Models.School;
+using Apiary.Models.School;
 
-namespace FutureReady.Models
+namespace Apiary.Models
 {
     public class Teacher : TenantEntity
     {
@@ -40,7 +40,7 @@ namespace FutureReady.Models
         public ApplicationUser? User { get; set; }
 
         [ForeignKey(nameof(SchoolId))]
-        // Fully-qualify the School type to avoid ambiguity with the nested namespace "School" under FutureReady.Models
-        public FutureReady.Models.School.School? School { get; set; }
+        // Fully-qualify the School type to avoid ambiguity with the nested namespace "School" under Apiary.Models
+        public Apiary.Models.School.School? School { get; set; }
     }
 }

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
-namespace FutureReady.Controllers
+namespace Apiary.Controllers
 {
     [AllowAnonymous]
     public class EmployerController : Controller

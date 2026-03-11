@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace FutureReady.Models.ParentForm
+namespace Apiary.Models.ParentForm
 {
     public class ParentFormDto
     {

@@ -4,9 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
 using System.Security.Claims;
-using FutureReady.Data;
+using Apiary.Data;
 
-namespace FutureReady.Services
+namespace Apiary.Services
 {
     public class HttpContextTenantProvider : ITenantProvider
     {

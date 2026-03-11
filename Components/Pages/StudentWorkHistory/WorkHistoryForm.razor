@@ -6,8 +6,8 @@
 @inject NavigationManager Navigation
 @using System.Text.Json
 @using Microsoft.AspNetCore.Authorization
-@using FutureReady.Models
-@using FutureReady.Models.School
+@using Apiary.Models
+@using Apiary.Models.School
 
 <PageTitle>Work History</PageTitle>
 
@@ -227,7 +227,7 @@
     [Parameter] public Guid StudentId { get; set; }
 
     private WorkHistoryFormDto FormData { get; set; } = new();
-    private FutureReady.Models.School.StudentWorkHistory? ExistingRecord { get; set; }
+    private Apiary.Models.School.StudentWorkHistory? ExistingRecord { get; set; }
     private string StudentName { get; set; } = "";
     private bool IsLoading { get; set; } = true;
     private bool IsSaving { get; set; }
@@ -325,7 +325,7 @@
                 return;
             }
 
-            var record = ExistingRecord ?? new FutureReady.Models.School.StudentWorkHistory
+            var record = ExistingRecord ?? new Apiary.Models.School.StudentWorkHistory
             {
                 StudentId = StudentId
             };

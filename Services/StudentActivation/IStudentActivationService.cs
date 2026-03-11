@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
-using FutureReady.Models.StudentActivation;
+using Apiary.Models.StudentActivation;
 
-namespace FutureReady.Services.StudentActivation
+namespace Apiary.Services.StudentActivation
 {
     public interface IStudentActivationService
     {

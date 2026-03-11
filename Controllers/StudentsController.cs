@@ -4,17 +4,18 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Identity;
-using FutureReady.Data;
-using FutureReady.Models;
-using FutureReady.Models.School;
-using FutureReady.Services;
-using FutureReady.Services.Students;
-using FutureReady.Services.Placements;
-using FutureReady.Services.StudentAccountTokens;
+using Apiary.Data;
+using Apiary.Models;
+using Apiary.Models.School;
+using Apiary.Services;
+using Apiary.Services.Students;
+using Apiary.Services.Placements;
+using Apiary.Services.StudentAccountTokens;
+using Apiary.Services.LogbookEntries;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 
-namespace FutureReady.Controllers
+namespace Apiary.Controllers
 {
     [Authorize(Roles = Roles.Teacher)]
     public class StudentsController : Controller
@@ -24,14 +25,16 @@ namespace FutureReady.Controllers
         private readonly IStudentService _studentService;
         private readonly IPlacementService _placementService;
         private readonly IStudentAccountTokenService _accountTokenService;
+        private readonly ILogbookEntryService _logbookService;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public StudentsController(ApplicationDbContext context, IStudentService studentService, IPlacementService placementService, IStudentAccountTokenService accountTokenService, UserManager<ApplicationUser> userManager, ITenantProvider? tenantProvider = null)
+        public StudentsController(ApplicationDbContext context, IStudentService studentService, IPlacementService placementService, IStudentAccountTokenService accountTokenService, ILogbookEntryService logbookService, UserManager<ApplicationUser> userManager, ITenantProvider? tenantProvider = null)
         {
             _context = context;
             _studentService = studentService;
             _placementService = placementService;
             _accountTokenService = accountTokenService;
+            _logbookService = logbookService;
             _userManager = userManager;
             _tenantProvider = tenantProvider;
         }
@@ -56,6 +59,24 @@ namespace FutureReady.Controllers
             // Get placements for this student
             var placements = await _placementService.GetByStudentIdAsync(id.Value, tenantId);
             ViewData["Placements"] = placements;
+
+            // Get logbook summaries for each placement
+            var placementSummaries = new Dictionary<Guid, (decimal TotalHours, int EntryCount, int VerifiedCount, Guid? PlacementStudentId)>();
+            foreach (var placement in placements)
+            {
+                var ps = placement.PlacementStudents.FirstOrDefault(ps => ps.StudentId == id.Value && !ps.IsDeleted);
+                if (ps != null)
+                {
+                    var entries = await _logbookService.GetByPlacementStudentIdAsync(ps.Id, tenantId);
+                    placementSummaries[placement.Id] = (
+                        entries.Sum(e => e.TotalHoursWorked),
+                        entries.Count,
+                        entries.Count(e => e.SupervisorVerified),
+                        ps.Id
+                    );
+                }
+            }
+            ViewData["PlacementSummaries"] = placementSummaries;
 
             // Get account tokens for this student
             var accountTokens = await _accountTokenService.GetByStudentIdAsync(id.Value, tenantId);

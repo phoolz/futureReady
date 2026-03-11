@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace FutureReady.Models.EmployerForm
+namespace Apiary.Models.EmployerForm
 {
     public class EmployerFormDto
     {
@@ -49,6 +49,10 @@ namespace FutureReady.Models.EmployerForm
         [MaxLength(20)]
         [Display(Name = "Postal Code")]
         public string PostalCode { get; set; } = string.Empty;
+
+        [MaxLength(200)]
+        [Display(Name = "Placement Role/Position")]
+        public string? PlacementRole { get; set; }
 
         [MaxLength(500)]
         [Display(Name = "Dress Code Requirements")]

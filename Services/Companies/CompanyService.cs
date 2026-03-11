@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using FutureReady.Data;
-using FutureReady.Models.School;
+using Apiary.Data;
+using Apiary.Models.School;
 
-namespace FutureReady.Services.Companies
+namespace Apiary.Services.Companies
 {
     public class CompanyService : ICompanyService
     {

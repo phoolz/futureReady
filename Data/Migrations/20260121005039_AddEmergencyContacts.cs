@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace FutureReady.Data.Migrations
+namespace Apiary.Data.Migrations
 {
     /// <inheritdoc />
     public partial class AddEmergencyContacts : Migration

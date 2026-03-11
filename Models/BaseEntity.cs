@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace FutureReady.Models
+namespace Apiary.Models
 {
     public abstract class BaseEntity
     {

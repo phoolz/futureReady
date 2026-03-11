@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using FutureReady.Models;
+using Apiary.Models;
 
-namespace FutureReady.Controllers
+namespace Apiary.Controllers
 {
     public class AuthenticationController : Controller
     {

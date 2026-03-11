@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace FutureReady.Services.Students
+namespace Apiary.Services.Students
 {
     public interface IStudentAuthorizationService
     {

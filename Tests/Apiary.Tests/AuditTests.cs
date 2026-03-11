@@ -4,12 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
-using FutureReady.Data;
-using FutureReady.Models;
-using FutureReady.Models.School;
-using FutureReady.Services;
+using Apiary.Data;
+using Apiary.Models;
+using Apiary.Models.School;
+using Apiary.Services;
 
-namespace FutureReady.Tests
+namespace Apiary.Tests
 {
     public class AuditTests
     {

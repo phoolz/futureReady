@@ -2,12 +2,12 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using FutureReady.Data;
-using FutureReady.Models;
-using FutureReady.Models.StudentActivation;
-using FutureReady.Services.StudentAccountTokens;
+using Apiary.Data;
+using Apiary.Models;
+using Apiary.Models.StudentActivation;
+using Apiary.Services.StudentAccountTokens;
 
-namespace FutureReady.Services.StudentActivation
+namespace Apiary.Services.StudentActivation
 {
     public class StudentActivationService : IStudentActivationService
     {

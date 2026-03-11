@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using FutureReady.Data;
-using FutureReady.Models.School;
-using FutureReady.Services;
+using Apiary.Data;
+using Apiary.Models.School;
+using Apiary.Services;
 
-namespace FutureReady.Services.Students
+namespace Apiary.Services.Students
 {
     public class StudentService : IStudentService
     {

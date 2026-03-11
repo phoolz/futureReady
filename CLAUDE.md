@@ -1,4 +1,4 @@
-# FutureReady Project Context
+# Apiary Project Context
 
 ## Overview
 Blazor Server application for managing student work placements, including parent/employer forms, student logbooks, and work history tracking.

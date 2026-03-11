@@ -3,9 +3,9 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.JSInterop;
-using FutureReady.Models.EmployerForm;
+using Apiary.Models.EmployerForm;
 
-namespace FutureReady.Services.EmployerForm
+namespace Apiary.Services.EmployerForm
 {
     public class EmployerFormStateService : IEmployerFormStateService
     {

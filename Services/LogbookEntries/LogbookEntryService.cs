@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using FutureReady.Data;
-using FutureReady.Models.School;
-namespace FutureReady.Services.LogbookEntries
+using Apiary.Data;
+using Apiary.Models.School;
+
+namespace Apiary.Services.LogbookEntries
 {
     public class LogbookEntryService : ILogbookEntryService
     {
@@ -23,17 +24,18 @@ namespace FutureReady.Services.LogbookEntries
             tenantId ??= _tenantProvider?.GetCurrentTenantId();
             return await _context.LogbookEntries
                 .AsNoTracking()
-                .Include(e => e.Placement)
+                .Include(e => e.PlacementStudent)
+                    .ThenInclude(ps => ps!.Placement)
                 .FirstOrDefaultAsync(e => e.Id == id && (!tenantId.HasValue || e.TenantId == tenantId.Value));
         }
 
-        public async Task<List<LogbookEntry>> GetByPlacementIdAsync(Guid placementId, Guid? tenantId = null)
+        public async Task<List<LogbookEntry>> GetByPlacementStudentIdAsync(Guid placementStudentId, Guid? tenantId = null)
         {
             tenantId ??= _tenantProvider?.GetCurrentTenantId();
             var query = _context.LogbookEntries
                 .AsNoTracking()
-                .Include(e => e.Placement)
-                .Where(e => e.PlacementId == placementId);
+                .Include(e => e.PlacementStudent)
+                .Where(e => e.PlacementStudentId == placementStudentId);
 
             if (tenantId.HasValue)
                 query = query.Where(e => e.TenantId == tenantId.Value);
@@ -62,14 +64,13 @@ namespace FutureReady.Services.LogbookEntries
             if (existing == null)
                 throw new InvalidOperationException("Logbook entry not found");
 
-            existing.PlacementId = entry.PlacementId;
+            existing.PlacementStudentId = entry.PlacementStudentId;
             existing.Date = entry.Date;
             existing.StartTime = entry.StartTime;
             existing.LunchStartTime = entry.LunchStartTime;
             existing.LunchEndTime = entry.LunchEndTime;
             existing.FinishTime = entry.FinishTime;
             existing.TotalHoursWorked = entry.TotalHoursWorked;
-            existing.CumulativeHours = entry.CumulativeHours;
             existing.SupervisorVerified = entry.SupervisorVerified;
             existing.SupervisorVerifiedAt = entry.SupervisorVerifiedAt;
 
@@ -107,11 +108,11 @@ namespace FutureReady.Services.LogbookEntries
             await _context.SaveChangesAsync();
         }
 
-        public async Task<decimal> GetTotalHoursAsync(Guid placementId, Guid? tenantId = null)
+        public async Task<decimal> GetTotalHoursAsync(Guid placementStudentId, Guid? tenantId = null)
         {
             tenantId ??= _tenantProvider?.GetCurrentTenantId();
             var query = _context.LogbookEntries
-                .Where(e => e.PlacementId == placementId);
+                .Where(e => e.PlacementStudentId == placementStudentId);
 
             if (tenantId.HasValue)
                 query = query.Where(e => e.TenantId == tenantId.Value);

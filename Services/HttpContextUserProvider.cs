@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 
-namespace FutureReady.Services
+namespace Apiary.Services
 {
     public class HttpContextUserProvider : IUserProvider
     {

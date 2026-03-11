@@ -1,8 +1,8 @@
 using System;
 using System.Threading.Tasks;
-using FutureReady.Models.School;
+using Apiary.Models.School;
 
-namespace FutureReady.Services.StudentWorkHistories
+namespace Apiary.Services.StudentWorkHistories
 {
     public interface IStudentWorkHistoryService
     {

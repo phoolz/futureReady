@@ -3,16 +3,16 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using FutureReady.Models;
-using FutureReady.Models.StudentPortal;
-using FutureReady.Data;
-using FutureReady.Services;
-using FutureReady.Services.Students;
-using FutureReady.Services.Placements;
-using FutureReady.Services.LogbookEntries;
+using Apiary.Models;
+using Apiary.Models.StudentPortal;
+using Apiary.Data;
+using Apiary.Services;
+using Apiary.Services.Students;
+using Apiary.Services.Placements;
+using Apiary.Services.LogbookEntries;
 using Microsoft.EntityFrameworkCore;
 
-namespace FutureReady.Controllers;
+namespace Apiary.Controllers;
 
 [Authorize]
 public class HomeController : Controller

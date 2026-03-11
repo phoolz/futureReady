@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace FutureReady.Models.StudentActivation
+namespace Apiary.Models.StudentActivation
 {
     public class StudentActivationDto
     {

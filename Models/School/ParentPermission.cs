@@ -1,12 +1,15 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace FutureReady.Models.School
+namespace Apiary.Models.School
 {
     public class ParentPermission : TenantEntity
     {
         [Required]
         public Guid PlacementId { get; set; }
+
+        [Required]
+        public Guid StudentId { get; set; }
 
         // Transport details
         [MaxLength(50)]
@@ -50,7 +53,8 @@ namespace FutureReady.Models.School
         [Display(Name = "Consent Date")]
         public DateOnly? ConsentDate { get; set; }
 
-        // Navigation property
+        // Navigation properties
         public Placement? Placement { get; set; }
+        public Student? Student { get; set; }
     }
 }

@@ -1,6 +1,6 @@
 using System;
 
-namespace FutureReady.Models.StudentPortal
+namespace Apiary.Models.StudentPortal
 {
     public class StudentPlacementViewModel
     {

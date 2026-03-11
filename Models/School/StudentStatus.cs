@@ -1,4 +1,4 @@
-namespace FutureReady.Models.School
+namespace Apiary.Models.School
 {
     public enum StudentStatus
     {

@@ -1,4 +1,4 @@
-@model FutureReady.Models.School.Placement
+@model Apiary.Models.School.Placement
 
 @{
     ViewData["Title"] = "Employer Acceptance Form";
@@ -23,10 +23,12 @@
                     <dl class="row">
                         <dt class="col-sm-4">Student Name</dt>
                         <dd class="col-sm-8">
-                            @if (Model.Student != null)
-                            {
-                                @Model.Student.FirstName @Model.Student.LastName
+                            @{
+                                var studentNames = string.Join(", ", Model.PlacementStudents
+                                    .Where(ps => !ps.IsDeleted && ps.Student != null)
+                                    .Select(ps => $"{ps.Student!.FirstName} {ps.Student.LastName}"));
                             }
+                            @(string.IsNullOrEmpty(studentNames) ? "No students assigned" : studentNames)
                         </dd>
                     </dl>
 

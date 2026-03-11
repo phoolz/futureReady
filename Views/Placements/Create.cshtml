@@ -1,4 +1,4 @@
-@model FutureReady.Models.School.Placement
+@model Apiary.Models.School.Placement
 
 @{
     ViewData["Title"] = "Create Placement";
@@ -16,18 +16,22 @@
                     <h5 class="mb-0">Placement Information</h5>
                 </div>
                 <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Create the placement first, then add students on the Edit page.
+                    </div>
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="StudentId" class="form-label">Student</label>
-                            <select asp-for="StudentId" asp-items="ViewBag.StudentId" class="form-select">
-                                <option value="">-- Select Student --</option>
-                            </select>
-                            <span asp-validation-for="StudentId" class="text-danger"></span>
-                        </div>
                         <div class="col-md-6 mb-3">
                             <label asp-for="Year" class="form-label"></label>
                             <input asp-for="Year" class="form-control" value="@DateTime.Now.Year" />
                             <span asp-validation-for="Year" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Status" class="form-label"></label>
+                            <select asp-for="Status" class="form-select">
+                                <option value="draft">Draft</option>
+                                <option value="pending_employer">Pending Employer</option>
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="row">
@@ -44,18 +48,6 @@
                                 <option value="">-- Select Supervisor --</option>
                             </select>
                             <span asp-validation-for="SupervisorId" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="Status" class="form-label"></label>
-                            <select asp-for="Status" class="form-select">
-                                <option value="draft">Draft</option>
-                                <option value="pending_employer">Pending Employer</option>
-                                <option value="pending_parent">Pending Parent</option>
-                                <option value="confirmed">Confirmed</option>
-                            </select>
-                            <span asp-validation-for="Status" class="text-danger"></span>
                         </div>
                     </div>
                 </div>

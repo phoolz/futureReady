@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using FutureReady.Models.School;
+using Apiary.Models.School;
 
-namespace FutureReady.Services.Placements
+namespace Apiary.Services.Placements
 {
     public interface IPlacementService
     {
@@ -16,5 +16,6 @@ namespace FutureReady.Services.Placements
         Task UpdateAsync(Placement placement, byte[]? rowVersion = null, Guid? tenantId = null);
         Task DeleteAsync(Guid id, Guid? tenantId = null);
         Task<bool> ExistsAsync(Guid id, Guid? tenantId = null);
+        Task RecalculateStatusAsync(Guid placementId, Guid? tenantId = null);
     }
 }
