@@ -5,7 +5,7 @@ Blazor Server application for managing student work placements, including parent
 
 ## Architecture
 
-- **Framework**: .NET 9, Blazor Server with InteractiveServer render mode
+- **Framework**: .NET 10, Blazor Server with InteractiveServer render mode
 - **Database**: Entity Framework Core with multi-tenant support via `TenantEntity` base class
 - **Pattern**: Services inject `ITenantProvider` for tenant isolation
 
