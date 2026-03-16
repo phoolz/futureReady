@@ -64,7 +64,6 @@ builder.Services.AddScoped<Apiary.Services.EmployerForm.IEmployerFormStateServic
 builder.Services.AddScoped<Apiary.Services.ParentForm.IParentFormService, Apiary.Services.ParentForm.ParentFormService>();
 builder.Services.AddScoped<Apiary.Services.ParentForm.IParentFormStateService, Apiary.Services.ParentForm.ParentFormStateService>();
 builder.Services.AddScoped<Apiary.Services.LogbookEvaluations.ILogbookEvaluationService, Apiary.Services.LogbookEvaluations.LogbookEvaluationService>();
-builder.Services.AddScoped<Apiary.Services.StudentWorkHistories.IStudentWorkHistoryService, Apiary.Services.StudentWorkHistories.StudentWorkHistoryService>();
 builder.Services.AddScoped<Apiary.Services.LogbookEntries.ILogbookEntryService, Apiary.Services.LogbookEntries.LogbookEntryService>();
 builder.Services.AddScoped<Apiary.Services.LogbookTasks.ILogbookTaskService, Apiary.Services.LogbookTasks.LogbookTaskService>();
 builder.Services.AddScoped<Apiary.Services.StudentAccountTokens.IStudentAccountTokenService, Apiary.Services.StudentAccountTokens.StudentAccountTokenService>();
