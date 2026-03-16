@@ -1,0 +1,165 @@
+@page "/StudentMedicalConditions/Edit/{Id:guid}"
+@layout MainLayout
+@attribute [Authorize(Roles = Roles.Teacher)]
+@inject IStudentMedicalConditionService MedicalConditionService
+@inject IStudentService StudentService
+@inject ITenantProvider TenantProvider
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Edit Medical Condition - Apiary</PageTitle>
+
+<h1>Edit Medical Condition</h1>
+
+@if (Student != null)
+{
+    <p class="text-muted">For @Student.FullName</p>
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post" @formname="edit-medical-condition">
+            <AntiforgeryToken />
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+            }
+
+            <input type="hidden" name="FormModel.Id" value="@FormModel?.Id" />
+            <input type="hidden" name="FormModel.StudentId" value="@FormModel?.StudentId" />
+            <input type="hidden" name="RowVersionBase64" value="@RowVersionBase64" />
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Condition Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="ConditionType" class="form-label">Condition Type *</label>
+                        <select id="ConditionType" name="FormModel.ConditionType" class="form-select" required>
+                            <option value="">-- Select Condition Type --</option>
+                            @foreach (var type in MedicalConditionTypes.All)
+                            {
+                                <option value="@type" selected="@(FormModel?.ConditionType == type)">@MedicalConditionTypes.GetDisplayName(type)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="Details" class="form-label">Details</label>
+                        <textarea id="Details" name="FormModel.Details" class="form-control" rows="5" maxlength="2000">@FormModel?.Details</textarea>
+                        <small class="text-muted">Maximum 2000 characters. Include relevant information such as triggers, medication requirements, and emergency procedures.</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="/StudentMedicalConditions/@FormModel?.StudentId" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [SupplyParameterFromForm(FormName = "edit-medical-condition")]
+    public StudentMedicalCondition? FormModel { get; set; }
+
+    [SupplyParameterFromForm(FormName = "edit-medical-condition")]
+    public string? RowVersionBase64 { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private Student? Student { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+
+        if (context != null && HttpMethods.IsPost(context.Request.Method))
+        {
+            await HandlePostAsync();
+            return;
+        }
+
+        await LoadConditionAsync();
+    }
+
+    private async Task LoadConditionAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        FormModel = await MedicalConditionService.GetByIdAsync(Id, tenantId);
+
+        if (FormModel == null)
+        {
+            var context = HttpContext ?? HttpContextAccessor.HttpContext;
+            context?.Response.Redirect("/Students");
+        }
+        else
+        {
+            Student = await StudentService.GetByIdAsync(FormModel.StudentId, tenantId);
+            RowVersionBase64 = FormModel.RowVersion != null ? Convert.ToBase64String(FormModel.RowVersion) : null;
+        }
+    }
+
+    private async Task HandlePostAsync()
+    {
+        if (FormModel == null)
+        {
+            ErrorMessage = "Invalid form data.";
+            return;
+        }
+
+        if (FormModel.Id != Id)
+        {
+            ErrorMessage = "Invalid condition ID.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.ConditionType))
+        {
+            ErrorMessage = "Condition type is required.";
+            return;
+        }
+
+        try
+        {
+            var tenantId = TenantProvider.GetCurrentTenantId();
+            byte[]? rowVersion = null;
+            if (!string.IsNullOrEmpty(RowVersionBase64))
+            {
+                rowVersion = Convert.FromBase64String(RowVersionBase64);
+            }
+            await MedicalConditionService.UpdateAsync(FormModel, rowVersion, tenantId);
+
+            var context = HttpContext ?? HttpContextAccessor.HttpContext;
+            context?.Response.Redirect($"/StudentMedicalConditions/{FormModel.StudentId}");
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+        {
+            var exists = await MedicalConditionService.ExistsAsync(Id, TenantProvider.GetCurrentTenantId());
+            if (!exists)
+            {
+                var context = HttpContext ?? HttpContextAccessor.HttpContext;
+                context?.Response.Redirect("/Students");
+            }
+            else
+            {
+                ErrorMessage = "The record has been modified by another user. Please reload and try again.";
+                await LoadConditionAsync();
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "An error occurred while updating the medical condition.";
+        }
+    }
+}

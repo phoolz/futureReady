@@ -1,0 +1,142 @@
+@page "/EmergencyContacts/Delete/{Id:guid}"
+@layout MainLayout
+@attribute [Authorize(Roles = Roles.Teacher)]
+@inject IEmergencyContactService EmergencyContactService
+@inject IStudentService StudentService
+@inject ITenantProvider TenantProvider
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Delete Emergency Contact - Apiary</PageTitle>
+
+<h1>Delete Emergency Contact</h1>
+
+<form id="delete-form" method="post" @formname="delete-emergency-contact">
+    <AntiforgeryToken />
+    <input type="hidden" name="Id" value="@Id" />
+</form>
+
+@if (Contact == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">Are you sure you want to delete this emergency contact?</h4>
+        <p>This action cannot be undone.</p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Contact Details</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Name</dt>
+                        <dd class="col-sm-8">@Contact.FullName</dd>
+
+                        <dt class="col-sm-4">Mobile Number</dt>
+                        <dd class="col-sm-8">@(Contact.MobileNumber ?? "N/A")</dd>
+
+                        <dt class="col-sm-4">Relationship</dt>
+                        <dd class="col-sm-8">@(Contact.Relationship ?? "N/A")</dd>
+
+                        <dt class="col-sm-4">Primary Contact</dt>
+                        <dd class="col-sm-8">
+                            @if (Contact.IsPrimary)
+                            {
+                                <span class="badge bg-success">Yes</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">No</span>
+                            }
+                        </dd>
+
+                        @if (Student != null)
+                        {
+                            <dt class="col-sm-4">Student</dt>
+                            <dd class="col-sm-8">@Student.FullName</dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" form="delete-form" class="btn btn-danger">Delete</button>
+                <a href="/EmergencyContacts/@Contact.StudentId" class="btn btn-secondary">Cancel</a>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private EmergencyContact? Contact { get; set; }
+    private Student? Student { get; set; }
+    private Guid? StudentId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+
+        if (context != null && HttpMethods.IsPost(context.Request.Method))
+        {
+            await HandlePostAsync();
+            return;
+        }
+
+        await LoadContactAsync();
+    }
+
+    private async Task LoadContactAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        Contact = await EmergencyContactService.GetByIdAsync(Id, tenantId);
+
+        if (Contact == null)
+        {
+            var context = HttpContext ?? HttpContextAccessor.HttpContext;
+            context?.Response.Redirect("/Students");
+        }
+        else
+        {
+            StudentId = Contact.StudentId;
+            Student = await StudentService.GetByIdAsync(Contact.StudentId, tenantId);
+        }
+    }
+
+    private async Task HandlePostAsync()
+    {
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+        var tenantId = TenantProvider.GetCurrentTenantId();
+
+        var contact = await EmergencyContactService.GetByIdAsync(Id, tenantId);
+        var studentId = contact?.StudentId;
+
+        try
+        {
+            await EmergencyContactService.DeleteAsync(Id, tenantId);
+        }
+        catch (Exception)
+        {
+            // Ignore errors during delete
+        }
+
+        if (studentId.HasValue)
+        {
+            context?.Response.Redirect($"/EmergencyContacts/{studentId}");
+        }
+        else
+        {
+            context?.Response.Redirect("/Students");
+        }
+    }
+}

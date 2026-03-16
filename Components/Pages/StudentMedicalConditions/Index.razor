@@ -1,0 +1,114 @@
+@page "/StudentMedicalConditions/{StudentId:guid}"
+@layout MainLayout
+@attribute [Authorize(Roles = Roles.Teacher)]
+@attribute [StreamRendering]
+@inject IStudentMedicalConditionService MedicalConditionService
+@inject IStudentService StudentService
+@inject ITenantProvider TenantProvider
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Medical Conditions - Apiary</PageTitle>
+
+@if (Student == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="list-header">
+        <div class="list-header-content">
+            <h1>Medical Conditions</h1>
+            <p>For @Student.FullName</p>
+        </div>
+        <div class="list-header-actions">
+            <a href="/StudentMedicalConditions/Create?studentId=@StudentId" class="btn-add">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+                Add Condition
+            </a>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <a href="/Students/Details/@StudentId" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Student
+        </a>
+    </div>
+
+    <div class="list-table">
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>Condition Type</th>
+                    <th>Details</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Conditions != null)
+            {
+                @foreach (var item in Conditions)
+                {
+                    <tr class="clickable" onclick="window.location='/StudentMedicalConditions/Details/@item.Id'">
+                        <td class="cell-primary">@MedicalConditionTypes.GetDisplayName(item.ConditionType)</td>
+                        <td class="cell-secondary">@(TruncateDetails(item.Details))</td>
+                        <td>
+                            <div class="row-actions">
+                                <a href="/StudentMedicalConditions/Details/@item.Id" class="row-action action-view" title="View" onclick="event.stopPropagation()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                        <circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                </a>
+                                <a href="/StudentMedicalConditions/Edit/@item.Id" class="row-action action-edit" title="Edit" onclick="event.stopPropagation()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+        @if (Conditions != null && !Conditions.Any())
+        {
+            <div class="list-empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+                <p>No medical conditions recorded. Add the first medical condition for this student.</p>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid StudentId { get; set; }
+
+    private Student? Student { get; set; }
+    private List<StudentMedicalCondition>? Conditions { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        Student = await StudentService.GetByIdAsync(StudentId, tenantId);
+
+        if (Student == null)
+        {
+            HttpContextAccessor.HttpContext?.Response.Redirect("/Students");
+            return;
+        }
+
+        Conditions = await MedicalConditionService.GetAllByStudentIdAsync(StudentId, tenantId);
+    }
+
+    private string TruncateDetails(string? details)
+    {
+        if (string.IsNullOrEmpty(details)) return "—";
+        return details.Length > 100 ? details.Substring(0, 100) + "..." : details;
+    }
+}

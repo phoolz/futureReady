@@ -1,0 +1,508 @@
+@page "/Students/Details/{Id:guid}"
+@layout MainLayout
+@attribute [Authorize(Roles = Roles.Teacher)]
+@attribute [StreamRendering]
+@inject IStudentService StudentService
+@inject IPlacementService PlacementService
+@inject IStudentAccountTokenService AccountTokenService
+@inject ILogbookEntryService LogbookService
+@inject ITenantProvider TenantProvider
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Student Details - Apiary</PageTitle>
+
+@if (Student == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div class="page-header mb-0">
+            <h1 class="page-title">Student Details</h1>
+            <p class="page-subtitle">@Student.FullName</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Students/Edit/@Student.Id" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            <a href="/Students/Delete/@Student.Id" class="btn btn-outline-danger">
+                <i class="bi bi-trash"></i> Delete
+            </a>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(ActivationLink))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong>@ActivationLinkMessage</strong>
+            <div class="mt-2">
+                <input type="text" class="form-control" value="@ActivationLink" id="activationLinkInput" readonly />
+            </div>
+            <div class="mt-2 d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-dark" onclick="navigator.clipboard.writeText(document.getElementById('activationLinkInput').value)">
+                    <i class="bi bi-clipboard"></i> Copy to Clipboard
+                </button>
+                <a href="@ActivationLink" target="_blank" class="btn btn-sm btn-outline-dark">
+                    <i class="bi bi-box-arrow-up-right"></i> Open In New Tab
+                </a>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Personal & Academic Information Side-by-Side -->
+    <div class="row">
+        <div class="col-md-6 d-flex">
+            <div class="card mb-4 flex-fill">
+                <div class="card-header">
+                    <h5 class="mb-0">Personal Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">First Name</dt>
+                        <dd class="col-sm-7">@Student.FirstName</dd>
+
+                        <dt class="col-sm-5">Last Name</dt>
+                        <dd class="col-sm-7">@Student.LastName</dd>
+
+                        <dt class="col-sm-5">Preferred Name</dt>
+                        <dd class="col-sm-7">@(Student.PreferredName ?? "N/A")</dd>
+
+                        <dt class="col-sm-5">Date of Birth</dt>
+                        <dd class="col-sm-7">@(Student.DateOfBirth?.ToString("d MMMM yyyy") ?? "N/A")</dd>
+
+                        <dt class="col-sm-5">Student Number</dt>
+                        <dd class="col-sm-7">@(Student.StudentNumber ?? "N/A")</dd>
+
+                        <dt class="col-sm-5">Phone</dt>
+                        <dd class="col-sm-7">@(Student.Phone ?? "N/A")</dd>
+
+                        <dt class="col-sm-5">Email</dt>
+                        <dd class="col-sm-7">@(Student.Email ?? "N/A")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 d-flex">
+            <div class="card mb-4 flex-fill">
+                <div class="card-header">
+                    <h5 class="mb-0">Academic Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Student Type</dt>
+                        <dd class="col-sm-7">@(Student.StudentType ?? "N/A")</dd>
+
+                        <dt class="col-sm-5">Year Level</dt>
+                        <dd class="col-sm-7">@(Student.YearLevel ?? "N/A")</dd>
+
+                        <dt class="col-sm-5">Graduation Year</dt>
+                        <dd class="col-sm-7">@(Student.GraduationYear?.ToString() ?? "N/A")</dd>
+
+                        <dt class="col-sm-5">Medicare Number</dt>
+                        <dd class="col-sm-7">@(Student.MedicareNumber ?? "N/A")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Placements Section -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Placements</h5>
+            <a href="/Placements/Create" class="btn btn-sm btn-success">
+                <i class="bi bi-plus"></i> Add Placement
+            </a>
+        </div>
+        <div class="card-body">
+            @if (Placements != null && Placements.Any())
+            {
+                <div class="row">
+                    @foreach (var placement in Placements)
+                    {
+                        var statusClass = placement.Status switch
+                        {
+                            "confirmed" => "bg-success",
+                            "pending_employer" => "bg-warning text-dark",
+                            "pending_parent" => "bg-info",
+                            _ => "bg-secondary"
+                        };
+                        var summary = PlacementSummaries.GetValueOrDefault(placement.Id);
+
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="card-title mb-1">
+                                                @(placement.PlacementRole ?? "No role specified")
+                                            </h6>
+                                            <p class="text-muted mb-0">
+                                                @(placement.Company?.Name ?? "No company assigned")
+                                            </p>
+                                        </div>
+                                        <span class="badge @statusClass">@placement.Status</span>
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <small class="text-muted">
+                                            <i class="bi bi-calendar"></i> @(placement.Year?.ToString() ?? "No year")
+                                            @if (placement.Supervisor != null)
+                                            {
+                                                <span class="ms-2">
+                                                    <i class="bi bi-person"></i> @placement.Supervisor.FirstName @placement.Supervisor.LastName
+                                                </span>
+                                            }
+                                        </small>
+                                    </div>
+
+                                    @if (summary.PlacementStudentId.HasValue)
+                                    {
+                                        <div class="d-flex gap-3 mb-3">
+                                            <div class="text-center">
+                                                <div class="fw-bold">@summary.TotalHours.ToString("0.#")</div>
+                                                <small class="text-muted">Hours</small>
+                                            </div>
+                                            <div class="text-center">
+                                                <div class="fw-bold">@summary.EntryCount</div>
+                                                <small class="text-muted">Entries</small>
+                                            </div>
+                                            <div class="text-center">
+                                                <div class="fw-bold">@summary.VerifiedCount</div>
+                                                <small class="text-muted">Verified</small>
+                                            </div>
+                                        </div>
+                                    }
+
+                                    <div class="d-flex gap-2">
+                                        <a href="/Placements/Details/@placement.Id" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Details
+                                        </a>
+                                        @if (summary.PlacementStudentId.HasValue)
+                                        {
+                                            <a href="/logbook/@summary.PlacementStudentId" class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-journal-text"></i> Logbook
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0">No placements found for this student.</p>
+            }
+        </div>
+    </div>
+
+    <!-- Student Account Section -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Student Account</h5>
+        </div>
+        <div class="card-body">
+            @if (Student.UserId.HasValue)
+            {
+                <div class="alert alert-success mb-3">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <strong>Account Active</strong> - This student has a linked user account.
+                </div>
+            }
+            else if (!string.IsNullOrWhiteSpace(Student.Email))
+            {
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <strong>No Account</strong> - Generate an activation link to allow the student to create their account.
+                </div>
+                <form method="post" @formname="generate-activation-link" class="mb-3">
+                    <AntiforgeryToken />
+                    <input type="hidden" name="StudentId" value="@Student.Id" />
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-link-45deg"></i> Generate Activation Link
+                    </button>
+                </form>
+            }
+            else
+            {
+                <div class="alert alert-warning mb-3">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <strong>Email Required</strong> - Add an email address to enable student account creation.
+                    <a href="/Students/Edit/@Student.Id" class="alert-link">Edit student</a>
+                </div>
+            }
+
+            @if (AccountTokens != null && AccountTokens.Any())
+            {
+                <h6>Activation Link History</h6>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Created</th>
+                            <th>Expires</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var token in AccountTokens)
+                        {
+                            var isActive = token.UsedAt == null && token.ExpiresAt > DateTime.UtcNow;
+                            <tr>
+                                <td>@token.CreatedAt.ToString("g")</td>
+                                <td>@token.ExpiresAt.ToString("g")</td>
+                                <td>
+                                    @if (token.UsedAt != null)
+                                    {
+                                        <span class="badge bg-success">Used @token.UsedAt.Value.ToString("g")</span>
+                                    }
+                                    else if (token.ExpiresAt <= DateTime.UtcNow)
+                                    {
+                                        <span class="badge bg-secondary">Expired</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        @if (isActive)
+                                        {
+                                            <form method="post" @formname="resend-activation-link" style="display:inline;">
+                                                <AntiforgeryToken />
+                                                <input type="hidden" name="StudentId" value="@Student.Id" />
+                                                <input type="hidden" name="TokenId" value="@token.Id" />
+                                                <button type="submit" class="btn btn-outline-primary btn-sm" title="Revoke and generate new link">
+                                                    <i class="bi bi-arrow-repeat"></i> Resend
+                                                </button>
+                                            </form>
+                                        }
+                                        <form method="post" @formname="delete-activation-token" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this activation token?');">
+                                            <AntiforgeryToken />
+                                            <input type="hidden" name="StudentId" value="@Student.Id" />
+                                            <input type="hidden" name="TokenId" value="@token.Id" />
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete token">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+    <!-- Related Information -->
+    <div class="d-flex gap-2 mb-4">
+        <a href="/EmergencyContacts/@Student.Id" class="btn btn-outline-primary">
+            <i class="bi bi-telephone"></i> Emergency Contacts
+        </a>
+        <a href="/StudentMedicalConditions/@Student.Id" class="btn btn-outline-primary">
+            <i class="bi bi-heart-pulse"></i> Medical Conditions
+        </a>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [SupplyParameterFromForm(FormName = "generate-activation-link")]
+    public GenerateActivationLinkModel? GenerateModel { get; set; }
+
+    [SupplyParameterFromForm]
+    public ResendActivationLinkModel? ResendModel { get; set; }
+
+    [SupplyParameterFromForm]
+    public DeleteActivationTokenModel? DeleteTokenModel { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private Student? Student { get; set; }
+    private List<Placement>? Placements { get; set; }
+    private List<StudentAccountToken>? AccountTokens { get; set; }
+    private Dictionary<Guid, (decimal TotalHours, int EntryCount, int VerifiedCount, Guid? PlacementStudentId)> PlacementSummaries { get; set; } = new();
+
+    private string? ActivationLink { get; set; }
+    private string? ActivationLinkMessage { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? SuccessMessage { get; set; }
+
+    public class GenerateActivationLinkModel
+    {
+        public Guid StudentId { get; set; }
+    }
+
+    public class ResendActivationLinkModel
+    {
+        public Guid StudentId { get; set; }
+        public Guid TokenId { get; set; }
+    }
+
+    public class DeleteActivationTokenModel
+    {
+        public Guid StudentId { get; set; }
+        public Guid TokenId { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+
+        if (context != null && HttpMethods.IsPost(context.Request.Method))
+        {
+            await HandlePostAsync(context);
+            return;
+        }
+
+        await LoadDataAsync();
+        LoadTempData();
+    }
+
+    private void LoadTempData()
+    {
+        var context = HttpContextAccessor.HttpContext;
+        if (context == null) return;
+
+        var tempDataFactory = context.RequestServices.GetService<Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataDictionaryFactory>();
+        var tempData = tempDataFactory?.GetTempData(context);
+
+        if (tempData != null)
+        {
+            ActivationLink = tempData["ActivationLink"] as string;
+            ActivationLinkMessage = tempData["ActivationLinkMessage"] as string;
+            ErrorMessage = tempData["ErrorMessage"] as string;
+            SuccessMessage = tempData["SuccessMessage"] as string;
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        Student = await StudentService.GetByIdAsync(Id, tenantId);
+
+        if (Student == null)
+        {
+            HttpContextAccessor.HttpContext?.Response.Redirect("/Students");
+            return;
+        }
+
+        Placements = await PlacementService.GetByStudentIdAsync(Id, tenantId);
+
+        // Get logbook summaries for each placement
+        foreach (var placement in Placements)
+        {
+            var ps = placement.PlacementStudents.FirstOrDefault(ps => ps.StudentId == Id && !ps.IsDeleted);
+            if (ps != null)
+            {
+                var entries = await LogbookService.GetByPlacementStudentIdAsync(ps.Id, tenantId);
+                PlacementSummaries[placement.Id] = (
+                    entries.Sum(e => e.TotalHoursWorked),
+                    entries.Count,
+                    entries.Count(e => e.SupervisorVerified),
+                    ps.Id
+                );
+            }
+        }
+
+        AccountTokens = await AccountTokenService.GetByStudentIdAsync(Id, tenantId);
+    }
+
+    private async Task HandlePostAsync(HttpContext context)
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        var tempDataFactory = context.RequestServices.GetService<Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataDictionaryFactory>();
+        var tempData = tempDataFactory?.GetTempData(context);
+
+        var form = await context.Request.ReadFormAsync();
+        var formName = form["_handler"].ToString();
+
+        if (formName == "generate-activation-link")
+        {
+            await HandleGenerateActivationLinkAsync(context, tenantId, tempData);
+        }
+        else if (formName == "resend-activation-link")
+        {
+            var tokenIdStr = form["TokenId"].ToString();
+            if (Guid.TryParse(tokenIdStr, out var tokenId))
+            {
+                await AccountTokenService.RevokeTokenByIdAsync(tokenId, tenantId);
+            }
+            await HandleGenerateActivationLinkAsync(context, tenantId, tempData);
+        }
+        else if (formName == "delete-activation-token")
+        {
+            var tokenIdStr = form["TokenId"].ToString();
+            if (Guid.TryParse(tokenIdStr, out var tokenId))
+            {
+                await AccountTokenService.RevokeTokenByIdAsync(tokenId, tenantId);
+                tempData!["SuccessMessage"] = "Activation token has been deleted.";
+            }
+            context.Response.Redirect($"/Students/Details/{Id}");
+        }
+    }
+
+    private async Task HandleGenerateActivationLinkAsync(HttpContext context, Guid? tenantId, Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataDictionary? tempData)
+    {
+        var student = await StudentService.GetByIdAsync(Id, tenantId);
+        if (student == null)
+        {
+            context.Response.Redirect("/Students");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(student.Email))
+        {
+            tempData!["ErrorMessage"] = "Student must have an email address to generate an activation link.";
+            context.Response.Redirect($"/Students/Details/{Id}");
+            return;
+        }
+
+        if (student.UserId.HasValue)
+        {
+            tempData!["ErrorMessage"] = "This student already has an account.";
+            context.Response.Redirect($"/Students/Details/{Id}");
+            return;
+        }
+
+        try
+        {
+            var token = await AccountTokenService.GenerateTokenAsync(Id, tenantId);
+            var activationLink = $"{context.Request.Scheme}://{context.Request.Host}/student/activate/{token.Token}";
+
+            tempData!["ActivationLink"] = activationLink;
+            tempData["ActivationLinkMessage"] = $"Activation link generated for {student.Email}. Send this link to the student:";
+        }
+        catch (InvalidOperationException ex)
+        {
+            tempData!["ErrorMessage"] = ex.Message;
+        }
+
+        context.Response.Redirect($"/Students/Details/{Id}");
+    }
+}
