@@ -1,0 +1,184 @@
+@page "/Schools/Edit/{Id:guid}"
+@layout MainLayout
+@attribute [Authorize(Roles = Roles.SiteAdmin)]
+@inject ISchoolService SchoolService
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Edit School - Apiary</PageTitle>
+
+<h1>Edit School</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post" @formname="edit-school">
+            <AntiforgeryToken />
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+            }
+
+            <input type="hidden" name="FormModel.Id" value="@FormModel?.Id" />
+            <input type="hidden" name="RowVersionBase64" value="@RowVersionBase64" />
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">School Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="Name" class="form-label">Name <span class="text-danger">*</span></label>
+                            <input type="text" id="Name" name="FormModel.Name" class="form-control" value="@FormModel?.Name" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="TenantKey" class="form-label">Tenant Key <span class="text-danger">*</span></label>
+                            <input type="text" id="TenantKey" name="FormModel.TenantKey" class="form-control" value="@FormModel?.TenantKey" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="Timezone" class="form-label">Timezone <span class="text-danger">*</span></label>
+                            <input type="text" id="Timezone" name="FormModel.Timezone" class="form-control" value="@FormModel?.Timezone" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Contact Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="ContactEmail" class="form-label">Contact Email</label>
+                            <input type="email" id="ContactEmail" name="FormModel.ContactEmail" class="form-control" value="@FormModel?.ContactEmail" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="ContactPhone" class="form-label">Contact Phone</label>
+                            <input type="text" id="ContactPhone" name="FormModel.ContactPhone" class="form-control" value="@FormModel?.ContactPhone" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="/Schools/Details/@Id" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [SupplyParameterFromForm(FormName = "edit-school")]
+    public School? FormModel { get; set; }
+
+    [SupplyParameterFromForm(FormName = "edit-school")]
+    public string? RowVersionBase64 { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+
+        if (context != null && HttpMethods.IsPost(context.Request.Method))
+        {
+            await HandlePostAsync();
+            return;
+        }
+
+        await LoadSchoolAsync();
+    }
+
+    private async Task LoadSchoolAsync()
+    {
+        FormModel = await SchoolService.GetByIdAsync(Id);
+
+        if (FormModel == null)
+        {
+            var context = HttpContext ?? HttpContextAccessor.HttpContext;
+            context?.Response.Redirect("/Schools");
+        }
+        else
+        {
+            RowVersionBase64 = FormModel.RowVersion != null ? Convert.ToBase64String(FormModel.RowVersion) : null;
+        }
+    }
+
+    private async Task HandlePostAsync()
+    {
+        if (FormModel == null)
+        {
+            ErrorMessage = "Invalid form data.";
+            return;
+        }
+
+        if (FormModel.Id != Id)
+        {
+            ErrorMessage = "Invalid school ID.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.Name))
+        {
+            ErrorMessage = "School name is required.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.TenantKey))
+        {
+            ErrorMessage = "Tenant key is required.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.Timezone))
+        {
+            ErrorMessage = "Timezone is required.";
+            return;
+        }
+
+        try
+        {
+            byte[]? rowVersion = null;
+            if (!string.IsNullOrEmpty(RowVersionBase64))
+            {
+                rowVersion = Convert.FromBase64String(RowVersionBase64);
+            }
+            await SchoolService.UpdateAsync(FormModel, rowVersion);
+
+            var context = HttpContext ?? HttpContextAccessor.HttpContext;
+            context?.Response.Redirect("/Schools");
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+        {
+            var exists = await SchoolService.ExistsAsync(Id);
+            if (!exists)
+            {
+                var context = HttpContext ?? HttpContextAccessor.HttpContext;
+                context?.Response.Redirect("/Schools");
+            }
+            else
+            {
+                ErrorMessage = "The record has been modified by another user. Please reload and try again.";
+                await LoadSchoolAsync();
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "An error occurred while updating the school.";
+        }
+    }
+}

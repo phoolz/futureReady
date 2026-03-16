@@ -1,0 +1,121 @@
+@page "/Schools"
+@layout MainLayout
+@attribute [Authorize(Roles = Roles.SiteAdmin)]
+@attribute [StreamRendering]
+@inject ISchoolService SchoolService
+
+<PageTitle>Schools - Apiary</PageTitle>
+
+<div class="list-header">
+    <div class="list-header-content">
+        <h1>Schools</h1>
+        <p>Manage tenant schools</p>
+    </div>
+    <div class="list-header-actions">
+        <div class="search-input">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" id="searchInput" placeholder="Search schools..." onkeyup="filterTable()">
+        </div>
+        <a href="/Schools/Create" class="btn-add">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Add School
+        </a>
+    </div>
+</div>
+
+<div class="list-table">
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Tenant Key</th>
+                <th>Timezone</th>
+                <th>Contact Email</th>
+                <th>Contact Phone</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @if (Schools != null)
+        {
+            @foreach (var item in Schools)
+            {
+                <tr class="clickable" onclick="window.location='/Schools/Details/@item.Id'">
+                    <td class="cell-primary">@item.Name</td>
+                    <td class="cell-secondary">@item.TenantKey</td>
+                    <td class="cell-secondary">@item.Timezone</td>
+                    <td class="cell-secondary">@(item.ContactEmail ?? "—")</td>
+                    <td class="cell-secondary">@(item.ContactPhone ?? "—")</td>
+                    <td>
+                        <div class="row-actions">
+                            <a href="/Schools/Details/@item.Id" class="row-action action-view" title="View" onclick="event.stopPropagation()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                            </a>
+                            <a href="/Schools/Edit/@item.Id" class="row-action action-edit" title="Edit" onclick="event.stopPropagation()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                                </svg>
+                            </a>
+                            <a href="/Schools/Delete/@item.Id" class="row-action action-delete" title="Delete" onclick="event.stopPropagation()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 6h18"/>
+                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                </svg>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+        </tbody>
+    </table>
+    @if (Schools != null && !Schools.Any())
+    {
+        <div class="list-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            <p>No schools found. Add your first school to get started.</p>
+        </div>
+    }
+</div>
+
+<script>
+    function filterTable() {
+        var input = document.getElementById("searchInput");
+        var filter = input.value.toLowerCase();
+        var table = document.getElementById("dataTable");
+        var rows = table.getElementsByTagName("tr");
+
+        for (var i = 1; i < rows.length; i++) {
+            var cells = rows[i].getElementsByTagName("td");
+            var match = false;
+            for (var j = 0; j < cells.length; j++) {
+                if (cells[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                    match = true;
+                    break;
+                }
+            }
+            rows[i].style.display = match ? "" : "none";
+        }
+    }
+</script>
+
+@code {
+    private List<School>? Schools { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Schools = await SchoolService.GetAllAsync();
+    }
+}
