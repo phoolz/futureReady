@@ -519,5 +519,424 @@ namespace Apiary.Services.ParentForm
             var result = notes.ToString().Trim();
             return string.IsNullOrEmpty(result) ? null : result;
         }
+
+        public async Task<bool> SaveStudentDetailsAsync(string token, StudentDetailsDto data)
+        {
+            var formToken = await _formTokenService.ValidateTokenAsync(token);
+            if (formToken == null || !formToken.IsValid || !formToken.StudentId.HasValue)
+            {
+                return false;
+            }
+
+            var student = await _context.Students
+                .IgnoreQueryFilters()
+                .Where(s => s.Id == formToken.StudentId.Value && !s.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            if (student == null)
+            {
+                return false;
+            }
+
+            student.StudentType = data.StudentType;
+            student.Phone = data.MobileNumber;
+            student.UpdatedAt = DateTimeOffset.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> SaveEmergencyContactAsync(string token, EmergencyContactDto data)
+        {
+            var formToken = await _formTokenService.ValidateTokenAsync(token);
+            if (formToken == null || !formToken.IsValid || !formToken.StudentId.HasValue)
+            {
+                return false;
+            }
+
+            var studentId = formToken.StudentId.Value;
+
+            // Get placement to get TenantId
+            var placement = await _context.Placements
+                .IgnoreQueryFilters()
+                .Where(p => p.Id == formToken.PlacementId && !p.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            if (placement == null)
+            {
+                return false;
+            }
+
+            // Soft delete existing emergency contacts
+            var existingContacts = await _context.EmergencyContacts
+                .IgnoreQueryFilters()
+                .Where(ec => ec.StudentId == studentId && !ec.IsDeleted)
+                .ToListAsync();
+
+            foreach (var contact in existingContacts)
+            {
+                contact.IsDeleted = true;
+            }
+
+            // Insert new emergency contact
+            var newContact = new EmergencyContact
+            {
+                Id = Guid.NewGuid(),
+                TenantId = placement.TenantId,
+                StudentId = studentId,
+                FirstName = data.FirstName,
+                LastName = data.LastName,
+                MobileNumber = data.MobileNumber,
+                Relationship = data.Relationship,
+                IsPrimary = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _context.EmergencyContacts.Add(newContact);
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> SaveWorkplaceDetailsAsync(string token, WorkplaceDetailsDto data)
+        {
+            var formToken = await _formTokenService.ValidateTokenAsync(token);
+            if (formToken == null || !formToken.IsValid || !formToken.StudentId.HasValue)
+            {
+                return false;
+            }
+
+            var placement = await _context.Placements
+                .IgnoreQueryFilters()
+                .Include(p => p.Company)
+                .Include(p => p.Supervisor)
+                .Where(p => p.Id == formToken.PlacementId && !p.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            if (placement == null)
+            {
+                return false;
+            }
+
+            // If company is not preset, create new company
+            if (placement.CompanyId == null && !data.IsCompanyPreset)
+            {
+                var newCompany = new Company
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = placement.TenantId,
+                    Name = data.CompanyName,
+                    Industry = data.Industry,
+                    StreetAddress = data.StreetAddress,
+                    StreetAddress2 = data.StreetAddress2,
+                    City = data.City,
+                    State = data.State,
+                    PostalCode = data.PostalCode,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                _context.Companies.Add(newCompany);
+                placement.CompanyId = newCompany.Id;
+                placement.Company = newCompany;
+            }
+
+            // If supervisor is not set, create new supervisor
+            if (placement.SupervisorId == null && placement.CompanyId != null)
+            {
+                var newSupervisor = new Supervisor
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = placement.TenantId,
+                    CompanyId = placement.CompanyId.Value,
+                    FirstName = data.ContactFirstName,
+                    LastName = data.ContactLastName,
+                    Email = data.ContactEmail,
+                    Phone = data.ContactPhone,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                _context.Supervisors.Add(newSupervisor);
+                placement.SupervisorId = newSupervisor.Id;
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> SaveTransportAsync(string token, TransportDto data)
+        {
+            var formToken = await _formTokenService.ValidateTokenAsync(token);
+            if (formToken == null || !formToken.IsValid || !formToken.StudentId.HasValue)
+            {
+                return false;
+            }
+
+            var studentId = formToken.StudentId.Value;
+
+            var placement = await _context.Placements
+                .IgnoreQueryFilters()
+                .Where(p => p.Id == formToken.PlacementId && !p.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            if (placement == null)
+            {
+                return false;
+            }
+
+            // Get or create ParentPermission
+            var parentPermission = await _context.ParentPermissions
+                .IgnoreQueryFilters()
+                .Where(pp => pp.PlacementId == placement.Id && pp.StudentId == studentId && !pp.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            if (parentPermission == null)
+            {
+                parentPermission = new ParentPermission
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = placement.TenantId,
+                    PlacementId = placement.Id,
+                    StudentId = studentId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.ParentPermissions.Add(parentPermission);
+            }
+
+            parentPermission.TransportMethod = data.TransportMethod;
+            parentPermission.PublicTransportDetails = data.PublicTransportDetails;
+            parentPermission.DriverName = data.DriverName;
+            parentPermission.DriverContactNumber = data.DriverContactNumber;
+            parentPermission.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> SaveMedicalDetailsAsync(string token, MedicalDetailsDto data)
+        {
+            var formToken = await _formTokenService.ValidateTokenAsync(token);
+            if (formToken == null || !formToken.IsValid || !formToken.StudentId.HasValue)
+            {
+                return false;
+            }
+
+            var studentId = formToken.StudentId.Value;
+
+            var placement = await _context.Placements
+                .IgnoreQueryFilters()
+                .Where(p => p.Id == formToken.PlacementId && !p.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            if (placement == null)
+            {
+                return false;
+            }
+
+            // Soft delete existing medical conditions
+            var existingConditions = await _context.StudentMedicalConditions
+                .IgnoreQueryFilters()
+                .Where(mc => mc.StudentId == studentId && !mc.IsDeleted)
+                .ToListAsync();
+
+            foreach (var condition in existingConditions)
+            {
+                condition.IsDeleted = true;
+            }
+
+            // Insert new medical conditions
+            if (data.HasAsthma)
+            {
+                _context.StudentMedicalConditions.Add(CreateMedicalCondition(
+                    placement.TenantId, studentId,
+                    MedicalConditionTypes.Asthma, data.AsthmaDetails));
+            }
+            if (data.HasDiabetes)
+            {
+                _context.StudentMedicalConditions.Add(CreateMedicalCondition(
+                    placement.TenantId, studentId,
+                    MedicalConditionTypes.Diabetes, data.DiabetesDetails));
+            }
+            if (data.HasEpilepsy)
+            {
+                _context.StudentMedicalConditions.Add(CreateMedicalCondition(
+                    placement.TenantId, studentId,
+                    MedicalConditionTypes.Epilepsy, data.EpilepsyDetails));
+            }
+            if (data.HasAllergies)
+            {
+                _context.StudentMedicalConditions.Add(CreateMedicalCondition(
+                    placement.TenantId, studentId,
+                    MedicalConditionTypes.Allergies, data.AllergiesDetails));
+            }
+            if (data.HasLearningDifficulties)
+            {
+                _context.StudentMedicalConditions.Add(CreateMedicalCondition(
+                    placement.TenantId, studentId,
+                    MedicalConditionTypes.LearningDifficulties, data.LearningDifficultiesDetails));
+            }
+            if (data.HasMedication)
+            {
+                _context.StudentMedicalConditions.Add(CreateMedicalCondition(
+                    placement.TenantId, studentId,
+                    MedicalConditionTypes.Medication, data.MedicationDetails));
+            }
+            if (data.HasOther)
+            {
+                _context.StudentMedicalConditions.Add(CreateMedicalCondition(
+                    placement.TenantId, studentId,
+                    MedicalConditionTypes.Other, data.OtherDetails));
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> SaveConsentAsync(string token, ConsentDto data)
+        {
+            var formToken = await _formTokenService.ValidateTokenAsync(token);
+            if (formToken == null || !formToken.IsValid || !formToken.StudentId.HasValue)
+            {
+                return false;
+            }
+
+            var studentId = formToken.StudentId.Value;
+
+            var placement = await _context.Placements
+                .IgnoreQueryFilters()
+                .Where(p => p.Id == formToken.PlacementId && !p.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            if (placement == null)
+            {
+                return false;
+            }
+
+            // Get or create ParentPermission
+            var parentPermission = await _context.ParentPermissions
+                .IgnoreQueryFilters()
+                .Where(pp => pp.PlacementId == placement.Id && pp.StudentId == studentId && !pp.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            if (parentPermission == null)
+            {
+                parentPermission = new ParentPermission
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = placement.TenantId,
+                    PlacementId = placement.Id,
+                    StudentId = studentId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.ParentPermissions.Add(parentPermission);
+            }
+
+            parentPermission.ShareMedicalWithEmployer = data.ShareMedicalWithEmployer;
+            parentPermission.RequestTeacherPrevisit = data.RequestTeacherPrevisit;
+            parentPermission.ParentFirstName = data.ParentFirstName;
+            parentPermission.ParentLastName = data.ParentLastName;
+            parentPermission.ConsentDate = data.ConsentDate;
+            parentPermission.ConsentGiven = data.ConsentGiven;
+            parentPermission.UpdatedAt = DateTime.UtcNow;
+
+            // Build medical notes for employer if sharing is enabled
+            if (data.ShareMedicalWithEmployer)
+            {
+                // Get current medical conditions to build notes
+                var medicalConditions = await _context.StudentMedicalConditions
+                    .IgnoreQueryFilters()
+                    .Where(mc => mc.StudentId == studentId && !mc.IsDeleted)
+                    .ToListAsync();
+
+                var medical = new MedicalDetailsDto();
+                foreach (var condition in medicalConditions)
+                {
+                    switch (condition.ConditionType)
+                    {
+                        case MedicalConditionTypes.Asthma:
+                            medical.HasAsthma = true;
+                            medical.AsthmaDetails = condition.Details;
+                            break;
+                        case MedicalConditionTypes.Diabetes:
+                            medical.HasDiabetes = true;
+                            medical.DiabetesDetails = condition.Details;
+                            break;
+                        case MedicalConditionTypes.Epilepsy:
+                            medical.HasEpilepsy = true;
+                            medical.EpilepsyDetails = condition.Details;
+                            break;
+                        case MedicalConditionTypes.Allergies:
+                            medical.HasAllergies = true;
+                            medical.AllergiesDetails = condition.Details;
+                            break;
+                        case MedicalConditionTypes.LearningDifficulties:
+                            medical.HasLearningDifficulties = true;
+                            medical.LearningDifficultiesDetails = condition.Details;
+                            break;
+                        case MedicalConditionTypes.Medication:
+                            medical.HasMedication = true;
+                            medical.MedicationDetails = condition.Details;
+                            break;
+                        case MedicalConditionTypes.Other:
+                            medical.HasOther = true;
+                            medical.OtherDetails = condition.Details;
+                            break;
+                    }
+                }
+                parentPermission.MedicalNotesForEmployer = BuildMedicalNotesForEmployer(medical);
+            }
+            else
+            {
+                parentPermission.MedicalNotesForEmployer = null;
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> FinalizeSubmissionAsync(string token)
+        {
+            var formToken = await _formTokenService.ValidateTokenAsync(token);
+            if (formToken == null || !formToken.IsValid || !formToken.StudentId.HasValue)
+            {
+                return false;
+            }
+
+            var studentId = formToken.StudentId.Value;
+
+            var placement = await _context.Placements
+                .IgnoreQueryFilters()
+                .Where(p => p.Id == formToken.PlacementId && !p.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            if (placement == null)
+            {
+                return false;
+            }
+
+            // Get PlacementStudent record
+            var placementStudent = await _context.PlacementStudents
+                .IgnoreQueryFilters()
+                .Where(ps => ps.PlacementId == placement.Id && ps.StudentId == studentId && !ps.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            if (placementStudent == null)
+            {
+                return false;
+            }
+
+            // Update PlacementStudent status
+            placementStudent.Status = "confirmed";
+            placementStudent.ParentSubmittedAt = DateTime.UtcNow;
+
+            // Recalculate overall placement status
+            await RecalculatePlacementStatusAsync(placement);
+
+            await _context.SaveChangesAsync();
+
+            // Mark token as used
+            await _formTokenService.MarkAsUsedAsync(token);
+
+            return true;
+        }
     }
 }

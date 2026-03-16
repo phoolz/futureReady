@@ -259,5 +259,247 @@ namespace Apiary.Services.EmployerForm
                 }
             });
         }
+
+        public async Task<bool> SaveWorkplaceDetailsAsync(string token, WorkplaceDetailsDto data)
+        {
+            var formToken = await _formTokenService.ValidateTokenAsync(token);
+            if (formToken == null || !formToken.IsValid)
+            {
+                return false;
+            }
+
+            var placement = await _context.Placements
+                .IgnoreQueryFilters()
+                .Include(p => p.Company)
+                .Where(p => p.Id == formToken.PlacementId && !p.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            if (placement == null)
+            {
+                return false;
+            }
+
+            // Update Company address fields
+            if (placement.Company != null)
+            {
+                placement.Company.StreetAddress = data.StreetAddress;
+                placement.Company.StreetAddress2 = data.StreetAddress2;
+                placement.Company.Suburb = data.Suburb;
+                placement.Company.City = data.City;
+                placement.Company.State = data.State;
+                placement.Company.PostalCode = data.PostalCode;
+                placement.Company.UpdatedAt = DateTimeOffset.UtcNow;
+            }
+
+            // Update Placement fields
+            placement.PlacementRole = data.PlacementRole;
+            placement.DressRequirement = data.DressCode;
+            placement.WorkStartTime = data.WorkStartTime;
+            placement.WorkEndTime = data.WorkEndTime;
+            placement.UpdatedAt = DateTimeOffset.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> SaveSupervisorDetailsAsync(string token, SupervisorDetailsDto data)
+        {
+            var formToken = await _formTokenService.ValidateTokenAsync(token);
+            if (formToken == null || !formToken.IsValid)
+            {
+                return false;
+            }
+
+            var placement = await _context.Placements
+                .IgnoreQueryFilters()
+                .Include(p => p.Supervisor)
+                .Where(p => p.Id == formToken.PlacementId && !p.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            if (placement == null)
+            {
+                return false;
+            }
+
+            if (placement.Supervisor != null)
+            {
+                placement.Supervisor.FirstName = data.FirstName;
+                placement.Supervisor.LastName = data.LastName;
+                placement.Supervisor.JobTitle = data.JobTitle;
+                placement.Supervisor.Email = data.Email;
+                placement.Supervisor.Phone = data.Phone;
+                placement.Supervisor.UpdatedAt = DateTimeOffset.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> SaveInsuranceAsync(string token, InsuranceDto data)
+        {
+            var formToken = await _formTokenService.ValidateTokenAsync(token);
+            if (formToken == null || !formToken.IsValid)
+            {
+                return false;
+            }
+
+            var placement = await _context.Placements
+                .IgnoreQueryFilters()
+                .Include(p => p.Company)
+                .Where(p => p.Id == formToken.PlacementId && !p.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            if (placement == null)
+            {
+                return false;
+            }
+
+            if (placement.Company != null)
+            {
+                placement.Company.PublicLiabilityInsurance5M = data.HasPublicLiabilityInsurance5M ?? false;
+                placement.Company.InsuranceValue = data.InsuranceValue;
+                placement.Company.HasPreviousWorkExperienceStudents = data.HasPreviousWorkExperienceStudents ?? false;
+                placement.Company.UpdatedAt = DateTimeOffset.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> SaveOhsAsync(string token, OhsDto data)
+        {
+            var formToken = await _formTokenService.ValidateTokenAsync(token);
+            if (formToken == null || !formToken.IsValid)
+            {
+                return false;
+            }
+
+            var placement = await _context.Placements
+                .IgnoreQueryFilters()
+                .Where(p => p.Id == formToken.PlacementId && !p.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            if (placement == null)
+            {
+                return false;
+            }
+
+            placement.HasOhsPolicy = data.HasOhsPolicy;
+            placement.HasInductionProgram = data.HasInductionProgram;
+            placement.SafetyBriefingMethod = data.SafetyBriefingMethod;
+            placement.HasObviousHazards = data.HasObviousHazards;
+            placement.HazardDetails = data.HazardDetails;
+            placement.InjuryPreventionTraining = data.InjuryPreventionTraining;
+            placement.ProvidesHazardReportingInstruction = data.ProvidesHazardReportingInstruction;
+            placement.HasEmergencyProcedures = data.HasEmergencyProcedures;
+            placement.HasFireExtinguishersChecked = data.HasFireExtinguishersChecked;
+            placement.HasFirstAidKit = data.HasFirstAidKit;
+            placement.HasSafeAmenities = data.HasSafeAmenities;
+            placement.UpdatedAt = DateTimeOffset.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> SaveGeneralTravelAsync(string token, GeneralTravelDto data)
+        {
+            var formToken = await _formTokenService.ValidateTokenAsync(token);
+            if (formToken == null || !formToken.IsValid)
+            {
+                return false;
+            }
+
+            var placement = await _context.Placements
+                .IgnoreQueryFilters()
+                .Where(p => p.Id == formToken.PlacementId && !p.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            if (placement == null)
+            {
+                return false;
+            }
+
+            placement.StaffInformedOfStudent = data.StaffInformedOfStudent;
+            placement.StaffMeetWorkingWithChildrenRequirements = data.StaffMeetWorkingWithChildrenRequirements;
+            placement.AdditionalInfoRequired = data.AdditionalInfoRequired;
+            placement.AdditionalInfoDetails = data.AdditionalInfoDetails;
+            placement.EmployerRequiresVehicleTravel = data.RequiresVehicleTravel;
+            placement.EmployerVehicleDetails = data.VehicleDetails;
+            placement.EmployerDriverExperience = data.DriverExperience;
+            placement.EmployerLicenceType = data.LicenceType;
+            placement.UpdatedAt = DateTimeOffset.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> SaveHazardsAppendixAsync(string token, HazardsAppendixDto data)
+        {
+            var formToken = await _formTokenService.ValidateTokenAsync(token);
+            if (formToken == null || !formToken.IsValid)
+            {
+                return false;
+            }
+
+            var placement = await _context.Placements
+                .IgnoreQueryFilters()
+                .Where(p => p.Id == formToken.PlacementId && !p.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            if (placement == null)
+            {
+                return false;
+            }
+
+            placement.HasChemicalHazards = data.HasChemicalHazards;
+            placement.ChemicalDetails = data.ChemicalDetails;
+            placement.HasPlantMachineryHazards = data.HasPlantMachineryHazards;
+            placement.PlantMachineryDetails = data.PlantMachineryDetails;
+            placement.HasBiologicalHazards = data.HasBiologicalHazards;
+            placement.BiologicalDetails = data.BiologicalDetails;
+            placement.HasErgonomicHazards = data.HasErgonomicHazards;
+            placement.ErgonomicDetails = data.ErgonomicDetails;
+            placement.HazardsAdditionalDetails = data.AdditionalDetails;
+            placement.UpdatedAt = DateTimeOffset.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> FinalizeSubmissionAsync(string token)
+        {
+            var formToken = await _formTokenService.ValidateTokenAsync(token);
+            if (formToken == null || !formToken.IsValid)
+            {
+                return false;
+            }
+
+            var placement = await _context.Placements
+                .IgnoreQueryFilters()
+                .Where(p => p.Id == formToken.PlacementId && !p.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            if (placement == null)
+            {
+                return false;
+            }
+
+            // Set submission timestamp
+            placement.EmployerSubmittedAt = DateTime.UtcNow;
+            placement.UpdatedAt = DateTimeOffset.UtcNow;
+
+            // Update status to pending_parents if it was pending_employer
+            if (placement.Status == "pending_employer")
+            {
+                placement.Status = "pending_parents";
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Mark token as used
+            await _formTokenService.MarkAsUsedAsync(token);
+
+            return true;
+        }
     }
 }

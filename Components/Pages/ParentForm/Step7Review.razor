@@ -1,0 +1,310 @@
+@page "/parent/form/{Token}/step7"
+@layout ParentFormLayout
+@attribute [StreamRendering]
+@inject IParentFormService FormService
+@inject NavigationManager Navigation
+
+<PageTitle>Parent Form - Review & Submit</PageTitle>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="error-container">
+        <p class="error-message">@ErrorMessage</p>
+        <p class="text-muted">Please contact the school if you believe this is an error.</p>
+    </div>
+}
+else if (IsSubmitted)
+{
+    <FormSection Title="Form Submitted Successfully">
+        <div class="text-center py-4">
+            <div class="text-success mb-3" style="font-size: 4rem;">&#10003;</div>
+            <h4>Thank you for completing the Parent Permission Form</h4>
+            <p class="text-muted">
+                Your consent has been recorded. The school will contact you if any additional information is required.
+            </p>
+        </div>
+    </FormSection>
+}
+else if (FormData != null)
+{
+    <ParentInfoHeader
+        StudentName="@FormData.StudentName"
+        SchoolName="@FormData.SchoolName" />
+
+    <ParentProgressIndicator CurrentStep="7" TotalSteps="7" />
+
+    <FormSection Title="Review & Submit">
+        <p class="mb-4 text-muted">Please review all your information before submitting. Click "Edit" on any section to make changes.</p>
+
+        <!-- Student Details -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Student Details</h5>
+                <a href="/parent/form/@Token/step1" class="btn-edit">Edit</a>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Student Name</span>
+                    <span class="review-value">@FormData.StudentName</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Student Type</span>
+                    <span class="review-value">@(FormData.StudentDetails.StudentType == "day" ? "Day Student" : "Boarding Student")</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Mobile Number</span>
+                    <span class="review-value">@FormData.StudentDetails.MobileNumber</span>
+                </div>
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- Emergency Contact -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Emergency Contact</h5>
+                <a href="/parent/form/@Token/step2" class="btn-edit">Edit</a>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Name</span>
+                    <span class="review-value">@FormData.EmergencyContact.FirstName @FormData.EmergencyContact.LastName</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Mobile Number</span>
+                    <span class="review-value">@FormData.EmergencyContact.MobileNumber</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Relationship</span>
+                    <span class="review-value">@FormData.EmergencyContact.Relationship</span>
+                </div>
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- Workplace -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Workplace</h5>
+                <a href="/parent/form/@Token/step3" class="btn-edit">Edit</a>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Company</span>
+                    <span class="review-value">@FormData.WorkplaceDetails.CompanyName</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Contact</span>
+                    <span class="review-value">@FormData.WorkplaceDetails.ContactFirstName @FormData.WorkplaceDetails.ContactLastName</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Address</span>
+                    <span class="review-value">
+                        @FormData.WorkplaceDetails.StreetAddress,
+                        @FormData.WorkplaceDetails.City @FormData.WorkplaceDetails.State @FormData.WorkplaceDetails.PostalCode
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- Transport -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Transport</h5>
+                <a href="/parent/form/@Token/step4" class="btn-edit">Edit</a>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Transport Method</span>
+                    <span class="review-value">@FormatTransportMethod(FormData.Transport.TransportMethod)</span>
+                </div>
+                @if (!string.IsNullOrEmpty(FormData.Transport.DriverName))
+                {
+                    <div class="review-item">
+                        <span class="review-label">Driver</span>
+                        <span class="review-value">@FormData.Transport.DriverName (@FormData.Transport.DriverContactNumber)</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- Medical -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Medical Information</h5>
+                <a href="/parent/form/@Token/step5" class="btn-edit">Edit</a>
+            </div>
+            <div class="review-grid">
+                @if (HasAnyMedicalCondition())
+                {
+                    @if (FormData.MedicalDetails.HasAsthma)
+                    {
+                        <div class="review-item">
+                            <span class="review-label">Asthma</span>
+                            <span class="review-value">Yes</span>
+                        </div>
+                    }
+                    @if (FormData.MedicalDetails.HasDiabetes)
+                    {
+                        <div class="review-item">
+                            <span class="review-label">Diabetes</span>
+                            <span class="review-value">Yes</span>
+                        </div>
+                    }
+                    @if (FormData.MedicalDetails.HasEpilepsy)
+                    {
+                        <div class="review-item">
+                            <span class="review-label">Epilepsy</span>
+                            <span class="review-value">Yes</span>
+                        </div>
+                    }
+                    @if (FormData.MedicalDetails.HasAllergies)
+                    {
+                        <div class="review-item">
+                            <span class="review-label">Allergies</span>
+                            <span class="review-value">Yes</span>
+                        </div>
+                    }
+                    @if (FormData.MedicalDetails.HasLearningDifficulties)
+                    {
+                        <div class="review-item">
+                            <span class="review-label">Learning Difficulties</span>
+                            <span class="review-value">Yes</span>
+                        </div>
+                    }
+                    @if (FormData.MedicalDetails.HasMedication)
+                    {
+                        <div class="review-item">
+                            <span class="review-label">Regular Medication</span>
+                            <span class="review-value">Yes</span>
+                        </div>
+                    }
+                    @if (FormData.MedicalDetails.HasOther)
+                    {
+                        <div class="review-item">
+                            <span class="review-label">Other Condition</span>
+                            <span class="review-value">Yes</span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="review-item">
+                        <span class="review-label">Medical Conditions</span>
+                        <span class="review-value">None reported</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- Consent -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Consent</h5>
+                <a href="/parent/form/@Token/step6" class="btn-edit">Edit</a>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Share Medical with Employer</span>
+                    <span class="review-value @(FormData.Consent.ShareMedicalWithEmployer ? "yes" : "")">@(FormData.Consent.ShareMedicalWithEmployer ? "Yes" : "No")</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Request Teacher Pre-visit</span>
+                    <span class="review-value @(FormData.Consent.RequestTeacherPrevisit ? "yes" : "")">@(FormData.Consent.RequestTeacherPrevisit ? "Yes" : "No")</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Parent/Guardian</span>
+                    <span class="review-value">@FormData.Consent.ParentFirstName @FormData.Consent.ParentLastName</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Consent Given</span>
+                    <span class="review-value @(FormData.Consent.ConsentGiven ? "yes" : "no")">@(FormData.Consent.ConsentGiven ? "Yes" : "No")</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-4">
+            <strong>Ready to submit?</strong> By clicking "Submit Form" below, you confirm that the information provided is accurate and complete.
+        </div>
+    </FormSection>
+
+    @if (!string.IsNullOrEmpty(SubmitError))
+    {
+        <div class="alert alert-danger mt-3">
+            @SubmitError
+        </div>
+    }
+
+    <form method="post" @formname="parent-step7" @onsubmit="HandleSubmit">
+        <AntiforgeryToken />
+
+        <div class="wizard-navigation">
+            <a href="/parent/form/@Token/step6" class="btn-wizard btn-previous">
+                &larr; Previous
+            </a>
+            <button type="submit" class="btn-wizard btn-submit">
+                Submit Form
+            </button>
+        </div>
+    </form>
+}
+
+@code {
+    [Parameter] public string Token { get; set; } = string.Empty;
+
+    private ParentFormDto? FormData { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? SubmitError { get; set; }
+    private bool IsSubmitted { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        FormData = await FormService.InitializeFormAsync(Token);
+
+        if (FormData == null)
+        {
+            ErrorMessage = "This form link is invalid, has expired, or has already been used.";
+            return;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        var success = await FormService.FinalizeSubmissionAsync(Token);
+        if (success)
+        {
+            IsSubmitted = true;
+        }
+        else
+        {
+            SubmitError = "Failed to submit the form. The link may have expired or already been used.";
+        }
+    }
+
+    private string FormatTransportMethod(string method) => method switch
+    {
+        "public" => "Public Transport",
+        "private_car" => "Private Car",
+        "combination" => "Combination",
+        _ => method
+    };
+
+    private bool HasAnyMedicalCondition() =>
+        FormData != null && (
+            FormData.MedicalDetails.HasAsthma ||
+            FormData.MedicalDetails.HasDiabetes ||
+            FormData.MedicalDetails.HasEpilepsy ||
+            FormData.MedicalDetails.HasAllergies ||
+            FormData.MedicalDetails.HasLearningDifficulties ||
+            FormData.MedicalDetails.HasMedication ||
+            FormData.MedicalDetails.HasOther
+        );
+}

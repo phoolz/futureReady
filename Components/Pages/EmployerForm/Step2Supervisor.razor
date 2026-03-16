@@ -1,0 +1,153 @@
+@page "/employer/form/{Token}/step2"
+@layout EmployerFormLayout
+@attribute [StreamRendering]
+@inject IEmployerFormService FormService
+@inject NavigationManager Navigation
+
+<PageTitle>Employer Form - Supervisor Details</PageTitle>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="error-container">
+        <p class="error-message">@ErrorMessage</p>
+        <p class="text-muted">Please contact the school if you believe this is an error.</p>
+    </div>
+}
+else if (FormData != null)
+{
+    <StudentInfoHeader
+        StudentName="@FormData.StudentName"
+        SchoolName="@FormData.SchoolName"
+        CompanyName="@FormData.CompanyName" />
+
+    <ProgressIndicator CurrentStep="2" TotalSteps="7" />
+
+    <form method="post" @formname="employer-step2" @onsubmit="HandleSubmit">
+        <AntiforgeryToken />
+
+        <FormSection Title="Supervisor Details">
+            <p class="mb-4 text-muted">Please provide the contact details for the person who will be directly supervising the student during their placement.</p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label required">First Name</label>
+                        <input type="text" class="form-control" name="Model.FirstName" value="@Model?.FirstName" placeholder="Enter first name" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label required">Last Name</label>
+                        <input type="text" class="form-control" name="Model.LastName" value="@Model?.LastName" placeholder="Enter last name" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Job Title</label>
+                <input type="text" class="form-control" name="Model.JobTitle" value="@Model?.JobTitle" placeholder="Enter job title" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">Email</label>
+                <input type="email" class="form-control" name="Model.Email" value="@Model?.Email" placeholder="Enter email address" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">Phone</label>
+                <input type="tel" class="form-control" name="Model.Phone" value="@Model?.Phone" placeholder="Enter phone number" />
+            </div>
+        </FormSection>
+
+        @if (!string.IsNullOrEmpty(ValidationError))
+        {
+            <div class="alert alert-danger mt-3">
+                @ValidationError
+            </div>
+        }
+
+        <div class="wizard-navigation">
+            <a href="/employer/form/@Token/step1" class="btn-wizard btn-previous">
+                &larr; Previous
+            </a>
+            <button type="submit" class="btn-wizard btn-next">
+                Next &rarr;
+            </button>
+        </div>
+    </form>
+}
+
+@code {
+    [Parameter] public string Token { get; set; } = string.Empty;
+
+    [SupplyParameterFromForm(FormName = "employer-step2")]
+    private SupervisorFormModel? Model { get; set; }
+
+    private EmployerFormDto? FormData { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? ValidationError { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        FormData = await FormService.InitializeFormAsync(Token);
+
+        if (FormData == null)
+        {
+            ErrorMessage = "This form link is invalid, has expired, or has already been used.";
+            return;
+        }
+
+        // Initialize form model with existing data
+        Model ??= new SupervisorFormModel
+        {
+            FirstName = FormData.SupervisorDetails.FirstName,
+            LastName = FormData.SupervisorDetails.LastName,
+            JobTitle = FormData.SupervisorDetails.JobTitle,
+            Email = FormData.SupervisorDetails.Email,
+            Phone = FormData.SupervisorDetails.Phone
+        };
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (Model == null) return;
+
+        // Validate required fields
+        if (string.IsNullOrWhiteSpace(Model.FirstName) ||
+            string.IsNullOrWhiteSpace(Model.LastName) ||
+            string.IsNullOrWhiteSpace(Model.Email) ||
+            string.IsNullOrWhiteSpace(Model.Phone))
+        {
+            ValidationError = "Please complete all required fields before proceeding.";
+            return;
+        }
+
+        var dto = new SupervisorDetailsDto
+        {
+            FirstName = Model.FirstName!,
+            LastName = Model.LastName!,
+            JobTitle = Model.JobTitle,
+            Email = Model.Email!,
+            Phone = Model.Phone!
+        };
+
+        var success = await FormService.SaveSupervisorDetailsAsync(Token, dto);
+        if (success)
+        {
+            Navigation.NavigateTo($"/employer/form/{Token}/step3", forceLoad: true);
+        }
+        else
+        {
+            ValidationError = "Failed to save. The link may have expired or already been used.";
+        }
+    }
+
+    private class SupervisorFormModel
+    {
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+        public string? JobTitle { get; set; }
+        public string? Email { get; set; }
+        public string? Phone { get; set; }
+    }
+}

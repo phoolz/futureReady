@@ -1,0 +1,184 @@
+@page "/employer/form/{Token}/step6"
+@layout EmployerFormLayout
+@attribute [StreamRendering]
+@inject IEmployerFormService FormService
+@inject NavigationManager Navigation
+
+<PageTitle>Employer Form - Hazards Appendix</PageTitle>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="error-container">
+        <p class="error-message">@ErrorMessage</p>
+        <p class="text-muted">Please contact the school if you believe this is an error.</p>
+    </div>
+}
+else if (FormData != null)
+{
+    <StudentInfoHeader
+        StudentName="@FormData.StudentName"
+        SchoolName="@FormData.SchoolName"
+        CompanyName="@FormData.CompanyName" />
+
+    <ProgressIndicator CurrentStep="6" TotalSteps="7" />
+
+    <form method="post" @formname="employer-step6" @onsubmit="HandleSubmit">
+        <AntiforgeryToken />
+
+        <FormSection Title="Hazards Appendix">
+            <p class="mb-4 text-muted">Please indicate if any of the following hazard types are present in the workplace and provide details where applicable.</p>
+
+            <div class="hazard-checkbox-group">
+                <div class="hazard-item">
+                    <div class="hazard-checkbox">
+                        <input type="checkbox" id="chemicalHazards" name="Model.HasChemicalHazards" value="true" checked="@(Model?.HasChemicalHazards == true)" />
+                        <label for="chemicalHazards">Chemical Hazards</label>
+                    </div>
+                    <p class="text-muted small mt-1">e.g., cleaning products, solvents, paints, acids, gases</p>
+                    <div class="hazard-details">
+                        <label class="form-label">Please provide details of chemical hazards</label>
+                        <textarea class="form-control" name="Model.ChemicalDetails" rows="2" placeholder="List the chemicals present and how they are managed">@Model?.ChemicalDetails</textarea>
+                    </div>
+                </div>
+
+                <div class="hazard-item">
+                    <div class="hazard-checkbox">
+                        <input type="checkbox" id="plantHazards" name="Model.HasPlantMachineryHazards" value="true" checked="@(Model?.HasPlantMachineryHazards == true)" />
+                        <label for="plantHazards">Plant/Machinery Hazards</label>
+                    </div>
+                    <p class="text-muted small mt-1">e.g., forklifts, power tools, conveyor belts, industrial equipment</p>
+                    <div class="hazard-details">
+                        <label class="form-label">Please provide details of plant/machinery hazards</label>
+                        <textarea class="form-control" name="Model.PlantMachineryDetails" rows="2" placeholder="List the equipment present and safety measures in place">@Model?.PlantMachineryDetails</textarea>
+                    </div>
+                </div>
+
+                <div class="hazard-item">
+                    <div class="hazard-checkbox">
+                        <input type="checkbox" id="biologicalHazards" name="Model.HasBiologicalHazards" value="true" checked="@(Model?.HasBiologicalHazards == true)" />
+                        <label for="biologicalHazards">Biological Hazards</label>
+                    </div>
+                    <p class="text-muted small mt-1">e.g., blood/bodily fluids, animals, bacteria, viruses, mould</p>
+                    <div class="hazard-details">
+                        <label class="form-label">Please provide details of biological hazards</label>
+                        <textarea class="form-control" name="Model.BiologicalDetails" rows="2" placeholder="Describe the biological hazards and control measures">@Model?.BiologicalDetails</textarea>
+                    </div>
+                </div>
+
+                <div class="hazard-item">
+                    <div class="hazard-checkbox">
+                        <input type="checkbox" id="ergonomicHazards" name="Model.HasErgonomicHazards" value="true" checked="@(Model?.HasErgonomicHazards == true)" />
+                        <label for="ergonomicHazards">Ergonomic Hazards</label>
+                    </div>
+                    <p class="text-muted small mt-1">e.g., repetitive tasks, heavy lifting, awkward postures, prolonged sitting/standing</p>
+                    <div class="hazard-details">
+                        <label class="form-label">Please provide details of ergonomic hazards</label>
+                        <textarea class="form-control" name="Model.ErgonomicDetails" rows="2" placeholder="Describe the ergonomic hazards and how they are managed">@Model?.ErgonomicDetails</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4" />
+
+            <div class="form-group">
+                <label class="form-label">Additional Hazard Information</label>
+                <textarea class="form-control" name="Model.AdditionalDetails" rows="3" placeholder="Provide any additional information about workplace hazards that hasn't been covered above">@Model?.AdditionalDetails</textarea>
+            </div>
+        </FormSection>
+
+        @if (!string.IsNullOrEmpty(ValidationError))
+        {
+            <div class="alert alert-danger mt-3">
+                @ValidationError
+            </div>
+        }
+
+        <div class="wizard-navigation">
+            <a href="/employer/form/@Token/step5" class="btn-wizard btn-previous">
+                &larr; Previous
+            </a>
+            <button type="submit" class="btn-wizard btn-next">
+                Next &rarr;
+            </button>
+        </div>
+    </form>
+}
+
+@code {
+    [Parameter] public string Token { get; set; } = string.Empty;
+
+    [SupplyParameterFromForm(FormName = "employer-step6")]
+    private HazardsFormModel? Model { get; set; }
+
+    private EmployerFormDto? FormData { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? ValidationError { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        FormData = await FormService.InitializeFormAsync(Token);
+
+        if (FormData == null)
+        {
+            ErrorMessage = "This form link is invalid, has expired, or has already been used.";
+            return;
+        }
+
+        // Initialize form model with existing data
+        Model ??= new HazardsFormModel
+        {
+            HasChemicalHazards = FormData.HazardsAppendix.HasChemicalHazards,
+            ChemicalDetails = FormData.HazardsAppendix.ChemicalDetails,
+            HasPlantMachineryHazards = FormData.HazardsAppendix.HasPlantMachineryHazards,
+            PlantMachineryDetails = FormData.HazardsAppendix.PlantMachineryDetails,
+            HasBiologicalHazards = FormData.HazardsAppendix.HasBiologicalHazards,
+            BiologicalDetails = FormData.HazardsAppendix.BiologicalDetails,
+            HasErgonomicHazards = FormData.HazardsAppendix.HasErgonomicHazards,
+            ErgonomicDetails = FormData.HazardsAppendix.ErgonomicDetails,
+            AdditionalDetails = FormData.HazardsAppendix.AdditionalDetails
+        };
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (Model == null) return;
+
+        // No required fields on this step
+
+        var dto = new HazardsAppendixDto
+        {
+            HasChemicalHazards = Model.HasChemicalHazards,
+            ChemicalDetails = Model.ChemicalDetails,
+            HasPlantMachineryHazards = Model.HasPlantMachineryHazards,
+            PlantMachineryDetails = Model.PlantMachineryDetails,
+            HasBiologicalHazards = Model.HasBiologicalHazards,
+            BiologicalDetails = Model.BiologicalDetails,
+            HasErgonomicHazards = Model.HasErgonomicHazards,
+            ErgonomicDetails = Model.ErgonomicDetails,
+            AdditionalDetails = Model.AdditionalDetails
+        };
+
+        var success = await FormService.SaveHazardsAppendixAsync(Token, dto);
+        if (success)
+        {
+            Navigation.NavigateTo($"/employer/form/{Token}/step7", forceLoad: true);
+        }
+        else
+        {
+            ValidationError = "Failed to save. The link may have expired or already been used.";
+        }
+    }
+
+    private class HazardsFormModel
+    {
+        public bool HasChemicalHazards { get; set; }
+        public string? ChemicalDetails { get; set; }
+        public bool HasPlantMachineryHazards { get; set; }
+        public string? PlantMachineryDetails { get; set; }
+        public bool HasBiologicalHazards { get; set; }
+        public string? BiologicalDetails { get; set; }
+        public bool HasErgonomicHazards { get; set; }
+        public string? ErgonomicDetails { get; set; }
+        public string? AdditionalDetails { get; set; }
+    }
+}

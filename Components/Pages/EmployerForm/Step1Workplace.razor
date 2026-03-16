@@ -1,0 +1,217 @@
+@page "/employer/form/{Token}/step1"
+@layout EmployerFormLayout
+@attribute [StreamRendering]
+@inject IEmployerFormService FormService
+@inject NavigationManager Navigation
+
+<PageTitle>Employer Form - Workplace Details</PageTitle>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="error-container">
+        <p class="error-message">@ErrorMessage</p>
+        <p class="text-muted">Please contact the school if you believe this is an error.</p>
+    </div>
+}
+else if (FormData != null)
+{
+    <StudentInfoHeader
+        StudentName="@FormData.StudentName"
+        SchoolName="@FormData.SchoolName"
+        CompanyName="@FormData.CompanyName" />
+
+    <ProgressIndicator CurrentStep="1" TotalSteps="7" />
+
+    <form method="post" @formname="employer-step1" @onsubmit="HandleSubmit">
+        <AntiforgeryToken />
+
+        <FormSection Title="Workplace Details">
+            <p class="mb-4 text-muted">Please provide the workplace address where the student will be located and the expected working hours.</p>
+
+            <div class="form-group">
+                <label class="form-label required">Street Address</label>
+                <input type="text" class="form-control" name="Model.StreetAddress" value="@Model?.StreetAddress" placeholder="Enter street address" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Street Address 2</label>
+                <input type="text" class="form-control" name="Model.StreetAddress2" value="@Model?.StreetAddress2" placeholder="Apartment, suite, unit, etc. (optional)" />
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label required">Suburb</label>
+                        <input type="text" class="form-control" name="Model.Suburb" value="@Model?.Suburb" placeholder="Enter suburb" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label required">City</label>
+                        <input type="text" class="form-control" name="Model.City" value="@Model?.City" placeholder="Enter city" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label required">State</label>
+                        <select class="form-control" name="Model.State">
+                            <option value="">Select state</option>
+                            <option value="ACT" selected="@(Model?.State == "ACT")">ACT</option>
+                            <option value="NSW" selected="@(Model?.State == "NSW")">NSW</option>
+                            <option value="NT" selected="@(Model?.State == "NT")">NT</option>
+                            <option value="QLD" selected="@(Model?.State == "QLD")">QLD</option>
+                            <option value="SA" selected="@(Model?.State == "SA")">SA</option>
+                            <option value="TAS" selected="@(Model?.State == "TAS")">TAS</option>
+                            <option value="VIC" selected="@(Model?.State == "VIC")">VIC</option>
+                            <option value="WA" selected="@(Model?.State == "WA")">WA</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label required">Postal Code</label>
+                        <input type="text" class="form-control" name="Model.PostalCode" value="@Model?.PostalCode" placeholder="Enter postal code" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Placement Role/Position</label>
+                <input type="text" class="form-control" name="Model.PlacementRole" value="@Model?.PlacementRole" placeholder="e.g., Retail Assistant, Office Admin" />
+                <small class="form-text text-muted">The job role or position the student(s) will be undertaking</small>
+            </div>
+
+            <hr class="my-4" />
+
+            <div class="form-group">
+                <label class="form-label">Dress Code Requirements</label>
+                <textarea class="form-control" name="Model.DressCode" rows="3" placeholder="Describe any dress code requirements (e.g., safety boots, enclosed shoes, uniform)">@Model?.DressCode</textarea>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label required">Work Start Time</label>
+                        <input type="time" class="form-control" name="Model.WorkStartTime" value="@Model?.WorkStartTime" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label required">Work End Time</label>
+                        <input type="time" class="form-control" name="Model.WorkEndTime" value="@Model?.WorkEndTime" />
+                    </div>
+                </div>
+            </div>
+        </FormSection>
+
+        @if (!string.IsNullOrEmpty(ValidationError))
+        {
+            <div class="alert alert-danger mt-3">
+                @ValidationError
+            </div>
+        }
+
+        <div class="wizard-navigation">
+            <div></div>
+            <button type="submit" class="btn-wizard btn-next">
+                Next &rarr;
+            </button>
+        </div>
+    </form>
+}
+
+@code {
+    [Parameter] public string Token { get; set; } = string.Empty;
+
+    [SupplyParameterFromForm(FormName = "employer-step1")]
+    private WorkplaceFormModel? Model { get; set; }
+
+    private EmployerFormDto? FormData { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? ValidationError { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        FormData = await FormService.InitializeFormAsync(Token);
+
+        if (FormData == null)
+        {
+            ErrorMessage = "This form link is invalid, has expired, or has already been used.";
+            return;
+        }
+
+        // Initialize form model with existing data
+        Model ??= new WorkplaceFormModel
+        {
+            StreetAddress = FormData.WorkplaceDetails.StreetAddress,
+            StreetAddress2 = FormData.WorkplaceDetails.StreetAddress2,
+            Suburb = FormData.WorkplaceDetails.Suburb,
+            City = FormData.WorkplaceDetails.City,
+            State = FormData.WorkplaceDetails.State,
+            PostalCode = FormData.WorkplaceDetails.PostalCode,
+            PlacementRole = FormData.WorkplaceDetails.PlacementRole,
+            DressCode = FormData.WorkplaceDetails.DressCode,
+            WorkStartTime = FormData.WorkplaceDetails.WorkStartTime,
+            WorkEndTime = FormData.WorkplaceDetails.WorkEndTime
+        };
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (Model == null) return;
+
+        // Validate required fields
+        if (string.IsNullOrWhiteSpace(Model.StreetAddress) ||
+            string.IsNullOrWhiteSpace(Model.Suburb) ||
+            string.IsNullOrWhiteSpace(Model.City) ||
+            string.IsNullOrWhiteSpace(Model.State) ||
+            string.IsNullOrWhiteSpace(Model.PostalCode) ||
+            string.IsNullOrWhiteSpace(Model.WorkStartTime) ||
+            string.IsNullOrWhiteSpace(Model.WorkEndTime))
+        {
+            ValidationError = "Please complete all required fields before proceeding.";
+            return;
+        }
+
+        var dto = new WorkplaceDetailsDto
+        {
+            StreetAddress = Model.StreetAddress!,
+            StreetAddress2 = Model.StreetAddress2,
+            Suburb = Model.Suburb!,
+            City = Model.City!,
+            State = Model.State!,
+            PostalCode = Model.PostalCode!,
+            PlacementRole = Model.PlacementRole,
+            DressCode = Model.DressCode,
+            WorkStartTime = Model.WorkStartTime!,
+            WorkEndTime = Model.WorkEndTime!
+        };
+
+        var success = await FormService.SaveWorkplaceDetailsAsync(Token, dto);
+        if (success)
+        {
+            Navigation.NavigateTo($"/employer/form/{Token}/step2", forceLoad: true);
+        }
+        else
+        {
+            ValidationError = "Failed to save. The link may have expired or already been used.";
+        }
+    }
+
+    private class WorkplaceFormModel
+    {
+        public string? StreetAddress { get; set; }
+        public string? StreetAddress2 { get; set; }
+        public string? Suburb { get; set; }
+        public string? City { get; set; }
+        public string? State { get; set; }
+        public string? PostalCode { get; set; }
+        public string? PlacementRole { get; set; }
+        public string? DressCode { get; set; }
+        public string? WorkStartTime { get; set; }
+        public string? WorkEndTime { get; set; }
+    }
+}

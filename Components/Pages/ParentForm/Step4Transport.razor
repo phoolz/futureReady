@@ -1,0 +1,218 @@
+@page "/parent/form/{Token}/step4"
+@layout ParentFormLayout
+@attribute [StreamRendering]
+@inject IParentFormService FormService
+@inject NavigationManager Navigation
+
+<PageTitle>Parent Form - Transport</PageTitle>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="error-container">
+        <p class="error-message">@ErrorMessage</p>
+        <p class="text-muted">Please contact the school if you believe this is an error.</p>
+    </div>
+}
+else if (FormData != null)
+{
+    <ParentInfoHeader
+        StudentName="@FormData.StudentName"
+        SchoolName="@FormData.SchoolName" />
+
+    <ParentProgressIndicator CurrentStep="4" TotalSteps="7" />
+
+    <form method="post" @formname="parent-step4" @onsubmit="HandleSubmit">
+        <AntiforgeryToken />
+
+        <FormSection Title="Transport Arrangements">
+            <p class="mb-4 text-muted">Please indicate how the student will travel to and from the workplace.</p>
+
+            <div class="form-group">
+                <label class="form-label required">How will the student travel to and from the workplace?</label>
+                <div class="transport-options">
+                    <div class="transport-option @(Model?.TransportMethod == "public" ? "selected" : "")"
+                         onclick="document.getElementById('transport-public').checked = true; document.querySelectorAll('.transport-option').forEach(e => e.classList.remove('selected')); this.classList.add('selected');">
+                        <div class="transport-icon">&#128652;</div>
+                        <div class="transport-label">Public Transport</div>
+                        <div class="transport-desc">Bus, train, tram, etc.</div>
+                    </div>
+                    <div class="transport-option @(Model?.TransportMethod == "private_car" ? "selected" : "")"
+                         onclick="document.getElementById('transport-car').checked = true; document.querySelectorAll('.transport-option').forEach(e => e.classList.remove('selected')); this.classList.add('selected');">
+                        <div class="transport-icon">&#128663;</div>
+                        <div class="transport-label">Private Car</div>
+                        <div class="transport-desc">Parent/guardian drives</div>
+                    </div>
+                    <div class="transport-option @(Model?.TransportMethod == "combination" ? "selected" : "")"
+                         onclick="document.getElementById('transport-combo').checked = true; document.querySelectorAll('.transport-option').forEach(e => e.classList.remove('selected')); this.classList.add('selected');">
+                        <div class="transport-icon">&#128652;&#128663;</div>
+                        <div class="transport-label">Combination</div>
+                        <div class="transport-desc">Mix of public and private</div>
+                    </div>
+                </div>
+                <input type="radio" id="transport-public" name="Model.TransportMethod" value="public" checked="@(Model?.TransportMethod == "public")" style="display:none" />
+                <input type="radio" id="transport-car" name="Model.TransportMethod" value="private_car" checked="@(Model?.TransportMethod == "private_car")" style="display:none" />
+                <input type="radio" id="transport-combo" name="Model.TransportMethod" value="combination" checked="@(Model?.TransportMethod == "combination")" style="display:none" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Public Transport Details</label>
+                <textarea class="form-control" name="Model.PublicTransportDetails" rows="3" placeholder="Please provide details of the public transport route (e.g., Bus 123 to City, then train to Suburb station)">@Model?.PublicTransportDetails</textarea>
+            </div>
+
+            <div class="alert alert-info">
+                <strong>Driver Information</strong>
+                <p class="mb-0">If using private car transport, please provide the details of the person who will be driving the student.</p>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Driver Name</label>
+                        <input type="text" class="form-control" name="Model.DriverName" value="@Model?.DriverName" placeholder="Enter driver's full name" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Driver Contact Number</label>
+                        <input type="tel" class="form-control" name="Model.DriverContactNumber" value="@Model?.DriverContactNumber" placeholder="Enter driver's phone number" />
+                    </div>
+                </div>
+            </div>
+        </FormSection>
+
+        @if (!string.IsNullOrEmpty(ValidationError))
+        {
+            <div class="alert alert-danger mt-3">
+                @ValidationError
+            </div>
+        }
+
+        <div class="wizard-navigation">
+            <a href="/parent/form/@Token/step3" class="btn-wizard btn-previous">
+                &larr; Previous
+            </a>
+            <button type="submit" class="btn-wizard btn-next">
+                Next &rarr;
+            </button>
+        </div>
+    </form>
+}
+
+<style>
+    .transport-options {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .transport-option {
+        flex: 1;
+        min-width: 150px;
+        padding: 1.5rem 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .transport-option:hover {
+        border-color: #007bff;
+        background-color: #f8f9fa;
+    }
+
+    .transport-option.selected {
+        border-color: #007bff;
+        background-color: #e7f1ff;
+    }
+
+    .transport-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .transport-label {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .transport-desc {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+</style>
+
+@code {
+    [Parameter] public string Token { get; set; } = string.Empty;
+
+    [SupplyParameterFromForm(FormName = "parent-step4")]
+    private TransportFormModel? Model { get; set; }
+
+    private ParentFormDto? FormData { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? ValidationError { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        FormData = await FormService.InitializeFormAsync(Token);
+
+        if (FormData == null)
+        {
+            ErrorMessage = "This form link is invalid, has expired, or has already been used.";
+            return;
+        }
+
+        Model ??= new TransportFormModel
+        {
+            TransportMethod = FormData.Transport.TransportMethod,
+            PublicTransportDetails = FormData.Transport.PublicTransportDetails,
+            DriverName = FormData.Transport.DriverName,
+            DriverContactNumber = FormData.Transport.DriverContactNumber
+        };
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (Model == null) return;
+
+        if (string.IsNullOrWhiteSpace(Model.TransportMethod))
+        {
+            ValidationError = "Please select a transport method before proceeding.";
+            return;
+        }
+
+        // Validate driver info if private car or combination
+        if ((Model.TransportMethod == "private_car" || Model.TransportMethod == "combination") &&
+            (string.IsNullOrWhiteSpace(Model.DriverName) || string.IsNullOrWhiteSpace(Model.DriverContactNumber)))
+        {
+            ValidationError = "Please provide driver details for private car transport.";
+            return;
+        }
+
+        var dto = new TransportDto
+        {
+            TransportMethod = Model.TransportMethod!,
+            PublicTransportDetails = Model.PublicTransportDetails,
+            DriverName = Model.DriverName,
+            DriverContactNumber = Model.DriverContactNumber
+        };
+
+        var success = await FormService.SaveTransportAsync(Token, dto);
+        if (success)
+        {
+            Navigation.NavigateTo($"/parent/form/{Token}/step5", forceLoad: true);
+        }
+        else
+        {
+            ValidationError = "Failed to save. The link may have expired or already been used.";
+        }
+    }
+
+    private class TransportFormModel
+    {
+        public string? TransportMethod { get; set; }
+        public string? PublicTransportDetails { get; set; }
+        public string? DriverName { get; set; }
+        public string? DriverContactNumber { get; set; }
+    }
+}
