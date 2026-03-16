@@ -1,0 +1,157 @@
+@page "/Users/Profile"
+@attribute [Authorize]
+@attribute [StreamRendering]
+@inject IUserService UserService
+@inject IUserProvider UserProvider
+@inject IHttpContextAccessor HttpContextAccessor
+@inject Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> UserManager
+
+<PageTitle>My Profile - Apiary</PageTitle>
+
+<h1>My Profile</h1>
+
+@if (User == null && !ErrorMessages.Any())
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-8">
+            @if (!string.IsNullOrEmpty(SuccessMessage))
+            {
+                <div class="alert alert-success" role="alert">@SuccessMessage</div>
+            }
+
+            <form method="post" @formname="update-profile">
+                <AntiforgeryToken />
+                <input type="hidden" name="FormModel.Id" value="@User?.Id" />
+
+                @if (ErrorMessages.Any())
+                {
+                    <div class="alert alert-danger" role="alert">
+                        @foreach (var error in ErrorMessages)
+                        {
+                            <div>@error</div>
+                        }
+                    </div>
+                }
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Profile Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="DisplayName" class="form-label">Display Name</label>
+                                <input type="text" id="DisplayName" name="FormModel.DisplayName" class="form-control" value="@FormModel?.DisplayName" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="Email" class="form-label">Email</label>
+                                <input type="email" id="Email" name="FormModel.Email" class="form-control" value="@FormModel?.Email" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Account Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-3">Username</dt>
+                            <dd class="col-sm-9">@User?.UserName</dd>
+
+                            <dt class="col-sm-3">Role</dt>
+                            <dd class="col-sm-9">@RoleName</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary">Update Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@code {
+    [SupplyParameterFromForm(FormName = "update-profile")]
+    public ProfileModel? FormModel { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private ApplicationUser? User { get; set; }
+    private string? RoleName { get; set; }
+    private List<string> ErrorMessages { get; set; } = new();
+    private string? SuccessMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var username = UserProvider.GetCurrentUsername();
+        if (string.IsNullOrEmpty(username))
+        {
+            ErrorMessages.Add("Not logged in.");
+            return;
+        }
+
+        User = await UserManager.FindByNameAsync(username) ?? await UserManager.FindByEmailAsync(username);
+        if (User == null || User.IsDeleted)
+        {
+            ErrorMessages.Add("User not found.");
+            return;
+        }
+
+        var roles = await UserManager.GetRolesAsync(User);
+        RoleName = roles.FirstOrDefault() ?? "—";
+
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+
+        if (context != null && HttpMethods.IsPost(context.Request.Method))
+        {
+            await HandlePostAsync();
+            return;
+        }
+
+        FormModel = new ProfileModel
+        {
+            Id = User.Id,
+            DisplayName = User.DisplayName,
+            Email = User.Email
+        };
+    }
+
+    private async Task HandlePostAsync()
+    {
+        if (FormModel == null || User == null)
+        {
+            ErrorMessages.Add("Invalid form data.");
+            return;
+        }
+
+        if (FormModel.Id != User.Id)
+        {
+            ErrorMessages.Add("Invalid user ID.");
+            return;
+        }
+
+        var (success, errors) = await UserService.UpdateProfileAsync(FormModel);
+
+        if (success)
+        {
+            SuccessMessage = "Profile updated successfully.";
+            // Refresh user data
+            User = await UserService.GetByIdAsync(FormModel.Id);
+            FormModel.DisplayName = User?.DisplayName;
+            FormModel.Email = User?.Email;
+        }
+        else
+        {
+            ErrorMessages.AddRange(errors);
+        }
+    }
+}

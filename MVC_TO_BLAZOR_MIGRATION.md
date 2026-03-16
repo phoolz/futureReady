@@ -332,7 +332,7 @@ Stage 3: Schools
 Stage 4: Users & Authentication
     ↓
 Stage 5: Students & Related Entities
-    ↓
+    ↓   
 Stage 6: Placements (Core Workflow)
     ↓
 Stage 7: Logbook Entries

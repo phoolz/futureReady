@@ -68,6 +68,7 @@ builder.Services.AddScoped<Apiary.Services.LogbookEntries.ILogbookEntryService, 
 builder.Services.AddScoped<Apiary.Services.LogbookTasks.ILogbookTaskService, Apiary.Services.LogbookTasks.LogbookTaskService>();
 builder.Services.AddScoped<Apiary.Services.StudentAccountTokens.IStudentAccountTokenService, Apiary.Services.StudentAccountTokens.StudentAccountTokenService>();
 builder.Services.AddScoped<Apiary.Services.StudentActivation.IStudentActivationService, Apiary.Services.StudentActivation.StudentActivationService>();
+builder.Services.AddScoped<Apiary.Services.Users.IUserService, Apiary.Services.Users.UserService>();
 
 var app = builder.Build();
 

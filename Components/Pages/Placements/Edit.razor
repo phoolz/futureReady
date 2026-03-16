@@ -1,0 +1,364 @@
+@page "/Placements/Edit/{Id:guid}"
+@attribute [Authorize(Roles = Roles.Teacher)]
+@attribute [StreamRendering]
+@inject IPlacementService PlacementService
+@inject IPlacementStudentService PlacementStudentService
+@inject ICompanyService CompanyService
+@inject ISupervisorService SupervisorService
+@inject IStudentService StudentService
+@inject ITenantProvider TenantProvider
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Edit Placement - Apiary</PageTitle>
+
+<h1>Edit Placement</h1>
+
+@if (!string.IsNullOrEmpty(SuccessMessage))
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @SuccessMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @ErrorMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (Placement == null && string.IsNullOrEmpty(ErrorMessage))
+{
+    <p>Loading...</p>
+}
+else if (Placement != null)
+{
+    <div class="row">
+        <div class="col-md-8">
+            <form method="post" @formname="edit-placement">
+                <AntiforgeryToken />
+                <input type="hidden" name="FormModel.Id" value="@Id" />
+                <input type="hidden" name="FormModel.RowVersion" value="@Convert.ToBase64String(Placement.RowVersion ?? Array.Empty<byte>())" />
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Placement Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="Year" class="form-label">Year</label>
+                                <input type="number" id="Year" name="FormModel.Year" class="form-control" value="@(FormModel?.Year ?? Placement.Year)" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="Status" class="form-label">Status</label>
+                                <select id="Status" name="FormModel.Status" class="form-select">
+                                    <option value="draft" selected="@((FormModel?.Status ?? Placement.Status) == "draft")">Draft</option>
+                                    <option value="pending_employer" selected="@((FormModel?.Status ?? Placement.Status) == "pending_employer")">Pending Employer</option>
+                                    <option value="pending_parents" selected="@((FormModel?.Status ?? Placement.Status) == "pending_parents")">Pending Parents</option>
+                                    <option value="partial" selected="@((FormModel?.Status ?? Placement.Status) == "partial")">Partial</option>
+                                    <option value="confirmed" selected="@((FormModel?.Status ?? Placement.Status) == "confirmed")">Confirmed</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="PlacementRole" class="form-label">Placement Role</label>
+                            <input type="text" id="PlacementRole" name="FormModel.PlacementRole" class="form-control" value="@(FormModel?.PlacementRole ?? Placement.PlacementRole)" placeholder="e.g., Retail Assistant, Office Admin" />
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="CompanyId" class="form-label">Company</label>
+                                <select id="CompanyId" name="FormModel.CompanyId" class="form-select">
+                                    <option value="">-- Select Company --</option>
+                                    @if (Companies != null)
+                                    {
+                                        @foreach (var company in Companies)
+                                        {
+                                            <option value="@company.Id" selected="@((FormModel?.CompanyId ?? Placement.CompanyId) == company.Id)">@company.Name</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="SupervisorId" class="form-label">Supervisor</label>
+                                <select id="SupervisorId" name="FormModel.SupervisorId" class="form-select">
+                                    <option value="">-- Select Supervisor --</option>
+                                    @if (Supervisors != null)
+                                    {
+                                        @foreach (var supervisor in Supervisors)
+                                        {
+                                            <option value="@supervisor.Id" selected="@((FormModel?.SupervisorId ?? Placement.SupervisorId) == supervisor.Id)">@supervisor.FirstName @supervisor.LastName</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <a href="/Placements" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Students</h5>
+                </div>
+                <div class="card-body">
+                    @if (PlacementStudents.Any())
+                    {
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Status</th>
+                                    <th>Parent Submitted</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var ps in PlacementStudents)
+                                {
+                                    var studentStatusClass = ps.Status switch
+                                    {
+                                        "confirmed" => "bg-success",
+                                        "pending_parent" => "bg-warning text-dark",
+                                        "withdrawn" => "bg-secondary",
+                                        _ => "bg-info"
+                                    };
+                                    var studentStatusText = ps.Status switch
+                                    {
+                                        "confirmed" => "Confirmed",
+                                        "pending_parent" => "Pending Parent",
+                                        "withdrawn" => "Withdrawn",
+                                        _ => ps.Status ?? "Unknown"
+                                    };
+                                    <tr>
+                                        <td>@(ps.Student != null ? $"{ps.Student.FirstName} {ps.Student.LastName}" : "Unknown")</td>
+                                        <td><span class="badge @studentStatusClass">@studentStatusText</span></td>
+                                        <td>
+                                            @if (ps.ParentSubmittedAt.HasValue)
+                                            {
+                                                @ps.ParentSubmittedAt.Value.ToString("d MMM yyyy")
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">—</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <form method="post" @formname="@($"remove-student-{ps.StudentId}")" style="display:inline;" onsubmit="return confirm('Are you sure you want to remove this student from the placement?');">
+                                                <AntiforgeryToken />
+                                                <input type="hidden" name="RemoveStudentModel.PlacementId" value="@Id" />
+                                                <input type="hidden" name="RemoveStudentModel.StudentId" value="@ps.StudentId" />
+                                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Remove student">
+                                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M3 6h18"/>
+                                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No students assigned to this placement.</p>
+                    }
+
+                    <hr />
+
+                    <h6>Add Student</h6>
+                    <form method="post" @formname="add-student" class="row g-2 align-items-end">
+                        <AntiforgeryToken />
+                        <input type="hidden" name="AddStudentModel.PlacementId" value="@Id" />
+                        <div class="col-md-8">
+                            <select name="AddStudentModel.StudentId" class="form-select" required>
+                                <option value="">-- Select Student --</option>
+                                @foreach (var student in AvailableStudents)
+                                {
+                                    <option value="@student.Id">@student.FirstName @student.LastName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-success w-100">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                    <path d="M12 5v14M5 12h14"/>
+                                </svg>
+                                Add Student
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [SupplyParameterFromForm(FormName = "edit-placement")]
+    public PlacementEditModel? FormModel { get; set; }
+
+    [SupplyParameterFromForm(FormName = "add-student")]
+    public AddStudentModel? AddStudentFormModel { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private Placement? Placement { get; set; }
+    private List<PlacementStudent> PlacementStudents { get; set; } = new();
+    private List<Company>? Companies { get; set; }
+    private List<Supervisor>? Supervisors { get; set; }
+    private List<Student> AvailableStudents { get; set; } = new();
+    private string? ErrorMessage { get; set; }
+    private string? SuccessMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        Companies = await CompanyService.GetAllAsync(tenantId);
+        Supervisors = await SupervisorService.GetAllAsync(tenantId);
+
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+
+        if (context != null && HttpMethods.IsPost(context.Request.Method))
+        {
+            await HandlePostAsync(context);
+        }
+
+        await LoadPlacementAsync();
+    }
+
+    private async Task LoadPlacementAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        Placement = await PlacementService.GetByIdWithDetailsAsync(Id, tenantId);
+
+        if (Placement == null)
+        {
+            ErrorMessage = "Placement not found.";
+            return;
+        }
+
+        PlacementStudents = Placement.PlacementStudents?.Where(ps => !ps.IsDeleted).ToList() ?? new();
+
+        var allStudents = await StudentService.GetAllAsync(tenantId);
+        var assignedStudentIds = PlacementStudents.Select(ps => ps.StudentId).ToHashSet();
+        AvailableStudents = allStudents.Where(s => !assignedStudentIds.Contains(s.Id)).ToList();
+    }
+
+    private async Task HandlePostAsync(HttpContext context)
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        var formName = context.Request.Form["_handler"].ToString();
+
+        if (formName == "edit-placement" && FormModel != null)
+        {
+            await HandleEditAsync(tenantId);
+        }
+        else if (formName == "add-student" && AddStudentFormModel?.StudentId != null && AddStudentFormModel.StudentId != Guid.Empty)
+        {
+            await HandleAddStudentAsync(tenantId);
+        }
+        else
+        {
+            // Check for remove-student forms
+            var removeStudentId = context.Request.Form["RemoveStudentModel.StudentId"].ToString();
+            if (!string.IsNullOrEmpty(removeStudentId) && Guid.TryParse(removeStudentId, out var studentId))
+            {
+                await HandleRemoveStudentAsync(studentId, tenantId);
+            }
+        }
+    }
+
+    private async Task HandleEditAsync(Guid? tenantId)
+    {
+        if (FormModel == null)
+        {
+            ErrorMessage = "Invalid form data.";
+            return;
+        }
+
+        try
+        {
+            var placement = new Placement
+            {
+                Id = Id,
+                CompanyId = FormModel.CompanyId,
+                SupervisorId = FormModel.SupervisorId,
+                Year = FormModel.Year,
+                Status = FormModel.Status ?? "draft",
+                PlacementRole = FormModel.PlacementRole
+            };
+
+            byte[]? rowVersion = null;
+            if (!string.IsNullOrEmpty(FormModel.RowVersion))
+            {
+                rowVersion = Convert.FromBase64String(FormModel.RowVersion);
+            }
+
+            await PlacementService.UpdateAsync(placement, rowVersion, tenantId);
+
+            var context = HttpContext ?? HttpContextAccessor.HttpContext;
+            context?.Response.Redirect($"/Placements/Details/{Id}");
+        }
+        catch (InvalidOperationException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "An error occurred while updating the placement.";
+        }
+    }
+
+    private async Task HandleAddStudentAsync(Guid? tenantId)
+    {
+        try
+        {
+            await PlacementStudentService.AddStudentToPlacementAsync(Id, AddStudentFormModel!.StudentId, tenantId);
+            await PlacementService.RecalculateStatusAsync(Id, tenantId);
+            SuccessMessage = "Student added to placement successfully.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private async Task HandleRemoveStudentAsync(Guid studentId, Guid? tenantId)
+    {
+        await PlacementStudentService.RemoveStudentFromPlacementAsync(Id, studentId, tenantId);
+        await PlacementService.RecalculateStatusAsync(Id, tenantId);
+        SuccessMessage = "Student removed from placement successfully.";
+    }
+
+    public class PlacementEditModel
+    {
+        public Guid Id { get; set; }
+        public Guid? CompanyId { get; set; }
+        public Guid? SupervisorId { get; set; }
+        public int? Year { get; set; }
+        public string? Status { get; set; }
+        public string? PlacementRole { get; set; }
+        public string? RowVersion { get; set; }
+    }
+
+    public class AddStudentModel
+    {
+        public Guid PlacementId { get; set; }
+        public Guid StudentId { get; set; }
+    }
+}

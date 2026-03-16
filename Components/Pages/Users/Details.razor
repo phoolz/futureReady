@@ -1,0 +1,82 @@
+@page "/Users/Details/{Id:guid}"
+@attribute [Authorize(Roles = Roles.SiteAdmin)]
+@attribute [StreamRendering]
+@inject IUserService UserService
+@inject ISchoolService SchoolService
+
+<PageTitle>User Details - Apiary</PageTitle>
+
+@if (User == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="details-header">
+        <div class="details-header-content">
+            <h1>@(User.DisplayName ?? User.UserName)</h1>
+            <p>@User.Email</p>
+        </div>
+        <div class="details-header-actions">
+            <a href="/Users/Edit/@Id" class="btn btn-primary">Edit</a>
+            <a href="/Users/Delete/@Id" class="btn btn-outline-danger">Delete</a>
+            <a href="/Users" class="btn btn-secondary">Back to List</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Account Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Username</dt>
+                        <dd class="col-sm-8">@User.UserName</dd>
+
+                        <dt class="col-sm-4">Email</dt>
+                        <dd class="col-sm-8">@(User.Email ?? "—")</dd>
+
+                        <dt class="col-sm-4">Display Name</dt>
+                        <dd class="col-sm-8">@(User.DisplayName ?? "—")</dd>
+
+                        <dt class="col-sm-4">Role</dt>
+                        <dd class="col-sm-8">@(RoleName ?? "—")</dd>
+
+                        <dt class="col-sm-4">School</dt>
+                        <dd class="col-sm-8">@(SchoolName ?? "—")</dd>
+
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8">
+                            <span class="indicator">
+                                <span class="indicator-dot @(User.IsActive ? "yes" : "no")"></span>
+                                @(User.IsActive ? "Active" : "Inactive")
+                            </span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private ApplicationUser? User { get; set; }
+    private string? RoleName { get; set; }
+    private string? SchoolName { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        User = await UserService.GetByIdAsync(Id);
+        if (User != null)
+        {
+            RoleName = await UserService.GetRoleAsync(Id);
+            var school = await SchoolService.GetByIdAsync(User.TenantId);
+            SchoolName = school?.Name;
+        }
+    }
+}
