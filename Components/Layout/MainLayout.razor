@@ -1,0 +1,24 @@
+@inherits LayoutComponentBase
+
+<div class="app-container">
+    <Sidebar />
+
+    <div class="main-wrapper">
+        <header class="main-header d-lg-none">
+            <button class="hamburger-btn" type="button" onclick="toggleSidebar()">
+                <span class="hamburger-icon">☰</span>
+            </button>
+            <span class="header-title">Apiary</span>
+        </header>
+
+        <main class="main-content">
+            @Body
+        </main>
+
+        <footer class="main-footer text-muted">
+            <div class="container-fluid">
+                &copy; @DateTime.Now.Year - Apiary - <a href="/Home/Privacy">Privacy</a>
+            </div>
+        </footer>
+    </div>
+</div>

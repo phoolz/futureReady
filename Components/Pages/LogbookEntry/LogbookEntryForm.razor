@@ -1,5 +1,6 @@
 @page "/student/logbook/{PlacementId:guid}"
 @page "/student/logbook/{PlacementId:guid}/{Date}"
+@layout MainLayout
 @rendermode InteractiveServer
 @attribute [Authorize(Roles = "Teacher,Student")]
 @inject ILogbookEntryService LogbookService
