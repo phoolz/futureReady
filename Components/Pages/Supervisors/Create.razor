@@ -1,0 +1,150 @@
+@page "/Supervisors/Create"
+@layout MainLayout
+@attribute [Authorize(Roles = Roles.Teacher)]
+@inject ISupervisorService SupervisorService
+@inject ICompanyService CompanyService
+@inject ITenantProvider TenantProvider
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Add Supervisor - Apiary</PageTitle>
+
+<h1>Add Supervisor</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <form method="post" @formname="create-supervisor">
+            <AntiforgeryToken />
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+            }
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Supervisor Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="CompanyId" class="form-label">Company</label>
+                        <select id="CompanyId" name="FormModel.CompanyId" class="form-select">
+                            <option value="">-- Select Company --</option>
+                            @if (Companies != null)
+                            {
+                                @foreach (var company in Companies)
+                                {
+                                    <option value="@company.Id" selected="@(FormModel?.CompanyId == company.Id)">@company.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="FirstName" class="form-label">First Name</label>
+                            <input type="text" id="FirstName" name="FormModel.FirstName" class="form-control" value="@FormModel?.FirstName" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="LastName" class="form-label">Last Name</label>
+                            <input type="text" id="LastName" name="FormModel.LastName" class="form-control" value="@FormModel?.LastName" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="JobTitle" class="form-label">Job Title</label>
+                        <input type="text" id="JobTitle" name="FormModel.JobTitle" class="form-control" value="@FormModel?.JobTitle" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="Email" class="form-label">Email</label>
+                        <input type="email" id="Email" name="FormModel.Email" class="form-control" value="@FormModel?.Email" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="Phone" class="form-label">Phone</label>
+                        <input type="text" id="Phone" name="FormModel.Phone" class="form-control" value="@FormModel?.Phone" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Create</button>
+                <a href="/Supervisors" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public Guid? CompanyId { get; set; }
+
+    [SupplyParameterFromForm(FormName = "create-supervisor")]
+    public Supervisor? FormModel { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private List<Company>? Companies { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        Companies = await CompanyService.GetAllAsync(tenantId);
+
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+
+        if (context != null && HttpMethods.IsPost(context.Request.Method))
+        {
+            await HandlePostAsync();
+            return;
+        }
+
+        FormModel ??= new Supervisor();
+        if (CompanyId.HasValue)
+        {
+            FormModel.CompanyId = CompanyId.Value;
+        }
+    }
+
+    private async Task HandlePostAsync()
+    {
+        if (FormModel == null)
+        {
+            ErrorMessage = "Invalid form data.";
+            return;
+        }
+
+        if (FormModel.CompanyId == Guid.Empty)
+        {
+            ErrorMessage = "Please select a company.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.FirstName))
+        {
+            ErrorMessage = "First name is required.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.LastName))
+        {
+            ErrorMessage = "Last name is required.";
+            return;
+        }
+
+        try
+        {
+            var tenantId = TenantProvider.GetCurrentTenantId();
+            await SupervisorService.CreateAsync(FormModel, tenantId);
+
+            var context = HttpContext ?? HttpContextAccessor.HttpContext;
+            context?.Response.Redirect("/Supervisors");
+        }
+        catch (InvalidOperationException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "An error occurred while creating the supervisor.";
+        }
+    }
+}

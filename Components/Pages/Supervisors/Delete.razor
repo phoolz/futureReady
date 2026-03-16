@@ -1,0 +1,111 @@
+@page "/Supervisors/Delete/{Id:guid}"
+@layout MainLayout
+@attribute [Authorize(Roles = Roles.Teacher)]
+@inject ISupervisorService SupervisorService
+@inject ITenantProvider TenantProvider
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Delete Supervisor - Apiary</PageTitle>
+
+<h1>Delete Supervisor</h1>
+
+<form id="delete-form" method="post" @formname="delete-supervisor">
+    <AntiforgeryToken />
+    <input type="hidden" name="Id" value="@Id" />
+</form>
+
+@if (Supervisor == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">Are you sure you want to delete this supervisor?</h4>
+        <p>This action cannot be undone.</p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Supervisor Details</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Name</dt>
+                        <dd class="col-sm-8">@Supervisor.FullName</dd>
+
+                        <dt class="col-sm-4">Company</dt>
+                        <dd class="col-sm-8">@Supervisor.Company?.Name</dd>
+
+                        <dt class="col-sm-4">Job Title</dt>
+                        <dd class="col-sm-8">@Supervisor.JobTitle</dd>
+
+                        <dt class="col-sm-4">Email</dt>
+                        <dd class="col-sm-8">@Supervisor.Email</dd>
+
+                        <dt class="col-sm-4">Phone</dt>
+                        <dd class="col-sm-8">@Supervisor.Phone</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" form="delete-form" class="btn btn-danger">Delete</button>
+                <a href="/Supervisors" class="btn btn-secondary">Cancel</a>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private Supervisor? Supervisor { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+
+        if (context != null && HttpMethods.IsPost(context.Request.Method))
+        {
+            await HandlePostAsync();
+            return;
+        }
+
+        await LoadSupervisorAsync();
+    }
+
+    private async Task LoadSupervisorAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        Supervisor = await SupervisorService.GetByIdAsync(Id, tenantId);
+
+        if (Supervisor == null)
+        {
+            var context = HttpContext ?? HttpContextAccessor.HttpContext;
+            context?.Response.Redirect("/Supervisors");
+        }
+    }
+
+    private async Task HandlePostAsync()
+    {
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+        try
+        {
+            var tenantId = TenantProvider.GetCurrentTenantId();
+            await SupervisorService.DeleteAsync(Id, tenantId);
+        }
+        catch (Exception)
+        {
+            // Ignore errors during delete
+        }
+
+        context?.Response.Redirect("/Supervisors");
+    }
+}
