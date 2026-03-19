@@ -501,6 +501,34 @@ h1, h2, h3, h4, h5, h6 {
     height: 1rem;
 }
 
+/* Secondary Action Button (next to Add) */
+.btn-secondary-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-white);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-medium);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.btn-secondary-action:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+}
+
+.btn-secondary-action svg {
+    width: 1rem;
+    height: 1rem;
+}
+
 /* Table - Clean inline style */
 .list-table {
     width: 100%;

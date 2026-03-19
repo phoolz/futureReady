@@ -9,6 +9,7 @@ using Apiary.Models;
 using Apiary.Models.School;
 using Apiary.Services;
 using Apiary.Services.Students;
+using Apiary.Models.Students;
 using Apiary.Services.Placements;
 using Apiary.Services.StudentAccountTokens;
 using Apiary.Services.LogbookEntries;
@@ -26,15 +27,17 @@ namespace Apiary.Controllers
         private readonly IPlacementService _placementService;
         private readonly IStudentAccountTokenService _accountTokenService;
         private readonly ILogbookEntryService _logbookService;
+        private readonly IStudentBulkUploadService _bulkUploadService;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public StudentsController(ApplicationDbContext context, IStudentService studentService, IPlacementService placementService, IStudentAccountTokenService accountTokenService, ILogbookEntryService logbookService, UserManager<ApplicationUser> userManager, ITenantProvider? tenantProvider = null)
+        public StudentsController(ApplicationDbContext context, IStudentService studentService, IPlacementService placementService, IStudentAccountTokenService accountTokenService, ILogbookEntryService logbookService, IStudentBulkUploadService bulkUploadService, UserManager<ApplicationUser> userManager, ITenantProvider? tenantProvider = null)
         {
             _context = context;
             _studentService = studentService;
             _placementService = placementService;
             _accountTokenService = accountTokenService;
             _logbookService = logbookService;
+            _bulkUploadService = bulkUploadService;
             _userManager = userManager;
             _tenantProvider = tenantProvider;
         }
@@ -257,6 +260,63 @@ namespace Apiary.Controllers
 
             TempData["SuccessMessage"] = "Activation token has been deleted.";
             return RedirectToAction(nameof(Details), new { id });
+        }
+
+        // GET: Students/BulkUpload
+        public IActionResult BulkUpload()
+        {
+            return View(new BulkUploadFormModel());
+        }
+
+        // POST: Students/BulkUpload
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequestSizeLimit(1_048_576)] // 1MB limit
+        public async Task<IActionResult> BulkUpload(BulkUploadFormModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            if (model.CsvFile == null || model.CsvFile.Length == 0)
+            {
+                ModelState.AddModelError(nameof(model.CsvFile), "Please select a CSV file to upload");
+                return View(model);
+            }
+
+            // Validate file extension
+            var extension = Path.GetExtension(model.CsvFile.FileName)?.ToLowerInvariant();
+            if (extension != ".csv")
+            {
+                ModelState.AddModelError(nameof(model.CsvFile), "Only CSV files are allowed");
+                return View(model);
+            }
+
+            // Validate file size (1MB max)
+            if (model.CsvFile.Length > 1_048_576)
+            {
+                ModelState.AddModelError(nameof(model.CsvFile), "File size must not exceed 1MB");
+                return View(model);
+            }
+
+            var tenantId = _tenantProvider?.GetCurrentTenantId();
+
+            using var stream = model.CsvFile.OpenReadStream();
+            var result = await _bulkUploadService.ProcessCsvAsync(stream, tenantId);
+
+            return View("BulkUploadResult", result);
+        }
+
+        // GET: Students/BulkUploadTemplate
+        public IActionResult BulkUploadTemplate()
+        {
+            var csv = "Email,FirstName,LastName,PreferredName,DateOfBirth,StudentNumber,Phone,StudentType,YearLevel,GraduationYear,MedicareNumber\n" +
+                      "john.smith@example.com,John,Smith,,2008-05-15,STU001,0412345678,day,10,2026,\n" +
+                      "jane.doe@example.com,Jane,Doe,Janie,2007-11-22,STU002,,boarding,11,2025,\n";
+
+            var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
+            return File(bytes, "text/csv", "student_upload_template.csv");
         }
     }
 }

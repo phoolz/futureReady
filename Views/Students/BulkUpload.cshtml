@@ -1,0 +1,123 @@
+@model Apiary.Models.Students.BulkUploadFormModel
+
+@{
+    ViewData["Title"] = "Bulk Upload Students";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Bulk Upload Students</h1>
+    <p class="page-subtitle">Import multiple students from a CSV file</p>
+</div>
+
+<div class="form-container">
+    <form asp-action="BulkUpload" enctype="multipart/form-data">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+        <div class="mb-4">
+            <label asp-for="CsvFile" class="form-label"></label>
+            <input asp-for="CsvFile" type="file" class="form-control" accept=".csv" />
+            <span asp-validation-for="CsvFile" class="text-danger"></span>
+            <small class="form-text text-muted">Maximum file size: 1MB. Maximum 500 rows.</small>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary">Upload and Process</button>
+            <a asp-action="BulkUploadTemplate" class="btn btn-outline-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 1rem; height: 1rem; margin-right: 0.25rem;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Download Template
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+
+    <hr class="my-4" />
+
+    <h5 class="mb-3">CSV Format</h5>
+    <p>Your CSV file must include a header row. Only the <strong>Email</strong> column is required; all other columns are optional.</p>
+
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>Column</th>
+                    <th>Required</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>Email</code></td>
+                    <td>Yes</td>
+                    <td>Must be a valid email format</td>
+                </tr>
+                <tr>
+                    <td><code>FirstName</code></td>
+                    <td>No</td>
+                    <td>Uses email prefix if empty</td>
+                </tr>
+                <tr>
+                    <td><code>LastName</code></td>
+                    <td>No</td>
+                    <td>Uses "(from import)" if empty</td>
+                </tr>
+                <tr>
+                    <td><code>PreferredName</code></td>
+                    <td>No</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><code>DateOfBirth</code></td>
+                    <td>No</td>
+                    <td>Format: YYYY-MM-DD</td>
+                </tr>
+                <tr>
+                    <td><code>StudentNumber</code></td>
+                    <td>No</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><code>Phone</code></td>
+                    <td>No</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><code>StudentType</code></td>
+                    <td>No</td>
+                    <td>e.g., "day", "boarding"</td>
+                </tr>
+                <tr>
+                    <td><code>YearLevel</code></td>
+                    <td>No</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><code>GraduationYear</code></td>
+                    <td>No</td>
+                    <td>Integer (e.g., 2025)</td>
+                </tr>
+                <tr>
+                    <td><code>MedicareNumber</code></td>
+                    <td>No</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h5 class="mb-3 mt-4">Example CSV</h5>
+    <pre class="bg-light p-3 rounded"><code>Email,FirstName,LastName,YearLevel,GraduationYear
+john.smith@example.com,John,Smith,10,2025
+jane.doe@example.com,Jane,Doe,11,2024
+bob@example.com,,,12,2023</code></pre>
+    <p class="text-muted">
+        <small>Note: Students with duplicate emails (already existing in the system) will be skipped.</small>
+    </p>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

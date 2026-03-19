@@ -52,6 +52,7 @@ builder.Services.AddScoped<ITenantProvider, HttpContextTenantProvider>();
 builder.Services.AddScoped<Apiary.Services.Schools.ISchoolService, Apiary.Services.Schools.SchoolService>();
 builder.Services.AddScoped<Apiary.Services.Students.IStudentService, Apiary.Services.Students.StudentService>();
 builder.Services.AddScoped<Apiary.Services.Students.IStudentAuthorizationService, Apiary.Services.Students.StudentAuthorizationService>();
+builder.Services.AddScoped<Apiary.Services.Students.IStudentBulkUploadService, Apiary.Services.Students.StudentBulkUploadService>();
 builder.Services.AddScoped<Apiary.Services.EmergencyContacts.IEmergencyContactService, Apiary.Services.EmergencyContacts.EmergencyContactService>();
 builder.Services.AddScoped<Apiary.Services.StudentMedicalConditions.IStudentMedicalConditionService, Apiary.Services.StudentMedicalConditions.StudentMedicalConditionService>();
 builder.Services.AddScoped<Apiary.Services.Companies.ICompanyService, Apiary.Services.Companies.CompanyService>();

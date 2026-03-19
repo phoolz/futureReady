@@ -1,0 +1,94 @@
+@model Apiary.Models.Students.BulkUploadResultModel
+
+@{
+    ViewData["Title"] = "Bulk Upload Results";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Bulk Upload Results</h1>
+    <p class="page-subtitle">Summary of the student import</p>
+</div>
+
+<div class="form-container">
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="card-title">@Model.TotalRows</h3>
+                    <p class="card-text text-muted">Total Rows</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-success">
+                <div class="card-body">
+                    <h3 class="card-title text-success">@Model.SuccessCount</h3>
+                    <p class="card-text text-muted">Created</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-warning">
+                <div class="card-body">
+                    <h3 class="card-title text-warning">@Model.SkippedCount</h3>
+                    <p class="card-text text-muted">Skipped</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-danger">
+                <div class="card-body">
+                    <h3 class="card-title text-danger">@Model.ErrorCount</h3>
+                    <p class="card-text text-muted">Errors</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.RowResults.Any())
+    {
+        <h5 class="mb-3">Row Details</h5>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 80px;">Line</th>
+                        <th>Email</th>
+                        <th style="width: 100px;">Status</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.RowResults)
+                    {
+                        var rowClass = row.Status switch
+                        {
+                            Apiary.Models.Students.BulkUploadRowStatus.Success => "table-success",
+                            Apiary.Models.Students.BulkUploadRowStatus.Skipped => "table-warning",
+                            Apiary.Models.Students.BulkUploadRowStatus.Error => "table-danger",
+                            _ => ""
+                        };
+                        var statusBadge = row.Status switch
+                        {
+                            Apiary.Models.Students.BulkUploadRowStatus.Success => "bg-success",
+                            Apiary.Models.Students.BulkUploadRowStatus.Skipped => "bg-warning text-dark",
+                            Apiary.Models.Students.BulkUploadRowStatus.Error => "bg-danger",
+                            _ => "bg-secondary"
+                        };
+                        <tr class="@rowClass">
+                            <td>@row.LineNumber</td>
+                            <td>@row.Email</td>
+                            <td><span class="badge @statusBadge">@row.Status</span></td>
+                            <td>@row.Message</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <div class="d-flex gap-2 mt-4">
+        <a asp-action="Index" class="btn btn-primary">View Students</a>
+        <a asp-action="BulkUpload" class="btn btn-outline-secondary">Upload Another</a>
+    </div>
+</div>
