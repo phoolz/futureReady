@@ -1,7 +1,7 @@
 @page "/employer/form/{Token}"
 @layout EmployerFormLayout
 @attribute [StreamRendering]
-@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
 
 <PageTitle>Employer Acceptance Form</PageTitle>
 
@@ -12,6 +12,6 @@
 
     protected override void OnInitialized()
     {
-        Navigation.NavigateTo($"/employer/form/{Token}/step1", replace: true);
+        HttpContextAccessor.HttpContext?.Response.Redirect($"/employer/form/{Token}/step1");
     }
 }

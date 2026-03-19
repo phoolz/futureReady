@@ -7,6 +7,7 @@
 @inject ILogbookEntryService LogbookService
 @inject IStudentAuthorizationService StudentAuthService
 @inject ITenantProvider TenantProvider
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Dashboard - Apiary</PageTitle>
 
@@ -279,16 +280,13 @@
 </AuthorizeView>
 
 @code {
-    [CascadingParameter]
-    private Task<AuthenticationState>? AuthState { get; set; }
-
     private StudentPortalViewModel? StudentModel { get; set; }
     private bool IsLoading { get; set; } = true;
     private bool StudentNotLinked { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthState!;
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
         if (!user.IsInRole(Roles.Student))
