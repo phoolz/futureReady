@@ -41,6 +41,7 @@
                 <th>Company</th>
                 <th>Supervisor</th>
                 <th>Year</th>
+                <th>Dates</th>
                 <th>Status</th>
                 <th></th>
             </tr>
@@ -99,6 +100,16 @@
                         }
                     </td>
                     <td class="cell-secondary">@(item.Year?.ToString() ?? "—")</td>
+                    <td class="cell-secondary">
+                        @if (item.StartDate.HasValue || item.FinishDate.HasValue)
+                        {
+                            @(item.StartDate?.ToString("d MMM") ?? "?")@(" – ")@(item.FinishDate?.ToString("d MMM") ?? "?")
+                        }
+                        else
+                        {
+                            <span>—</span>
+                        }
+                    </td>
                     <td>
                         <span class="status-badge @statusClass">@statusText</span>
                     </td>

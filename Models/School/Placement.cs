@@ -12,6 +12,12 @@ namespace Apiary.Models.School
 
         public int? Year { get; set; }
 
+        [Display(Name = "Start Date")]
+        public DateOnly? StartDate { get; set; }
+
+        [Display(Name = "Finish Date")]
+        public DateOnly? FinishDate { get; set; }
+
         [MaxLength(50)]
         public string Status { get; set; } = "draft";  // 'draft', 'pending_parent', 'pending_employer', 'confirmed'
 

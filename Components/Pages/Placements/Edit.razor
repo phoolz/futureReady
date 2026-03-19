@@ -63,6 +63,16 @@ else if (Placement != null)
                                 </select>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="StartDate" class="form-label">Start Date</label>
+                                <input type="date" id="StartDate" name="FormModel.StartDate" class="form-control" value="@(FormModel?.StartDate?.ToString("yyyy-MM-dd") ?? Placement.StartDate?.ToString("yyyy-MM-dd"))" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="FinishDate" class="form-label">Finish Date</label>
+                                <input type="date" id="FinishDate" name="FormModel.FinishDate" class="form-control" value="@(FormModel?.FinishDate?.ToString("yyyy-MM-dd") ?? Placement.FinishDate?.ToString("yyyy-MM-dd"))" />
+                            </div>
+                        </div>
                         <div class="col-md-12 mb-3">
                             <label for="PlacementRole" class="form-label">Placement Role</label>
                             <input type="text" id="PlacementRole" name="FormModel.PlacementRole" class="form-control" value="@(FormModel?.PlacementRole ?? Placement.PlacementRole)" placeholder="e.g., Retail Assistant, Office Admin" />
@@ -299,6 +309,8 @@ else if (Placement != null)
                 CompanyId = FormModel.CompanyId,
                 SupervisorId = FormModel.SupervisorId,
                 Year = FormModel.Year,
+                StartDate = FormModel.StartDate,
+                FinishDate = FormModel.FinishDate,
                 Status = FormModel.Status ?? "draft",
                 PlacementRole = FormModel.PlacementRole
             };
@@ -351,6 +363,8 @@ else if (Placement != null)
         public Guid? CompanyId { get; set; }
         public Guid? SupervisorId { get; set; }
         public int? Year { get; set; }
+        public DateOnly? StartDate { get; set; }
+        public DateOnly? FinishDate { get; set; }
         public string? Status { get; set; }
         public string? PlacementRole { get; set; }
         public string? RowVersion { get; set; }
