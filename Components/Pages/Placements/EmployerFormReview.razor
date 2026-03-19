@@ -1,0 +1,496 @@
+@page "/Placements/EmployerFormReview/{Id:guid}"
+@attribute [Authorize(Roles = Roles.Teacher)]
+@attribute [StreamRendering]
+@inject IPlacementService PlacementService
+@inject ITenantProvider TenantProvider
+
+<PageTitle>Employer Form Review - Apiary</PageTitle>
+
+@if (Placement == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Employer Form Review</h1>
+            <p class="text-muted mb-0">
+                @if (Placement.EmployerSubmittedAt.HasValue)
+                {
+                    <span class="badge bg-success me-2">Submitted</span>
+                    <span>Submitted on @Placement.EmployerSubmittedAt.Value.ToString("d MMMM yyyy 'at' h:mm tt")</span>
+                }
+                else
+                {
+                    <span class="badge bg-warning text-dark">Not yet submitted</span>
+                }
+            </p>
+        </div>
+        <a href="/Placements/Details/@Id" class="btn btn-secondary">Back to Placement</a>
+    </div>
+
+    @if (!Placement.EmployerSubmittedAt.HasValue)
+    {
+        <div class="alert alert-warning">
+            <strong>Form not submitted.</strong> The employer has not yet completed and submitted the acceptance form.
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Placement Overview -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Placement Overview</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Students</dt>
+                        <dd class="col-sm-8">
+                            @{
+                                var studentNames = string.Join(", ", Placement.PlacementStudents
+                                    .Where(ps => !ps.IsDeleted && ps.Student != null)
+                                    .Select(ps => $"{ps.Student!.FirstName} {ps.Student.LastName}"));
+                            }
+                            @(string.IsNullOrEmpty(studentNames) ? "No students assigned" : studentNames)
+                        </dd>
+
+                        <dt class="col-sm-4">Company</dt>
+                        <dd class="col-sm-8">@(Placement.Company?.Name ?? "Not assigned")</dd>
+
+                        <dt class="col-sm-4">Year</dt>
+                        <dd class="col-sm-8">@Placement.Year</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Workplace Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Workplace Details</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        @if (Placement.Company != null)
+                        {
+                            <dt class="col-sm-4">Address</dt>
+                            <dd class="col-sm-8">
+                                @if (!string.IsNullOrEmpty(Placement.Company.StreetAddress))
+                                {
+                                    @Placement.Company.StreetAddress<br />
+                                    @if (!string.IsNullOrEmpty(Placement.Company.StreetAddress2))
+                                    {
+                                        @Placement.Company.StreetAddress2<br />
+                                    }
+                                    @Placement.Company.Suburb @Placement.Company.City @Placement.Company.State @Placement.Company.PostalCode
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Not provided</span>
+                                }
+                            </dd>
+                        }
+
+                        <dt class="col-sm-4">Work Hours</dt>
+                        <dd class="col-sm-8">
+                            @if (!string.IsNullOrEmpty(Placement.WorkStartTime) && !string.IsNullOrEmpty(Placement.WorkEndTime))
+                            {
+                                @Placement.WorkStartTime<text> - </text>@Placement.WorkEndTime
+                            }
+                            else
+                            {
+                                <span class="text-muted">Not specified</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">Dress Requirements</dt>
+                        <dd class="col-sm-8">@(Placement.DressRequirement ?? "Not specified")</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Supervisor Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Supervisor Details</h5>
+                </div>
+                <div class="card-body">
+                    @if (Placement.Supervisor != null)
+                    {
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">Name</dt>
+                            <dd class="col-sm-8">@Placement.Supervisor.FirstName @Placement.Supervisor.LastName</dd>
+
+                            <dt class="col-sm-4">Job Title</dt>
+                            <dd class="col-sm-8">@(Placement.Supervisor.JobTitle ?? "Not specified")</dd>
+
+                            <dt class="col-sm-4">Email</dt>
+                            <dd class="col-sm-8">@(Placement.Supervisor.Email ?? "Not specified")</dd>
+
+                            <dt class="col-sm-4">Phone</dt>
+                            <dd class="col-sm-8">@(Placement.Supervisor.Phone ?? "Not specified")</dd>
+                        </dl>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">No supervisor assigned</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Insurance & Experience -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Insurance & Experience</h5>
+                </div>
+                <div class="card-body">
+                    @if (Placement.Company != null)
+                    {
+                        <dl class="row mb-0">
+                            <dt class="col-sm-6">Public Liability Insurance ($5M+)</dt>
+                            <dd class="col-sm-6">
+                                <span class="badge @(Placement.Company.PublicLiabilityInsurance5M ? "bg-success" : "bg-danger")">
+                                    @(Placement.Company.PublicLiabilityInsurance5M ? "Yes" : "No")
+                                </span>
+                                @if (!string.IsNullOrEmpty(Placement.Company.InsuranceValue))
+                                {
+                                    <span class="ms-2">(@Placement.Company.InsuranceValue)</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-6">Previous Work Experience Students</dt>
+                            <dd class="col-sm-6">
+                                <span class="badge @(Placement.Company.HasPreviousWorkExperienceStudents ? "bg-success" : "bg-secondary")">
+                                    @(Placement.Company.HasPreviousWorkExperienceStudents ? "Yes" : "No")
+                                </span>
+                            </dd>
+                        </dl>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">No company information available</p>
+                    }
+                </div>
+            </div>
+
+            <!-- OHS -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Occupational Health & Safety</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-6">Has OHS Policy</dt>
+                        <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Placement.HasOhsPolicy)">@FormatBool(Placement.HasOhsPolicy)</span></dd>
+
+                        <dt class="col-sm-6">Has Induction Program</dt>
+                        <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Placement.HasInductionProgram)">@FormatBool(Placement.HasInductionProgram)</span></dd>
+
+                        <dt class="col-sm-6">Safety Briefing Method</dt>
+                        <dd class="col-sm-6">@(Placement.SafetyBriefingMethod ?? "Not specified")</dd>
+
+                        <dt class="col-sm-6">Has Obvious Hazards</dt>
+                        <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Placement.HasObviousHazards)">@FormatBool(Placement.HasObviousHazards)</span></dd>
+
+                        @if (Placement.HasObviousHazards == true && !string.IsNullOrEmpty(Placement.HazardDetails))
+                        {
+                            <dt class="col-sm-6">Hazard Details</dt>
+                            <dd class="col-sm-6">@Placement.HazardDetails</dd>
+
+                            <dt class="col-sm-6">Injury Prevention Training</dt>
+                            <dd class="col-sm-6">@(Placement.InjuryPreventionTraining ?? "Not specified")</dd>
+                        }
+
+                        <dt class="col-sm-6">Provides Hazard Reporting Instruction</dt>
+                        <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Placement.ProvidesHazardReportingInstruction)">@FormatBool(Placement.ProvidesHazardReportingInstruction)</span></dd>
+
+                        <dt class="col-sm-6">Has Emergency Procedures</dt>
+                        <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Placement.HasEmergencyProcedures)">@FormatBool(Placement.HasEmergencyProcedures)</span></dd>
+
+                        <dt class="col-sm-6">Fire Extinguishers Checked</dt>
+                        <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Placement.HasFireExtinguishersChecked)">@FormatBool(Placement.HasFireExtinguishersChecked)</span></dd>
+
+                        <dt class="col-sm-6">Has First Aid Kit</dt>
+                        <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Placement.HasFirstAidKit)">@FormatBool(Placement.HasFirstAidKit)</span></dd>
+
+                        <dt class="col-sm-6">Safe Amenities</dt>
+                        <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Placement.HasSafeAmenities)">@FormatBool(Placement.HasSafeAmenities)</span></dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- General & Staff -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">General Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-6">Staff Informed of Student</dt>
+                        <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Placement.StaffInformedOfStudent)">@FormatBool(Placement.StaffInformedOfStudent)</span></dd>
+
+                        <dt class="col-sm-6">Staff Meet Working with Children Requirements</dt>
+                        <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Placement.StaffMeetWorkingWithChildrenRequirements)">@FormatBool(Placement.StaffMeetWorkingWithChildrenRequirements)</span></dd>
+
+                        <dt class="col-sm-6">Additional Information Required</dt>
+                        <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Placement.AdditionalInfoRequired)">@FormatBool(Placement.AdditionalInfoRequired)</span></dd>
+
+                        @if (Placement.AdditionalInfoRequired == true && !string.IsNullOrEmpty(Placement.AdditionalInfoDetails))
+                        {
+                            <dt class="col-sm-6">Additional Info Details</dt>
+                            <dd class="col-sm-6">@Placement.AdditionalInfoDetails</dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Vehicle Travel -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Vehicle Travel</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-6">Requires Vehicle Travel</dt>
+                        <dd class="col-sm-6"><span class="badge @BoolBadgeClass(Placement.EmployerRequiresVehicleTravel)">@FormatBool(Placement.EmployerRequiresVehicleTravel)</span></dd>
+
+                        @if (Placement.EmployerRequiresVehicleTravel == true)
+                        {
+                            <dt class="col-sm-6">Vehicle Details</dt>
+                            <dd class="col-sm-6">@(Placement.EmployerVehicleDetails ?? "Not specified")</dd>
+
+                            <dt class="col-sm-6">Driver Experience</dt>
+                            <dd class="col-sm-6">@(Placement.EmployerDriverExperience ?? "Not specified")</dd>
+
+                            <dt class="col-sm-6">Licence Type</dt>
+                            <dd class="col-sm-6">@(Placement.EmployerLicenceType ?? "Not specified")</dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Hazards Appendix -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Hazards Appendix</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-6">Chemical Hazards</dt>
+                        <dd class="col-sm-6">
+                            <span class="badge @(Placement.HasChemicalHazards ? "bg-warning text-dark" : "bg-secondary")">
+                                @(Placement.HasChemicalHazards ? "Yes" : "No")
+                            </span>
+                            @if (Placement.HasChemicalHazards && !string.IsNullOrEmpty(Placement.ChemicalDetails))
+                            {
+                                <p class="mt-2 mb-0 small">@Placement.ChemicalDetails</p>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-6">Plant/Machinery Hazards</dt>
+                        <dd class="col-sm-6">
+                            <span class="badge @(Placement.HasPlantMachineryHazards ? "bg-warning text-dark" : "bg-secondary")">
+                                @(Placement.HasPlantMachineryHazards ? "Yes" : "No")
+                            </span>
+                            @if (Placement.HasPlantMachineryHazards && !string.IsNullOrEmpty(Placement.PlantMachineryDetails))
+                            {
+                                <p class="mt-2 mb-0 small">@Placement.PlantMachineryDetails</p>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-6">Biological Hazards</dt>
+                        <dd class="col-sm-6">
+                            <span class="badge @(Placement.HasBiologicalHazards ? "bg-warning text-dark" : "bg-secondary")">
+                                @(Placement.HasBiologicalHazards ? "Yes" : "No")
+                            </span>
+                            @if (Placement.HasBiologicalHazards && !string.IsNullOrEmpty(Placement.BiologicalDetails))
+                            {
+                                <p class="mt-2 mb-0 small">@Placement.BiologicalDetails</p>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-6">Ergonomic Hazards</dt>
+                        <dd class="col-sm-6">
+                            <span class="badge @(Placement.HasErgonomicHazards ? "bg-warning text-dark" : "bg-secondary")">
+                                @(Placement.HasErgonomicHazards ? "Yes" : "No")
+                            </span>
+                            @if (Placement.HasErgonomicHazards && !string.IsNullOrEmpty(Placement.ErgonomicDetails))
+                            {
+                                <p class="mt-2 mb-0 small">@Placement.ErgonomicDetails</p>
+                            }
+                        </dd>
+
+                        @if (!string.IsNullOrEmpty(Placement.HazardsAdditionalDetails))
+                        {
+                            <dt class="col-sm-6">Additional Hazard Information</dt>
+                            <dd class="col-sm-6">@Placement.HazardsAdditionalDetails</dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Summary -->
+        <div class="col-lg-4">
+            <div class="card sticky-top" style="top: 1rem;">
+                <div class="card-header">
+                    <h5 class="mb-0">Summary</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Submission Status</h6>
+                    @if (Placement.EmployerSubmittedAt.HasValue)
+                    {
+                        <p class="text-success">Form submitted</p>
+                    }
+                    else
+                    {
+                        <p class="text-warning">Awaiting submission</p>
+                    }
+
+                    <hr />
+
+                    <h6>Key Safety Items</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            @if (Placement.Company?.PublicLiabilityInsurance5M == true)
+                            {
+                                <span class="text-success">&#10003;</span>
+                            }
+                            else
+                            {
+                                <span class="text-danger">&#10007;</span>
+                            }
+                            Public Liability Insurance
+                        </li>
+                        <li class="mb-2">
+                            @if (Placement.HasOhsPolicy == true)
+                            {
+                                <span class="text-success">&#10003;</span>
+                            }
+                            else if (Placement.HasOhsPolicy == false)
+                            {
+                                <span class="text-danger">&#10007;</span>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">?</span>
+                            }
+                            OHS Policy
+                        </li>
+                        <li class="mb-2">
+                            @if (Placement.HasEmergencyProcedures == true)
+                            {
+                                <span class="text-success">&#10003;</span>
+                            }
+                            else if (Placement.HasEmergencyProcedures == false)
+                            {
+                                <span class="text-danger">&#10007;</span>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">?</span>
+                            }
+                            Emergency Procedures
+                        </li>
+                        <li class="mb-2">
+                            @if (Placement.HasFirstAidKit == true)
+                            {
+                                <span class="text-success">&#10003;</span>
+                            }
+                            else if (Placement.HasFirstAidKit == false)
+                            {
+                                <span class="text-danger">&#10007;</span>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">?</span>
+                            }
+                            First Aid Kit
+                        </li>
+                        <li class="mb-2">
+                            @if (Placement.StaffMeetWorkingWithChildrenRequirements == true)
+                            {
+                                <span class="text-success">&#10003;</span>
+                            }
+                            else if (Placement.StaffMeetWorkingWithChildrenRequirements == false)
+                            {
+                                <span class="text-danger">&#10007;</span>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">?</span>
+                            }
+                            Working with Children Check
+                        </li>
+                    </ul>
+
+                    @{
+                        var hasHazards = Placement.HasChemicalHazards || Placement.HasPlantMachineryHazards || Placement.HasBiologicalHazards || Placement.HasErgonomicHazards || Placement.HasObviousHazards == true;
+                    }
+                    @if (hasHazards)
+                    {
+                        <hr />
+                        <h6 class="text-warning">Hazards Identified</h6>
+                        <ul class="list-unstyled mb-0 small">
+                            @if (Placement.HasObviousHazards == true)
+                            {
+                                <li>- Obvious workplace hazards</li>
+                            }
+                            @if (Placement.HasChemicalHazards)
+                            {
+                                <li>- Chemical hazards</li>
+                            }
+                            @if (Placement.HasPlantMachineryHazards)
+                            {
+                                <li>- Plant/Machinery hazards</li>
+                            }
+                            @if (Placement.HasBiologicalHazards)
+                            {
+                                <li>- Biological hazards</li>
+                            }
+                            @if (Placement.HasErgonomicHazards)
+                            {
+                                <li>- Ergonomic hazards</li>
+                            }
+                        </ul>
+                    }
+
+                    @if (Placement.EmployerRequiresVehicleTravel == true)
+                    {
+                        <hr />
+                        <h6>Vehicle Travel Required</h6>
+                        <p class="small mb-0 text-muted">Student may travel in employer's vehicle during placement.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private Placement? Placement { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        Placement = await PlacementService.GetByIdWithDetailsAsync(Id, tenantId);
+    }
+
+    private string FormatBool(bool? value) => value switch
+    {
+        true => "Yes",
+        false => "No",
+        _ => "Not specified"
+    };
+
+    private string BoolBadgeClass(bool? value) => value switch
+    {
+        true => "bg-success",
+        false => "bg-danger",
+        _ => "bg-secondary"
+    };
+}

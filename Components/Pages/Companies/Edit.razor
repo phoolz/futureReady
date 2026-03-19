@@ -1,0 +1,247 @@
+@page "/Companies/Edit/{Id:guid}"
+@layout MainLayout
+@attribute [Authorize(Roles = Roles.Teacher)]
+@inject ICompanyService CompanyService
+@inject ITenantProvider TenantProvider
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Edit Company - Apiary</PageTitle>
+
+<h1>Edit Company</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post" @formname="edit-company">
+            <AntiforgeryToken />
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+            }
+
+            <input type="hidden" name="FormModel.Id" value="@FormModel?.Id" />
+            <input type="hidden" name="RowVersionBase64" value="@RowVersionBase64" />
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="Name" class="form-label">Name</label>
+                            <input type="text" id="Name" name="FormModel.Name" class="form-control" value="@FormModel?.Name" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="Industry" class="form-label">Industry</label>
+                            <input type="text" id="Industry" name="FormModel.Industry" class="form-control" value="@FormModel?.Industry" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Physical Address</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="StreetAddress" class="form-label">Street Address</label>
+                            <input type="text" id="StreetAddress" name="FormModel.StreetAddress" class="form-control" value="@FormModel?.StreetAddress" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="StreetAddress2" class="form-label">Street Address 2</label>
+                            <input type="text" id="StreetAddress2" name="FormModel.StreetAddress2" class="form-control" value="@FormModel?.StreetAddress2" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="Suburb" class="form-label">Suburb</label>
+                            <input type="text" id="Suburb" name="FormModel.Suburb" class="form-control" value="@FormModel?.Suburb" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="City" class="form-label">City</label>
+                            <input type="text" id="City" name="FormModel.City" class="form-control" value="@FormModel?.City" />
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label for="State" class="form-label">State</label>
+                            <input type="text" id="State" name="FormModel.State" class="form-control" value="@FormModel?.State" />
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label for="PostalCode" class="form-label">Postal Code</label>
+                            <input type="text" id="PostalCode" name="FormModel.PostalCode" class="form-control" value="@FormModel?.PostalCode" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Postal Address</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="PostalStreetAddress" class="form-label">Postal Street Address</label>
+                            <input type="text" id="PostalStreetAddress" name="FormModel.PostalStreetAddress" class="form-control" value="@FormModel?.PostalStreetAddress" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="PostalSuburb" class="form-label">Postal Suburb</label>
+                            <input type="text" id="PostalSuburb" name="FormModel.PostalSuburb" class="form-control" value="@FormModel?.PostalSuburb" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="PostalCity" class="form-label">Postal City</label>
+                            <input type="text" id="PostalCity" name="FormModel.PostalCity" class="form-control" value="@FormModel?.PostalCity" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="PostalState" class="form-label">Postal State</label>
+                            <input type="text" id="PostalState" name="FormModel.PostalState" class="form-control" value="@FormModel?.PostalState" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="PostalPostalCode" class="form-label">Postal Postal Code</label>
+                            <input type="text" id="PostalPostalCode" name="FormModel.PostalPostalCode" class="form-control" value="@FormModel?.PostalPostalCode" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Insurance & Experience</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" id="PublicLiabilityInsurance5M" name="FormModel.PublicLiabilityInsurance5M" class="form-check-input" value="true" checked="@(FormModel?.PublicLiabilityInsurance5M == true)" />
+                                <label for="PublicLiabilityInsurance5M" class="form-check-label">Public Liability Insurance ($5M+)</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="InsuranceValue" class="form-label">Insurance Value</label>
+                            <input type="text" id="InsuranceValue" name="FormModel.InsuranceValue" class="form-control" value="@FormModel?.InsuranceValue" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" id="HasPreviousWorkExperienceStudents" name="FormModel.HasPreviousWorkExperienceStudents" class="form-check-input" value="true" checked="@(FormModel?.HasPreviousWorkExperienceStudents == true)" />
+                                <label for="HasPreviousWorkExperienceStudents" class="form-check-label">Has Previous Work Experience Students</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="/Companies/Details/@Id" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [SupplyParameterFromForm(FormName = "edit-company")]
+    public Company? FormModel { get; set; }
+
+    [SupplyParameterFromForm(FormName = "edit-company")]
+    public string? RowVersionBase64 { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+
+        if (context != null && HttpMethods.IsPost(context.Request.Method))
+        {
+            await HandlePostAsync();
+            return;
+        }
+
+        await LoadCompanyAsync();
+    }
+
+    private async Task LoadCompanyAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        FormModel = await CompanyService.GetByIdAsync(Id, tenantId);
+
+        if (FormModel == null)
+        {
+            var context = HttpContext ?? HttpContextAccessor.HttpContext;
+            context?.Response.Redirect("/Companies");
+        }
+        else
+        {
+            RowVersionBase64 = FormModel.RowVersion != null ? Convert.ToBase64String(FormModel.RowVersion) : null;
+        }
+    }
+
+    private async Task HandlePostAsync()
+    {
+        if (FormModel == null)
+        {
+            ErrorMessage = "Invalid form data.";
+            return;
+        }
+
+        if (FormModel.Id != Id)
+        {
+            ErrorMessage = "Invalid company ID.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.Name))
+        {
+            ErrorMessage = "Company name is required.";
+            return;
+        }
+
+        try
+        {
+            var tenantId = TenantProvider.GetCurrentTenantId();
+            byte[]? rowVersion = null;
+            if (!string.IsNullOrEmpty(RowVersionBase64))
+            {
+                rowVersion = Convert.FromBase64String(RowVersionBase64);
+            }
+            await CompanyService.UpdateAsync(FormModel, rowVersion, tenantId);
+
+            var context = HttpContext ?? HttpContextAccessor.HttpContext;
+            context?.Response.Redirect("/Companies");
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+        {
+            var exists = await CompanyService.ExistsAsync(Id, TenantProvider.GetCurrentTenantId());
+            if (!exists)
+            {
+                var context = HttpContext ?? HttpContextAccessor.HttpContext;
+                context?.Response.Redirect("/Companies");
+            }
+            else
+            {
+                ErrorMessage = "The record has been modified by another user. Please reload and try again.";
+                await LoadCompanyAsync();
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "An error occurred while updating the company.";
+        }
+    }
+}

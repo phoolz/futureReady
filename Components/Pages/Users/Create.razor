@@ -1,0 +1,171 @@
+@page "/Users/Create"
+@attribute [Authorize(Roles = Roles.SiteAdmin)]
+@attribute [StreamRendering]
+@inject IUserService UserService
+@inject ISchoolService SchoolService
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Create User - Apiary</PageTitle>
+
+<h1>Create User</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post" @formname="create-user">
+            <AntiforgeryToken />
+
+            @if (ErrorMessages.Any())
+            {
+                <div class="alert alert-danger" role="alert">
+                    @foreach (var error in ErrorMessages)
+                    {
+                        <div>@error</div>
+                    }
+                </div>
+            }
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Account Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="UserName" class="form-label">Username <span class="text-danger">*</span></label>
+                            <input type="text" id="UserName" name="FormModel.UserName" class="form-control" value="@FormModel?.UserName" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="Email" class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" id="Email" name="FormModel.Email" class="form-control" value="@FormModel?.Email" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="DisplayName" class="form-label">Display Name</label>
+                            <input type="text" id="DisplayName" name="FormModel.DisplayName" class="form-control" value="@FormModel?.DisplayName" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="Password" class="form-label">Password <span class="text-danger">*</span></label>
+                            <input type="password" id="Password" name="FormModel.Password" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Role & School</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="RoleName" class="form-label">Role <span class="text-danger">*</span></label>
+                            <select id="RoleName" name="FormModel.RoleName" class="form-select">
+                                @foreach (var role in Roles.AllRoles)
+                                {
+                                    <option value="@role" selected="@(FormModel?.RoleName == role)">@role</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="TenantId" class="form-label">School <span class="text-danger">*</span></label>
+                            <select id="TenantId" name="FormModel.TenantId" class="form-select">
+                                <option value="">-- Select School --</option>
+                                @if (Schools != null)
+                                {
+                                    @foreach (var school in Schools)
+                                    {
+                                        <option value="@school.Id" selected="@(FormModel?.TenantId == school.Id)">@school.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="IsActive" name="FormModel.IsActive" value="true" checked="@(FormModel?.IsActive ?? true)" />
+                                <label class="form-check-label" for="IsActive">Active</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Create</button>
+                <a href="/Users" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromForm(FormName = "create-user")]
+    public CreateUserModel? FormModel { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private List<Apiary.Models.School.School>? Schools { get; set; }
+    private List<string> ErrorMessages { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Schools = await SchoolService.GetAllAsync();
+
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+
+        if (context != null && HttpMethods.IsPost(context.Request.Method))
+        {
+            await HandlePostAsync();
+            return;
+        }
+
+        FormModel ??= new CreateUserModel { IsActive = true, RoleName = Roles.Teacher };
+    }
+
+    private async Task HandlePostAsync()
+    {
+        if (FormModel == null)
+        {
+            ErrorMessages.Add("Invalid form data.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.UserName))
+        {
+            ErrorMessages.Add("Username is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.Email))
+        {
+            ErrorMessages.Add("Email is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.Password))
+        {
+            ErrorMessages.Add("Password is required.");
+        }
+
+        if (FormModel.TenantId == Guid.Empty)
+        {
+            ErrorMessages.Add("School is required.");
+        }
+
+        if (ErrorMessages.Any())
+            return;
+
+        var (success, errors) = await UserService.CreateAsync(FormModel);
+
+        if (success)
+        {
+            var context = HttpContext ?? HttpContextAccessor.HttpContext;
+            context?.Response.Redirect("/Users");
+        }
+        else
+        {
+            ErrorMessages.AddRange(errors);
+        }
+    }
+}

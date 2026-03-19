@@ -1,19 +1,15 @@
 @page "/student/activate/{Token}"
 @layout StudentActivationLayout
-@rendermode InteractiveServer
+@attribute [StreamRendering]
 @inject IStudentActivationService ActivationService
 @inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+@using Microsoft.AspNetCore.Http
+@using Apiary.Components.Pages.EmployerForm.Shared
 
 <PageTitle>Activate Your Account</PageTitle>
 
-@if (IsLoading)
-{
-    <div class="loading-container">
-        <div class="loading-spinner"></div>
-        <p>Loading...</p>
-    </div>
-}
-else if (!string.IsNullOrEmpty(ErrorMessage))
+@if (!string.IsNullOrEmpty(ErrorMessage))
 {
     <FormSection Title="Unable to Activate Account">
         <div class="text-center py-4">
@@ -42,8 +38,8 @@ else if (IsSuccess)
 }
 else if (FormData != null)
 {
-    <EditForm Model="FormData" OnValidSubmit="HandleSubmit">
-        <DataAnnotationsValidator />
+    <form method="post" @formname="student-activation" @onsubmit="HandleSubmit">
+        <AntiforgeryToken />
 
         <FormSection Title="Account Details">
             <p class="text-muted mb-3">Please confirm your details below.</p>
@@ -68,16 +64,14 @@ else if (FormData != null)
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Password <span class="text-danger">*</span></label>
-                    <InputText type="password" class="form-control" @bind-Value="FormData.Password" />
-                    <ValidationMessage For="@(() => FormData.Password)" class="text-danger" />
+                    <input type="password" class="form-control" name="FormModel.Password" value="@FormModel?.Password" />
                     <small class="form-text text-muted">
                         Must be at least 8 characters with uppercase, lowercase, and a number.
                     </small>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                    <InputText type="password" class="form-control" @bind-Value="FormData.ConfirmPassword" />
-                    <ValidationMessage For="@(() => FormData.ConfirmPassword)" class="text-danger" />
+                    <input type="password" class="form-control" name="FormModel.ConfirmPassword" value="@FormModel?.ConfirmPassword" />
                 </div>
             </div>
         </FormSection>
@@ -87,21 +81,21 @@ else if (FormData != null)
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Preferred Name</label>
-                    <InputText class="form-control" @bind-Value="FormData.PreferredName" />
+                    <input type="text" class="form-control" name="FormModel.PreferredName" value="@FormModel?.PreferredName" />
                 </div>
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Date of Birth</label>
-                    <InputDate class="form-control" @bind-Value="FormData.DateOfBirth" />
+                    <input type="date" class="form-control" name="FormModel.DateOfBirth" value="@FormModel?.DateOfBirth?.ToString("yyyy-MM-dd")" />
                 </div>
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Phone</label>
-                    <InputText class="form-control" @bind-Value="FormData.Phone" />
+                    <input type="tel" class="form-control" name="FormModel.Phone" value="@FormModel?.Phone" />
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Medicare Number</label>
-                    <InputText class="form-control" @bind-Value="FormData.MedicareNumber" />
+                    <input type="text" class="form-control" name="FormModel.MedicareNumber" value="@FormModel?.MedicareNumber" />
                 </div>
             </div>
         </FormSection>
@@ -111,23 +105,23 @@ else if (FormData != null)
             <div class="row">
                 <div class="col-md-3 mb-3">
                     <label class="form-label">Student Number</label>
-                    <InputText class="form-control" @bind-Value="FormData.StudentNumber" />
+                    <input type="text" class="form-control" name="FormModel.StudentNumber" value="@FormModel?.StudentNumber" />
                 </div>
                 <div class="col-md-3 mb-3">
                     <label class="form-label">Student Type</label>
-                    <InputSelect class="form-select" @bind-Value="FormData.StudentType">
+                    <select class="form-select" name="FormModel.StudentType">
                         <option value="">Select Type</option>
-                        <option value="day">Day</option>
-                        <option value="boarding">Boarding</option>
-                    </InputSelect>
+                        <option value="day" selected="@(FormModel?.StudentType == "day")">Day</option>
+                        <option value="boarding" selected="@(FormModel?.StudentType == "boarding")">Boarding</option>
+                    </select>
                 </div>
                 <div class="col-md-3 mb-3">
                     <label class="form-label">Year Level</label>
-                    <InputText class="form-control" @bind-Value="FormData.YearLevel" />
+                    <input type="text" class="form-control" name="FormModel.YearLevel" value="@FormModel?.YearLevel" />
                 </div>
                 <div class="col-md-3 mb-3">
                     <label class="form-label">Graduation Year</label>
-                    <InputNumber class="form-control" @bind-Value="FormData.GraduationYear" />
+                    <input type="number" class="form-control" name="FormModel.GraduationYear" value="@FormModel?.GraduationYear" />
                 </div>
             </div>
         </FormSection>
@@ -140,27 +134,20 @@ else if (FormData != null)
         }
 
         <div class="d-flex justify-content-end mt-4">
-            <button type="submit" class="btn btn-primary btn-lg" disabled="@IsSubmitting">
-                @if (IsSubmitting)
-                {
-                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    <span>Creating Account...</span>
-                }
-                else
-                {
-                    <span>Create Account</span>
-                }
+            <button type="submit" class="btn btn-primary btn-lg">
+                Create Account
             </button>
         </div>
-    </EditForm>
+    </form>
 }
 
 @code {
     [Parameter] public string Token { get; set; } = string.Empty;
 
+    [SupplyParameterFromForm(FormName = "student-activation")]
+    private StudentActivationFormModel? FormModel { get; set; }
+
     private StudentActivationDto? FormData { get; set; }
-    private bool IsLoading { get; set; } = true;
-    private bool IsSubmitting { get; set; }
     private bool IsSuccess { get; set; }
     private string? ErrorMessage { get; set; }
     private string? SubmitError { get; set; }
@@ -174,29 +161,68 @@ else if (FormData != null)
             if (FormData == null)
             {
                 ErrorMessage = "This activation link is invalid, has expired, or has already been used.";
+                return;
             }
+
+            // Initialize FormModel with values from FormData
+            FormModel ??= new StudentActivationFormModel
+            {
+                PreferredName = FormData.PreferredName,
+                DateOfBirth = FormData.DateOfBirth,
+                Phone = FormData.Phone,
+                StudentNumber = FormData.StudentNumber,
+                StudentType = FormData.StudentType,
+                YearLevel = FormData.YearLevel,
+                GraduationYear = FormData.GraduationYear,
+                MedicareNumber = FormData.MedicareNumber
+            };
         }
         catch (Exception ex)
         {
             ErrorMessage = "An error occurred while loading the form. Please try again later.";
             Console.WriteLine($"Initialization error: {ex.Message}");
         }
-        finally
-        {
-            IsLoading = false;
-        }
     }
 
     private async Task HandleSubmit()
     {
-        if (FormData == null) return;
+        if (FormData == null || FormModel == null) return;
 
         SubmitError = null;
-        IsSubmitting = true;
-        StateHasChanged();
 
         try
         {
+            // Validate password
+            if (string.IsNullOrWhiteSpace(FormModel.Password))
+            {
+                SubmitError = "Password is required.";
+                return;
+            }
+
+            if (FormModel.Password.Length < 8)
+            {
+                SubmitError = "Password must be at least 8 characters.";
+                return;
+            }
+
+            if (FormModel.Password != FormModel.ConfirmPassword)
+            {
+                SubmitError = "Passwords do not match.";
+                return;
+            }
+
+            // Apply form values to FormData
+            FormData.Password = FormModel.Password;
+            FormData.ConfirmPassword = FormModel.ConfirmPassword;
+            FormData.PreferredName = FormModel.PreferredName;
+            FormData.DateOfBirth = FormModel.DateOfBirth;
+            FormData.Phone = FormModel.Phone;
+            FormData.StudentNumber = FormModel.StudentNumber;
+            FormData.StudentType = FormModel.StudentType;
+            FormData.YearLevel = FormModel.YearLevel;
+            FormData.GraduationYear = FormModel.GraduationYear;
+            FormData.MedicareNumber = FormModel.MedicareNumber;
+
             var (success, errorMessage) = await ActivationService.ActivateAccountAsync(Token, FormData);
 
             if (success)
@@ -213,9 +239,19 @@ else if (FormData != null)
             SubmitError = "An error occurred while creating your account. Please try again.";
             Console.WriteLine($"Submit error: {ex.Message}");
         }
-        finally
-        {
-            IsSubmitting = false;
-        }
+    }
+
+    private class StudentActivationFormModel
+    {
+        public string? Password { get; set; }
+        public string? ConfirmPassword { get; set; }
+        public string? PreferredName { get; set; }
+        public DateOnly? DateOfBirth { get; set; }
+        public string? Phone { get; set; }
+        public string? StudentNumber { get; set; }
+        public string? StudentType { get; set; }
+        public string? YearLevel { get; set; }
+        public int? GraduationYear { get; set; }
+        public string? MedicareNumber { get; set; }
     }
 }

@@ -1,0 +1,255 @@
+@page "/Students/Edit/{Id:guid}"
+@layout MainLayout
+@attribute [Authorize(Roles = Roles.Teacher)]
+@inject IStudentService StudentService
+@inject ITenantProvider TenantProvider
+@inject IHttpContextAccessor HttpContextAccessor
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Edit Student - Apiary</PageTitle>
+
+<h1>Edit Student</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post" @formname="edit-student">
+            <AntiforgeryToken />
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+            }
+
+            <input type="hidden" name="FormModel.Id" value="@FormModel?.Id" />
+            <input type="hidden" name="RowVersionBase64" value="@RowVersionBase64" />
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Personal Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="FirstName" class="form-label">First Name *</label>
+                            <input type="text" id="FirstName" name="FormModel.FirstName" class="form-control" value="@FormModel?.FirstName" required />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="LastName" class="form-label">Last Name *</label>
+                            <input type="text" id="LastName" name="FormModel.LastName" class="form-control" value="@FormModel?.LastName" required />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="PreferredName" class="form-label">Preferred Name</label>
+                            <input type="text" id="PreferredName" name="FormModel.PreferredName" class="form-control" value="@FormModel?.PreferredName" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="DateOfBirth" class="form-label">Date of Birth</label>
+                            <input type="date" id="DateOfBirth" name="FormModel.DateOfBirth" class="form-control" value="@FormModel?.DateOfBirth?.ToString("yyyy-MM-dd")" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="StudentNumber" class="form-label">Student Number</label>
+                            <input type="text" id="StudentNumber" name="FormModel.StudentNumber" class="form-control" value="@FormModel?.StudentNumber" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="Phone" class="form-label">Phone</label>
+                            <input type="text" id="Phone" name="FormModel.Phone" class="form-control" value="@FormModel?.Phone" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="Email" class="form-label">Email</label>
+                            <input type="email" id="Email" name="FormModel.Email" class="form-control" value="@FormModel?.Email" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Academic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="StudentType" class="form-label">Student Type</label>
+                            <select id="StudentType" name="FormModel.StudentType" class="form-select">
+                                <option value="">-- Select --</option>
+                                <option value="day" selected="@(FormModel?.StudentType == "day")">Day</option>
+                                <option value="boarding" selected="@(FormModel?.StudentType == "boarding")">Boarding</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="YearLevel" class="form-label">Year Level</label>
+                            <input type="text" id="YearLevel" name="FormModel.YearLevel" class="form-control" value="@FormModel?.YearLevel" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="GraduationYear" class="form-label">Graduation Year</label>
+                            <input type="number" id="GraduationYear" name="FormModel.GraduationYear" class="form-control" value="@FormModel?.GraduationYear" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="MedicareNumber" class="form-label">Medicare Number</label>
+                            <input type="text" id="MedicareNumber" name="FormModel.MedicareNumber" class="form-control" value="@FormModel?.MedicareNumber" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Account Linking</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="UserId" class="form-label">Link to User Account</label>
+                        <select id="UserId" name="FormModel.UserId" class="form-select">
+                            <option value="">-- No linked account --</option>
+                            @if (StudentUsers != null)
+                            {
+                                @foreach (var user in StudentUsers)
+                                {
+                                    <option value="@user.Id" selected="@(FormModel?.UserId == user.Id)">@user.DisplayName (@user.Email)</option>
+                                }
+                            }
+                        </select>
+                        <small class="text-muted">Only users with the Student role are shown.</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="/Students/Details/@Id" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [SupplyParameterFromForm(FormName = "edit-student")]
+    public Student? FormModel { get; set; }
+
+    [SupplyParameterFromForm(FormName = "edit-student")]
+    public string? RowVersionBase64 { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private List<ApplicationUser>? StudentUsers { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+
+        if (context != null && HttpMethods.IsPost(context.Request.Method))
+        {
+            await LoadStudentUsersAsync();
+            await HandlePostAsync();
+            return;
+        }
+
+        await LoadStudentAsync();
+        await LoadStudentUsersAsync();
+    }
+
+    private async Task LoadStudentAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        FormModel = await StudentService.GetByIdAsync(Id, tenantId);
+
+        if (FormModel == null)
+        {
+            var context = HttpContext ?? HttpContextAccessor.HttpContext;
+            context?.Response.Redirect("/Students");
+        }
+        else
+        {
+            RowVersionBase64 = FormModel.RowVersion != null ? Convert.ToBase64String(FormModel.RowVersion) : null;
+        }
+    }
+
+    private async Task LoadStudentUsersAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        var allUsers = UserManager.Users.Where(u => !u.IsDeleted && u.TenantId == tenantId).ToList();
+        StudentUsers = new List<ApplicationUser>();
+
+        foreach (var user in allUsers)
+        {
+            var roles = await UserManager.GetRolesAsync(user);
+            if (roles.Contains(Roles.Student))
+            {
+                StudentUsers.Add(user);
+            }
+        }
+    }
+
+    private async Task HandlePostAsync()
+    {
+        if (FormModel == null)
+        {
+            ErrorMessage = "Invalid form data.";
+            return;
+        }
+
+        if (FormModel.Id != Id)
+        {
+            ErrorMessage = "Invalid student ID.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.FirstName))
+        {
+            ErrorMessage = "First name is required.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.LastName))
+        {
+            ErrorMessage = "Last name is required.";
+            return;
+        }
+
+        try
+        {
+            var tenantId = TenantProvider.GetCurrentTenantId();
+            byte[]? rowVersion = null;
+            if (!string.IsNullOrEmpty(RowVersionBase64))
+            {
+                rowVersion = Convert.FromBase64String(RowVersionBase64);
+            }
+            await StudentService.UpdateAsync(FormModel, rowVersion, tenantId);
+
+            var context = HttpContext ?? HttpContextAccessor.HttpContext;
+            context?.Response.Redirect("/Students");
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+        {
+            var exists = await StudentService.ExistsAsync(Id, TenantProvider.GetCurrentTenantId());
+            if (!exists)
+            {
+                var context = HttpContext ?? HttpContextAccessor.HttpContext;
+                context?.Response.Redirect("/Students");
+            }
+            else
+            {
+                ErrorMessage = "The record has been modified by another user. Please reload and try again.";
+                await LoadStudentAsync();
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "An error occurred while updating the student.";
+        }
+    }
+}

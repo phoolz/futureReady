@@ -1,0 +1,177 @@
+@page "/Users/Edit/{Id:guid}"
+@attribute [Authorize(Roles = Roles.SiteAdmin)]
+@attribute [StreamRendering]
+@inject IUserService UserService
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Edit User - Apiary</PageTitle>
+
+<h1>Edit User</h1>
+
+@if (User == null && !ErrorMessages.Any())
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-8">
+            <form method="post" @formname="edit-user">
+                <AntiforgeryToken />
+                <input type="hidden" name="FormModel.Id" value="@Id" />
+
+                @if (ErrorMessages.Any())
+                {
+                    <div class="alert alert-danger" role="alert">
+                        @foreach (var error in ErrorMessages)
+                        {
+                            <div>@error</div>
+                        }
+                    </div>
+                }
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Account Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="UserName" class="form-label">Username <span class="text-danger">*</span></label>
+                                <input type="text" id="UserName" name="FormModel.UserName" class="form-control" value="@FormModel?.UserName" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="Email" class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" id="Email" name="FormModel.Email" class="form-control" value="@FormModel?.Email" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="DisplayName" class="form-label">Display Name</label>
+                                <input type="text" id="DisplayName" name="FormModel.DisplayName" class="form-control" value="@FormModel?.DisplayName" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="NewPassword" class="form-label">New Password</label>
+                                <input type="password" id="NewPassword" name="FormModel.NewPassword" class="form-control" placeholder="Leave blank to keep current" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Role & Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="RoleName" class="form-label">Role <span class="text-danger">*</span></label>
+                                <select id="RoleName" name="FormModel.RoleName" class="form-select">
+                                    @foreach (var role in Roles.AllRoles)
+                                    {
+                                        <option value="@role" selected="@(FormModel?.RoleName == role)">@role</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check mt-4">
+                                    <input type="checkbox" class="form-check-input" id="IsActive" name="FormModel.IsActive" value="true" checked="@(FormModel?.IsActive ?? false)" />
+                                    <label class="form-check-label" for="IsActive">Active</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <a href="/Users" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [SupplyParameterFromForm(FormName = "edit-user")]
+    public EditUserModel? FormModel { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private ApplicationUser? User { get; set; }
+    private List<string> ErrorMessages { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+
+        if (context != null && HttpMethods.IsPost(context.Request.Method))
+        {
+            await HandlePostAsync();
+            return;
+        }
+
+        User = await UserService.GetByIdAsync(Id);
+        if (User == null)
+        {
+            ErrorMessages.Add("User not found.");
+            return;
+        }
+
+        var roleName = await UserService.GetRoleAsync(Id) ?? Roles.Teacher;
+
+        FormModel = new EditUserModel
+        {
+            Id = User.Id,
+            UserName = User.UserName ?? string.Empty,
+            Email = User.Email ?? string.Empty,
+            DisplayName = User.DisplayName,
+            IsActive = User.IsActive,
+            RoleName = roleName
+        };
+    }
+
+    private async Task HandlePostAsync()
+    {
+        if (FormModel == null)
+        {
+            ErrorMessages.Add("Invalid form data.");
+            return;
+        }
+
+        if (FormModel.Id != Id)
+        {
+            ErrorMessages.Add("Invalid user ID.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.UserName))
+        {
+            ErrorMessages.Add("Username is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.Email))
+        {
+            ErrorMessages.Add("Email is required.");
+        }
+
+        if (ErrorMessages.Any())
+            return;
+
+        var (success, errors) = await UserService.UpdateAsync(FormModel);
+
+        if (success)
+        {
+            var context = HttpContext ?? HttpContextAccessor.HttpContext;
+            context?.Response.Redirect("/Users");
+        }
+        else
+        {
+            ErrorMessages.AddRange(errors);
+        }
+    }
+}

@@ -1,0 +1,131 @@
+@page "/StudentMedicalConditions/Create"
+@layout MainLayout
+@attribute [Authorize(Roles = Roles.Teacher)]
+@inject IStudentMedicalConditionService MedicalConditionService
+@inject IStudentService StudentService
+@inject ITenantProvider TenantProvider
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Add Medical Condition - Apiary</PageTitle>
+
+<h1>Add Medical Condition</h1>
+
+@if (Student != null)
+{
+    <p class="text-muted">For @Student.FullName</p>
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post" @formname="create-medical-condition">
+            <AntiforgeryToken />
+            <input type="hidden" name="FormModel.StudentId" value="@StudentId" />
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+            }
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Condition Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="ConditionType" class="form-label">Condition Type *</label>
+                        <select id="ConditionType" name="FormModel.ConditionType" class="form-select" required>
+                            <option value="">-- Select Condition Type --</option>
+                            @foreach (var type in MedicalConditionTypes.All)
+                            {
+                                <option value="@type" selected="@(FormModel?.ConditionType == type)">@MedicalConditionTypes.GetDisplayName(type)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="Details" class="form-label">Details</label>
+                        <textarea id="Details" name="FormModel.Details" class="form-control" rows="5" maxlength="2000">@FormModel?.Details</textarea>
+                        <small class="text-muted">Maximum 2000 characters. Include relevant information such as triggers, medication requirements, and emergency procedures.</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Create</button>
+                <a href="/StudentMedicalConditions/@StudentId" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public Guid? StudentId { get; set; }
+
+    [SupplyParameterFromForm(FormName = "create-medical-condition")]
+    public StudentMedicalCondition? FormModel { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private Student? Student { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!StudentId.HasValue)
+        {
+            HttpContextAccessor.HttpContext?.Response.Redirect("/Students");
+            return;
+        }
+
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        Student = await StudentService.GetByIdAsync(StudentId.Value, tenantId);
+
+        if (Student == null)
+        {
+            HttpContextAccessor.HttpContext?.Response.Redirect("/Students");
+            return;
+        }
+
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+
+        if (context != null && HttpMethods.IsPost(context.Request.Method))
+        {
+            await HandlePostAsync();
+            return;
+        }
+
+        FormModel ??= new StudentMedicalCondition { StudentId = StudentId.Value };
+    }
+
+    private async Task HandlePostAsync()
+    {
+        if (FormModel == null)
+        {
+            ErrorMessage = "Invalid form data.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.ConditionType))
+        {
+            ErrorMessage = "Condition type is required.";
+            return;
+        }
+
+        try
+        {
+            await MedicalConditionService.CreateAsync(FormModel);
+
+            var context = HttpContext ?? HttpContextAccessor.HttpContext;
+            context?.Response.Redirect($"/StudentMedicalConditions/{StudentId}");
+        }
+        catch (InvalidOperationException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "An error occurred while creating the medical condition.";
+        }
+    }
+}

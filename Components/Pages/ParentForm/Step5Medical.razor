@@ -1,0 +1,262 @@
+@page "/parent/form/{Token}/step5"
+@layout ParentFormLayout
+@attribute [StreamRendering]
+@inject IParentFormService FormService
+@inject NavigationManager Navigation
+
+<PageTitle>Parent Form - Medical Information</PageTitle>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="error-container">
+        <p class="error-message">@ErrorMessage</p>
+        <p class="text-muted">Please contact the school if you believe this is an error.</p>
+    </div>
+}
+else if (FormData != null)
+{
+    <ParentInfoHeader
+        StudentName="@FormData.StudentName"
+        SchoolName="@FormData.SchoolName" />
+
+    <ParentProgressIndicator CurrentStep="5" TotalSteps="7" />
+
+    <form method="post" @formname="parent-step5" @onsubmit="HandleSubmit">
+        <AntiforgeryToken />
+
+        <FormSection Title="Medical Information">
+            <p class="mb-4 text-muted">Please indicate if the student has any medical conditions that the school and/or employer should be aware of. This information helps ensure the student's safety and wellbeing during their placement.</p>
+
+            <div class="alert alert-info mb-4">
+                <strong>Privacy Note:</strong> This information is collected for health and safety purposes. You will have the option to choose whether this information is shared with the employer on the next step.
+            </div>
+
+            <div class="medical-checkbox-group">
+                <div class="medical-item">
+                    <div class="medical-checkbox">
+                        <input type="checkbox" id="hasAsthma" name="Model.HasAsthma" value="true" checked="@(Model?.HasAsthma == true)" />
+                        <label for="hasAsthma">Asthma</label>
+                    </div>
+                    <div class="medical-details">
+                        <label class="form-label">Please provide details about the asthma management</label>
+                        <textarea class="form-control" name="Model.AsthmaDetails" rows="2" placeholder="e.g., Uses Ventolin as needed, triggers include exercise and dust">@Model?.AsthmaDetails</textarea>
+                    </div>
+                </div>
+
+                <div class="medical-item">
+                    <div class="medical-checkbox">
+                        <input type="checkbox" id="hasDiabetes" name="Model.HasDiabetes" value="true" checked="@(Model?.HasDiabetes == true)" />
+                        <label for="hasDiabetes">Diabetes</label>
+                    </div>
+                    <div class="medical-details">
+                        <label class="form-label">Please provide details about diabetes management</label>
+                        <textarea class="form-control" name="Model.DiabetesDetails" rows="2" placeholder="e.g., Type 1, manages with insulin pump, needs regular meal breaks">@Model?.DiabetesDetails</textarea>
+                    </div>
+                </div>
+
+                <div class="medical-item">
+                    <div class="medical-checkbox">
+                        <input type="checkbox" id="hasEpilepsy" name="Model.HasEpilepsy" value="true" checked="@(Model?.HasEpilepsy == true)" />
+                        <label for="hasEpilepsy">Epilepsy</label>
+                    </div>
+                    <div class="medical-details">
+                        <label class="form-label">Please provide details about epilepsy management</label>
+                        <textarea class="form-control" name="Model.EpilepsyDetails" rows="2" placeholder="e.g., Last seizure date, triggers, what to do if a seizure occurs">@Model?.EpilepsyDetails</textarea>
+                    </div>
+                </div>
+
+                <div class="medical-item">
+                    <div class="medical-checkbox">
+                        <input type="checkbox" id="hasAllergies" name="Model.HasAllergies" value="true" checked="@(Model?.HasAllergies == true)" />
+                        <label for="hasAllergies">Allergies</label>
+                    </div>
+                    <div class="medical-details">
+                        <label class="form-label">Please list all allergies and their severity</label>
+                        <textarea class="form-control" name="Model.AllergiesDetails" rows="2" placeholder="e.g., Peanut allergy (severe, carries EpiPen), hay fever (mild)">@Model?.AllergiesDetails</textarea>
+                    </div>
+                </div>
+
+                <div class="medical-item">
+                    <div class="medical-checkbox">
+                        <input type="checkbox" id="hasLearningDifficulties" name="Model.HasLearningDifficulties" value="true" checked="@(Model?.HasLearningDifficulties == true)" />
+                        <label for="hasLearningDifficulties">Learning Difficulties</label>
+                    </div>
+                    <div class="medical-details">
+                        <label class="form-label">Please describe the learning difficulty and any support that helps</label>
+                        <textarea class="form-control" name="Model.LearningDifficultiesDetails" rows="2" placeholder="e.g., Dyslexia - benefits from written instructions, extra time for tasks">@Model?.LearningDifficultiesDetails</textarea>
+                    </div>
+                </div>
+
+                <div class="medical-item">
+                    <div class="medical-checkbox">
+                        <input type="checkbox" id="hasMedication" name="Model.HasMedication" value="true" checked="@(Model?.HasMedication == true)" />
+                        <label for="hasMedication">Regular Medication</label>
+                    </div>
+                    <div class="medical-details">
+                        <label class="form-label">Please list medications and when they are taken</label>
+                        <textarea class="form-control" name="Model.MedicationDetails" rows="2" placeholder="e.g., Takes medication for ADHD each morning before school">@Model?.MedicationDetails</textarea>
+                    </div>
+                </div>
+
+                <div class="medical-item">
+                    <div class="medical-checkbox">
+                        <input type="checkbox" id="hasOther" name="Model.HasOther" value="true" checked="@(Model?.HasOther == true)" />
+                        <label for="hasOther">Other Medical Condition</label>
+                    </div>
+                    <div class="medical-details">
+                        <label class="form-label">Please describe the condition and any relevant information</label>
+                        <textarea class="form-control" name="Model.OtherDetails" rows="2" placeholder="Please describe any other medical conditions">@Model?.OtherDetails</textarea>
+                    </div>
+                </div>
+            </div>
+        </FormSection>
+
+        @if (!string.IsNullOrEmpty(ValidationError))
+        {
+            <div class="alert alert-danger mt-3">
+                @ValidationError
+            </div>
+        }
+
+        <div class="wizard-navigation">
+            <a href="/parent/form/@Token/step4" class="btn-wizard btn-previous">
+                &larr; Previous
+            </a>
+            <button type="submit" class="btn-wizard btn-next">
+                Next &rarr;
+            </button>
+        </div>
+    </form>
+}
+
+<style>
+    .medical-checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .medical-item {
+        padding: 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background-color: #fafafa;
+    }
+
+    .medical-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .medical-checkbox input[type="checkbox"] {
+        width: 1.25rem;
+        height: 1.25rem;
+        cursor: pointer;
+    }
+
+    .medical-checkbox label {
+        font-weight: 600;
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .medical-details {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e0e0e0;
+    }
+</style>
+
+@code {
+    [Parameter] public string Token { get; set; } = string.Empty;
+
+    [SupplyParameterFromForm(FormName = "parent-step5")]
+    private MedicalFormModel? Model { get; set; }
+
+    private ParentFormDto? FormData { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? ValidationError { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        FormData = await FormService.InitializeFormAsync(Token);
+
+        if (FormData == null)
+        {
+            ErrorMessage = "This form link is invalid, has expired, or has already been used.";
+            return;
+        }
+
+        Model ??= new MedicalFormModel
+        {
+            HasAsthma = FormData.MedicalDetails.HasAsthma,
+            AsthmaDetails = FormData.MedicalDetails.AsthmaDetails,
+            HasDiabetes = FormData.MedicalDetails.HasDiabetes,
+            DiabetesDetails = FormData.MedicalDetails.DiabetesDetails,
+            HasEpilepsy = FormData.MedicalDetails.HasEpilepsy,
+            EpilepsyDetails = FormData.MedicalDetails.EpilepsyDetails,
+            HasAllergies = FormData.MedicalDetails.HasAllergies,
+            AllergiesDetails = FormData.MedicalDetails.AllergiesDetails,
+            HasLearningDifficulties = FormData.MedicalDetails.HasLearningDifficulties,
+            LearningDifficultiesDetails = FormData.MedicalDetails.LearningDifficultiesDetails,
+            HasMedication = FormData.MedicalDetails.HasMedication,
+            MedicationDetails = FormData.MedicalDetails.MedicationDetails,
+            HasOther = FormData.MedicalDetails.HasOther,
+            OtherDetails = FormData.MedicalDetails.OtherDetails
+        };
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (Model == null) return;
+
+        // No required fields on this step
+
+        var dto = new MedicalDetailsDto
+        {
+            HasAsthma = Model.HasAsthma,
+            AsthmaDetails = Model.AsthmaDetails,
+            HasDiabetes = Model.HasDiabetes,
+            DiabetesDetails = Model.DiabetesDetails,
+            HasEpilepsy = Model.HasEpilepsy,
+            EpilepsyDetails = Model.EpilepsyDetails,
+            HasAllergies = Model.HasAllergies,
+            AllergiesDetails = Model.AllergiesDetails,
+            HasLearningDifficulties = Model.HasLearningDifficulties,
+            LearningDifficultiesDetails = Model.LearningDifficultiesDetails,
+            HasMedication = Model.HasMedication,
+            MedicationDetails = Model.MedicationDetails,
+            HasOther = Model.HasOther,
+            OtherDetails = Model.OtherDetails
+        };
+
+        var success = await FormService.SaveMedicalDetailsAsync(Token, dto);
+        if (success)
+        {
+            Navigation.NavigateTo($"/parent/form/{Token}/step6", forceLoad: true);
+        }
+        else
+        {
+            ValidationError = "Failed to save. The link may have expired or already been used.";
+        }
+    }
+
+    private class MedicalFormModel
+    {
+        public bool HasAsthma { get; set; }
+        public string? AsthmaDetails { get; set; }
+        public bool HasDiabetes { get; set; }
+        public string? DiabetesDetails { get; set; }
+        public bool HasEpilepsy { get; set; }
+        public string? EpilepsyDetails { get; set; }
+        public bool HasAllergies { get; set; }
+        public string? AllergiesDetails { get; set; }
+        public bool HasLearningDifficulties { get; set; }
+        public string? LearningDifficultiesDetails { get; set; }
+        public bool HasMedication { get; set; }
+        public string? MedicationDetails { get; set; }
+        public bool HasOther { get; set; }
+        public string? OtherDetails { get; set; }
+    }
+}

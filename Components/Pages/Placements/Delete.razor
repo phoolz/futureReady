@@ -1,0 +1,102 @@
+@page "/Placements/Delete/{Id:guid}"
+@attribute [Authorize(Roles = Roles.Teacher)]
+@attribute [StreamRendering]
+@inject IPlacementService PlacementService
+@inject ITenantProvider TenantProvider
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Delete Placement - Apiary</PageTitle>
+
+<h1>Delete Placement</h1>
+
+@if (Placement == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="alert alert-danger">
+        <h4 class="alert-heading">Are you sure you want to delete this placement?</h4>
+        <p>This action cannot be undone.</p>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Placement Details</h5>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-4">Students</dt>
+                <dd class="col-sm-8">
+                    @{
+                        var studentNames = string.Join(", ", Placement.PlacementStudents
+                            .Where(ps => !ps.IsDeleted && ps.Student != null)
+                            .Select(ps => $"{ps.Student!.FirstName} {ps.Student.LastName}"));
+                    }
+                    @(string.IsNullOrEmpty(studentNames) ? "No students assigned" : studentNames)
+                </dd>
+
+                <dt class="col-sm-4">Company</dt>
+                <dd class="col-sm-8">@(Placement.Company?.Name ?? "—")</dd>
+
+                <dt class="col-sm-4">Supervisor</dt>
+                <dd class="col-sm-8">
+                    @if (Placement.Supervisor != null)
+                    {
+                        @($"{Placement.Supervisor.FirstName} {Placement.Supervisor.LastName}")
+                    }
+                    else
+                    {
+                        <span>—</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-4">Year</dt>
+                <dd class="col-sm-8">@(Placement.Year?.ToString() ?? "—")</dd>
+
+                <dt class="col-sm-4">Status</dt>
+                <dd class="col-sm-8">@(Placement.Status ?? "Draft")</dd>
+            </dl>
+        </div>
+    </div>
+
+    <form method="post" @formname="delete-placement">
+        <AntiforgeryToken />
+        <input type="hidden" name="Id" value="@Id" />
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a href="/Placements" class="btn btn-secondary">Cancel</a>
+    </form>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private Placement? Placement { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+
+        if (context != null && HttpMethods.IsPost(context.Request.Method))
+        {
+            await HandlePostAsync();
+            return;
+        }
+
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        Placement = await PlacementService.GetByIdWithDetailsAsync(Id, tenantId);
+    }
+
+    private async Task HandlePostAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        await PlacementService.DeleteAsync(Id, tenantId);
+
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+        context?.Response.Redirect("/Placements");
+    }
+}

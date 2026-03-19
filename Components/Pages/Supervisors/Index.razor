@@ -1,0 +1,130 @@
+@page "/Supervisors"
+@layout MainLayout
+@attribute [Authorize(Roles = Roles.Teacher)]
+@attribute [StreamRendering]
+@inject ISupervisorService SupervisorService
+@inject ITenantProvider TenantProvider
+
+<PageTitle>Supervisors - Apiary</PageTitle>
+
+<div class="list-header">
+    <div class="list-header-content">
+        <h1>Supervisors</h1>
+        <p>Manage workplace supervisors</p>
+    </div>
+    <div class="list-header-actions">
+        <div class="search-input">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" id="searchInput" placeholder="Search supervisors..." onkeyup="filterTable()">
+        </div>
+        <a href="/Supervisors/Create" class="btn-add">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Add Supervisor
+        </a>
+    </div>
+</div>
+
+<div class="list-table">
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Company</th>
+                <th>Job Title</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @if (Supervisors != null)
+        {
+            @foreach (var item in Supervisors)
+            {
+                <tr class="clickable" onclick="window.location='/Supervisors/Details/@item.Id'">
+                    <td class="cell-primary">@item.FullName</td>
+                    <td>@(item.Company?.Name ?? "—")</td>
+                    <td class="cell-secondary">@(item.JobTitle ?? "—")</td>
+                    <td class="cell-secondary">
+                        @if (!string.IsNullOrEmpty(item.Email))
+                        {
+                            <a href="mailto:@item.Email" onclick="event.stopPropagation()">@item.Email</a>
+                        }
+                        else
+                        {
+                            <span>—</span>
+                        }
+                    </td>
+                    <td class="cell-secondary">@(item.Phone ?? "—")</td>
+                    <td>
+                        <div class="row-actions">
+                            <a href="/Supervisors/Details/@item.Id" class="row-action action-view" title="View" onclick="event.stopPropagation()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                            </a>
+                            <a href="/Supervisors/Edit/@item.Id" class="row-action action-edit" title="Edit" onclick="event.stopPropagation()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                                </svg>
+                            </a>
+                            <a href="/Supervisors/Delete/@item.Id" class="row-action action-delete" title="Delete" onclick="event.stopPropagation()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                </svg>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+        </tbody>
+    </table>
+    @if (Supervisors != null && !Supervisors.Any())
+    {
+        <div class="list-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>
+            </svg>
+            <p>No supervisors found. Add your first supervisor to get started.</p>
+        </div>
+    }
+</div>
+
+<script>
+    function filterTable() {
+        var input = document.getElementById("searchInput");
+        var filter = input.value.toLowerCase();
+        var table = document.getElementById("dataTable");
+        var rows = table.getElementsByTagName("tr");
+
+        for (var i = 1; i < rows.length; i++) {
+            var cells = rows[i].getElementsByTagName("td");
+            var match = false;
+            for (var j = 0; j < cells.length; j++) {
+                if (cells[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                    match = true;
+                    break;
+                }
+            }
+            rows[i].style.display = match ? "" : "none";
+        }
+    }
+</script>
+
+@code {
+    private List<Supervisor>? Supervisors { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        Supervisors = await SupervisorService.GetAllAsync(tenantId);
+    }
+}

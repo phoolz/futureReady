@@ -1,0 +1,331 @@
+@page "/LogbookEntries/{PlacementId:guid}"
+@layout MainLayout
+@attribute [Authorize(Roles = Roles.TeacherOrStudent)]
+@attribute [StreamRendering]
+@inject IPlacementService PlacementService
+@inject ILogbookEntryService LogbookService
+@inject IStudentAuthorizationService StudentAuthService
+@inject ITenantProvider TenantProvider
+
+<PageTitle>Logbook Entries - Apiary</PageTitle>
+
+@if (IsLoading)
+{
+    <div class="list-header">
+        <div class="list-header-content">
+            <h1>Logbook Entries</h1>
+            <p>Loading...</p>
+        </div>
+    </div>
+}
+else if (!IsAuthorized)
+{
+    <div class="list-header">
+        <div class="list-header-content">
+            <h1>Access Denied</h1>
+            <p>You are not authorized to view this logbook.</p>
+        </div>
+    </div>
+}
+else if (ViewModel == null)
+{
+    <div class="list-header">
+        <div class="list-header-content">
+            <h1>Logbook Entries</h1>
+            <p>Placement not found.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="list-header">
+        <div class="list-header-content">
+            <h1>Logbook Entries</h1>
+            <p>@ViewModel.PlacementInfo</p>
+        </div>
+        <div class="list-header-actions">
+            <a href="/student/logbook/@PlacementId" class="btn-add">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+                Add Entry
+            </a>
+            <a href="/" class="btn-secondary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m15 18-6-6 6-6"/>
+                </svg>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-value primary">@ViewModel.TotalHours.ToString("0.#")</div>
+            <div class="stat-label">Total Hours</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value success">@ViewModel.VerifiedCount</div>
+            <div class="stat-label">Verified Entries</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">@ViewModel.TotalEntries</div>
+            <div class="stat-label">Total Entries</div>
+        </div>
+    </div>
+
+    <div class="list-table">
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Start</th>
+                    <th>Finish</th>
+                    <th>Hours</th>
+                    <th>Cumulative</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (ViewModel.Entries.Any())
+            {
+                @foreach (var entry in ViewModel.Entries)
+                {
+                    <tr class="clickable" onclick="window.location='/student/logbook/@PlacementId/@entry.Date.ToString("yyyy-MM-dd")'">
+                        <td class="cell-primary">@entry.Date.ToString("ddd, d MMM yyyy")</td>
+                        <td class="cell-secondary">@(entry.StartTime ?? "—")</td>
+                        <td class="cell-secondary">@(entry.FinishTime ?? "—")</td>
+                        <td class="cell-secondary">@entry.TotalHoursWorked.ToString("0.#")</td>
+                        <td class="cell-secondary">@entry.CumulativeHours.ToString("0.#")</td>
+                        <td>
+                            @if (entry.SupervisorVerified)
+                            {
+                                <span class="badge success">Verified</span>
+                            }
+                            else
+                            {
+                                <span class="badge secondary">Pending</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+        @if (!ViewModel.Entries.Any())
+        {
+            <div class="list-empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" x2="8" y1="13" y2="13"/>
+                    <line x1="16" x2="8" y1="17" y2="17"/>
+                </svg>
+                <p>No logbook entries yet. Start logging your work placement hours by adding your first entry.</p>
+                <a href="/student/logbook/@PlacementId" class="btn-add">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    Add First Entry
+                </a>
+            </div>
+        }
+    </div>
+}
+
+<style>
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value.primary {
+        color: var(--primary);
+    }
+
+    .stat-value.success {
+        color: var(--success);
+    }
+
+    .stat-label {
+        color: var(--muted);
+        font-size: 0.875rem;
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .badge.success {
+        background: color-mix(in srgb, var(--success) 15%, transparent);
+        color: var(--success);
+    }
+
+    .badge.secondary {
+        background: var(--muted-bg);
+        color: var(--muted);
+    }
+
+    .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1.25rem;
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.15s ease;
+    }
+
+    .btn-secondary:hover {
+        background: var(--hover);
+        border-color: var(--border-strong);
+    }
+
+    .btn-secondary svg {
+        width: 1rem;
+        height: 1rem;
+    }
+
+    @@media (max-width: 768px) {
+        .stats-cards {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+@code {
+    [Parameter]
+    public Guid PlacementId { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
+
+    private LogbookEntriesListViewModel? ViewModel { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private bool IsAuthorized { get; set; } = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+
+        // Load placement for authorization and display info
+        var placement = await PlacementService.GetByIdWithDetailsAsync(PlacementId, tenantId);
+        if (placement == null)
+        {
+            IsLoading = false;
+            return;
+        }
+
+        // Get the PlacementStudent for the current user (if student)
+        Guid? placementStudentId = null;
+
+        var authState = await AuthState!;
+        var user = authState.User;
+
+        // Authorization check: students can only see their own placements
+        if (user.IsInRole(Roles.Student))
+        {
+            var studentId = await StudentAuthService.GetCurrentUserStudentIdAsync();
+            if (!studentId.HasValue)
+            {
+                IsAuthorized = false;
+                IsLoading = false;
+                return;
+            }
+
+            var placementStudent = placement.PlacementStudents.FirstOrDefault(ps => ps.StudentId == studentId.Value && !ps.IsDeleted);
+            if (placementStudent == null)
+            {
+                IsAuthorized = false;
+                IsLoading = false;
+                return;
+            }
+
+            placementStudentId = placementStudent.Id;
+        }
+        else
+        {
+            // For teachers, show entries for the first student (or could aggregate)
+            var firstPlacementStudent = placement.PlacementStudents.FirstOrDefault(ps => !ps.IsDeleted);
+            placementStudentId = firstPlacementStudent?.Id;
+        }
+
+        if (!placementStudentId.HasValue)
+        {
+            // No students in placement
+            ViewModel = new LogbookEntriesListViewModel
+            {
+                PlacementId = PlacementId,
+                PlacementInfo = $"{placement.Company?.Name ?? "Unknown Company"} - {placement.Year}",
+                TotalHours = 0,
+                VerifiedCount = 0,
+                TotalEntries = 0,
+                Entries = new()
+            };
+            IsLoading = false;
+            return;
+        }
+
+        // Load entries for this placement student
+        var entries = await LogbookService.GetByPlacementStudentIdAsync(placementStudentId.Value, tenantId);
+
+        // Calculate cumulative hours
+        // Entries come ordered by Date descending, so sort ascending for calculation
+        var sortedAscending = entries.OrderBy(e => e.Date).ToList();
+        decimal runningTotal = 0;
+        foreach (var entry in sortedAscending)
+        {
+            runningTotal += entry.TotalHoursWorked;
+            entry.CumulativeHours = runningTotal;
+        }
+
+        // Map to view model (display in descending order - most recent first)
+        ViewModel = new LogbookEntriesListViewModel
+        {
+            PlacementId = PlacementId,
+            PlacementInfo = $"{placement.Company?.Name ?? "Unknown Company"} - {placement.Year}",
+            TotalHours = runningTotal,
+            VerifiedCount = entries.Count(e => e.SupervisorVerified),
+            TotalEntries = entries.Count,
+            Entries = entries.OrderByDescending(e => e.Date).Select(e => new LogbookEntryViewModel
+            {
+                Id = e.Id,
+                Date = e.Date,
+                StartTime = e.StartTime,
+                FinishTime = e.FinishTime,
+                TotalHoursWorked = e.TotalHoursWorked,
+                CumulativeHours = e.CumulativeHours,
+                SupervisorVerified = e.SupervisorVerified
+            }).ToList()
+        };
+
+        IsLoading = false;
+    }
+}

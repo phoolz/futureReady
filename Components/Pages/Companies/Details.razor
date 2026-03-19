@@ -1,0 +1,261 @@
+@page "/Companies/Details/{Id:guid}"
+@layout MainLayout
+@attribute [Authorize(Roles = Roles.Teacher)]
+@attribute [StreamRendering]
+@inject ICompanyService CompanyService
+@inject ISupervisorService SupervisorService
+@inject IPlacementService PlacementService
+@inject ITenantProvider TenantProvider
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Company Details - Apiary</PageTitle>
+
+@if (Company == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>@Company.Name</h1>
+        <div class="d-flex gap-2">
+            <a href="/Companies/Edit/@Company.Id" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            <a href="/Companies/Delete/@Company.Id" class="btn btn-outline-danger">
+                <i class="bi bi-trash"></i> Delete
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Name</dt>
+                        <dd class="col-sm-8">@Company.Name</dd>
+
+                        <dt class="col-sm-4">Industry</dt>
+                        <dd class="col-sm-8">@Company.Industry</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Physical Address</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Street Address</dt>
+                        <dd class="col-sm-8">@Company.StreetAddress</dd>
+
+                        <dt class="col-sm-4">Street Address 2</dt>
+                        <dd class="col-sm-8">@Company.StreetAddress2</dd>
+
+                        <dt class="col-sm-4">Suburb</dt>
+                        <dd class="col-sm-8">@Company.Suburb</dd>
+
+                        <dt class="col-sm-4">City</dt>
+                        <dd class="col-sm-8">@Company.City</dd>
+
+                        <dt class="col-sm-4">State</dt>
+                        <dd class="col-sm-8">@Company.State</dd>
+
+                        <dt class="col-sm-4">Postal Code</dt>
+                        <dd class="col-sm-8">@Company.PostalCode</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Postal Address</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Postal Street Address</dt>
+                        <dd class="col-sm-8">@Company.PostalStreetAddress</dd>
+
+                        <dt class="col-sm-4">Postal Suburb</dt>
+                        <dd class="col-sm-8">@Company.PostalSuburb</dd>
+
+                        <dt class="col-sm-4">Postal City</dt>
+                        <dd class="col-sm-8">@Company.PostalCity</dd>
+
+                        <dt class="col-sm-4">Postal State</dt>
+                        <dd class="col-sm-8">@Company.PostalState</dd>
+
+                        <dt class="col-sm-4">Postal Postal Code</dt>
+                        <dd class="col-sm-8">@Company.PostalPostalCode</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Insurance & Experience</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Public Liability Insurance ($5M+)</dt>
+                        <dd class="col-sm-8">
+                            @if (Company.PublicLiabilityInsurance5M)
+                            {
+                                <span class="badge bg-success">Yes</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">No</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">Insurance Value</dt>
+                        <dd class="col-sm-8">@Company.InsuranceValue</dd>
+
+                        <dt class="col-sm-4">Has Previous Work Experience Students</dt>
+                        <dd class="col-sm-8">
+                            @if (Company.HasPreviousWorkExperienceStudents)
+                            {
+                                <span class="badge bg-success">Yes</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">No</span>
+                            }
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Supervisors</h5>
+                    <a href="/Supervisors/Create?companyId=@Company.Id" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg"></i> Add
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if (Supervisors != null && Supervisors.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var supervisor in Supervisors)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="fw-bold">@($"{supervisor.FirstName} {supervisor.LastName}")</div>
+                                        @if (!string.IsNullOrEmpty(supervisor.JobTitle))
+                                        {
+                                            <small class="text-muted">@supervisor.JobTitle</small>
+                                        }
+                                        @if (!string.IsNullOrEmpty(supervisor.Email))
+                                        {
+                                            <div><small>@supervisor.Email</small></div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(supervisor.Phone))
+                                        {
+                                            <div><small>@supervisor.Phone</small></div>
+                                        }
+                                    </div>
+                                    <a href="/Supervisors/Details/@supervisor.Id" class="btn btn-sm btn-outline-secondary">
+                                        View
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">No supervisors added yet.</p>
+                    }
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Placements</h5>
+                </div>
+                <div class="card-body">
+                    @if (Placements != null && Placements.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var placement in Placements)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div>
+                                        @{
+                                            var placementStudentNames = string.Join(", ", placement.PlacementStudents
+                                                .Where(ps => !ps.IsDeleted && ps.Student != null)
+                                                .Select(ps => $"{ps.Student!.FirstName} {ps.Student.LastName}"));
+                                        }
+                                        <div class="fw-bold">@(string.IsNullOrEmpty(placementStudentNames) ? "No students" : placementStudentNames)</div>
+                                        <small class="text-muted">@placement.Year</small>
+                                        @if (placement.Supervisor != null)
+                                        {
+                                            <div><small>Supervisor: @placement.Supervisor.FirstName @placement.Supervisor.LastName</small></div>
+                                        }
+                                        <div>
+                                            @if (placement.Status == "draft")
+                                            {
+                                                <span class="badge bg-secondary">Draft</span>
+                                            }
+                                            else if (placement.Status == "pending_parent")
+                                            {
+                                                <span class="badge bg-warning text-dark">Pending Parent</span>
+                                            }
+                                            else if (placement.Status == "pending_employer")
+                                            {
+                                                <span class="badge bg-warning text-dark">Pending Employer</span>
+                                            }
+                                            else if (placement.Status == "confirmed")
+                                            {
+                                                <span class="badge bg-success">Confirmed</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <a href="/Placements/Details/@placement.Id" class="btn btn-sm btn-outline-secondary">
+                                        View
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">No placements yet.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private Company? Company { get; set; }
+    private List<Supervisor>? Supervisors { get; set; }
+    private List<Placement>? Placements { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        Company = await CompanyService.GetByIdAsync(Id, tenantId);
+
+        if (Company == null)
+        {
+            HttpContextAccessor.HttpContext?.Response.Redirect("/Companies");
+            return;
+        }
+
+        Supervisors = await SupervisorService.GetByCompanyAsync(Id, tenantId);
+        Placements = await PlacementService.GetByCompanyIdAsync(Id, tenantId);
+    }
+}
