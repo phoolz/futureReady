@@ -1,0 +1,36 @@
+@inherits LayoutComponentBase
+
+<CascadingValue Value="this">
+    <div class="employer-form-layout">
+        <header class="employer-form-header">
+            <div class="container">
+                <h1 class="header-title">@Title</h1>
+                <p class="header-subtitle">@Subtitle</p>
+            </div>
+        </header>
+
+        <main class="employer-form-main">
+            <div class="container">
+                @Body
+            </div>
+        </main>
+
+        <footer class="employer-form-footer">
+            <div class="container">
+                <p>Apiary Work Experience Program</p>
+            </div>
+        </footer>
+    </div>
+</CascadingValue>
+
+@code {
+    public string Title { get; set; } = "Work Experience";
+    public string Subtitle { get; set; } = "";
+
+    public void SetHeader(string title, string subtitle)
+    {
+        Title = title;
+        Subtitle = subtitle;
+        StateHasChanged();
+    }
+}

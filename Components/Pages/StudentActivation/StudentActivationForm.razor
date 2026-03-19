@@ -1,5 +1,5 @@
 @page "/student/activate/{Token}"
-@layout StudentActivationLayout
+@layout PublicFormLayout
 @rendermode InteractiveServer
 @inject IStudentActivationService ActivationService
 @inject NavigationManager Navigation
@@ -157,6 +157,7 @@ else if (FormData != null)
 
 @code {
     [Parameter] public string Token { get; set; } = string.Empty;
+    [CascadingParameter] public PublicFormLayout? Layout { get; set; }
 
     private StudentActivationDto? FormData { get; set; }
     private bool IsLoading { get; set; } = true;
@@ -167,6 +168,7 @@ else if (FormData != null)
 
     protected override async Task OnInitializedAsync()
     {
+        Layout?.SetHeader("Student Account", "Create Your Account");
         try
         {
             FormData = await ActivationService.InitializeFormAsync(Token);

@@ -1,28 +1,29 @@
-/* Employer Form Wizard Styles */
+/* External Form Wizard Styles */
 
 .employer-form-layout {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background-color: #f8f9fa;
+    background-color: var(--bg-primary);
 }
 
 .employer-form-header {
-    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-    color: white;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
     padding: 1.5rem 0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid var(--border-light);
 }
 
 .header-title {
     font-size: 1.75rem;
     font-weight: 600;
+    font-family: var(--font-display);
     margin: 0;
 }
 
 .header-subtitle {
     font-size: 1rem;
-    opacity: 0.9;
+    color: var(--text-secondary);
     margin: 0.25rem 0 0 0;
 }
 
@@ -32,11 +33,12 @@
 }
 
 .employer-form-footer {
-    background-color: #2c3e50;
-    color: rgba(255, 255, 255, 0.7);
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
     padding: 1rem 0;
     text-align: center;
     font-size: 0.875rem;
+    border-top: 1px solid var(--border-light);
 }
 
 .employer-form-footer p {
@@ -59,7 +61,7 @@
     left: 2rem;
     right: 2rem;
     height: 2px;
-    background-color: #dee2e6;
+    background-color: var(--border-light);
     z-index: 0;
 }
 
@@ -75,8 +77,8 @@
     width: 2rem;
     height: 2rem;
     border-radius: 50%;
-    background-color: #dee2e6;
-    color: #6c757d;
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -86,35 +88,35 @@
 }
 
 .progress-step.active .step-circle {
-    background-color: #3498db;
+    background-color: var(--accent-primary);
     color: white;
 }
 
 .progress-step.completed .step-circle {
-    background-color: #27ae60;
+    background-color: var(--apiary-success);
     color: white;
 }
 
 .step-label {
     font-size: 0.75rem;
-    color: #6c757d;
+    color: var(--text-secondary);
     margin-top: 0.5rem;
     text-align: center;
     max-width: 80px;
 }
 
 .progress-step.active .step-label {
-    color: #3498db;
+    color: var(--accent-primary);
     font-weight: 600;
 }
 
 .progress-step.completed .step-label {
-    color: #27ae60;
+    color: var(--apiary-success);
 }
 
 /* Student Info Header */
 .student-info-header {
-    background-color: white;
+    background-color: var(--bg-white);
     border-radius: 0.5rem;
     padding: 1rem 1.5rem;
     margin-bottom: 1.5rem;
@@ -132,7 +134,7 @@
 
 .info-label {
     font-size: 0.75rem;
-    color: #6c757d;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -140,12 +142,12 @@
 .info-value {
     font-size: 1rem;
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--text-primary);
 }
 
 /* Form Section */
 .form-section {
-    background-color: white;
+    background-color: var(--bg-white);
     border-radius: 0.5rem;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
@@ -155,10 +157,11 @@
 .form-section-title {
     font-size: 1.25rem;
     font-weight: 600;
-    color: #2c3e50;
+    font-family: var(--font-display);
+    color: var(--text-primary);
     margin-bottom: 1.5rem;
     padding-bottom: 0.75rem;
-    border-bottom: 2px solid #3498db;
+    border-bottom: 2px solid var(--accent-primary);
 }
 
 /* Form Controls */
@@ -170,35 +173,35 @@
     display: block;
     font-weight: 500;
     margin-bottom: 0.5rem;
-    color: #2c3e50;
+    color: var(--text-primary);
 }
 
 .form-label.required::after {
     content: ' *';
-    color: #e74c3c;
+    color: var(--apiary-danger);
 }
 
 .form-control {
     width: 100%;
     padding: 0.75rem 1rem;
     font-size: 1rem;
-    border: 1px solid #ced4da;
+    border: 1px solid var(--border-medium);
     border-radius: 0.375rem;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .form-control:focus {
-    border-color: #3498db;
+    border-color: var(--accent-primary);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    box-shadow: 0 0 0 3px var(--accent-subtle);
 }
 
 .form-control.invalid {
-    border-color: #e74c3c;
+    border-color: var(--apiary-danger);
 }
 
 .validation-message {
-    color: #e74c3c;
+    color: var(--apiary-danger);
     font-size: 0.875rem;
     margin-top: 0.25rem;
 }
@@ -212,8 +215,8 @@
 .toggle-btn {
     flex: 1;
     padding: 0.75rem 1rem;
-    border: 2px solid #ced4da;
-    background-color: white;
+    border: 2px solid var(--border-medium);
+    background-color: var(--bg-white);
     border-radius: 0.375rem;
     font-size: 1rem;
     font-weight: 500;
@@ -223,24 +226,24 @@
 }
 
 .toggle-btn:hover {
-    border-color: #3498db;
+    border-color: var(--accent-primary);
 }
 
 .toggle-btn.selected {
-    border-color: #3498db;
-    background-color: #3498db;
+    border-color: var(--accent-primary);
+    background-color: var(--accent-primary);
     color: white;
 }
 
 .toggle-btn.selected-yes {
-    border-color: #27ae60;
-    background-color: #27ae60;
+    border-color: var(--apiary-success);
+    background-color: var(--apiary-success);
     color: white;
 }
 
 .toggle-btn.selected-no {
-    border-color: #e74c3c;
-    background-color: #e74c3c;
+    border-color: var(--apiary-danger);
+    background-color: var(--apiary-danger);
     color: white;
 }
 
@@ -248,7 +251,7 @@
 .conditional-field {
     margin-top: 1rem;
     padding-left: 1rem;
-    border-left: 3px solid #3498db;
+    border-left: 3px solid var(--accent-primary);
 }
 
 /* Wizard Navigation */
@@ -257,7 +260,7 @@
     justify-content: space-between;
     margin-top: 2rem;
     padding-top: 1.5rem;
-    border-top: 1px solid #dee2e6;
+    border-top: 1px solid var(--border-light);
 }
 
 .btn-wizard {
@@ -271,30 +274,30 @@
 }
 
 .btn-previous {
-    background-color: #6c757d;
+    background-color: var(--text-secondary);
     color: white;
 }
 
 .btn-previous:hover {
-    background-color: #5a6268;
+    background-color: var(--apiary-charcoal);
 }
 
 .btn-next {
-    background-color: #3498db;
+    background-color: var(--accent-primary);
     color: white;
 }
 
 .btn-next:hover {
-    background-color: #2980b9;
+    background-color: var(--accent-hover);
 }
 
 .btn-submit {
-    background-color: #27ae60;
+    background-color: var(--apiary-success);
     color: white;
 }
 
 .btn-submit:hover {
-    background-color: #219a52;
+    background-color: #1da34e;
 }
 
 .btn-wizard:disabled {
@@ -317,12 +320,13 @@
 .review-section-title {
     font-size: 1.125rem;
     font-weight: 600;
-    color: #2c3e50;
+    font-family: var(--font-display);
+    color: var(--text-primary);
 }
 
 .btn-edit {
     font-size: 0.875rem;
-    color: #3498db;
+    color: var(--accent-primary);
     background: none;
     border: none;
     cursor: pointer;
@@ -346,21 +350,21 @@
 
 .review-label {
     font-size: 0.75rem;
-    color: #6c757d;
+    color: var(--text-secondary);
     margin-bottom: 0.25rem;
 }
 
 .review-value {
     font-weight: 500;
-    color: #2c3e50;
+    color: var(--text-primary);
 }
 
 .review-value.yes {
-    color: #27ae60;
+    color: var(--apiary-success);
 }
 
 .review-value.no {
-    color: #e74c3c;
+    color: var(--apiary-danger);
 }
 
 /* Loading & Error States */
@@ -373,8 +377,8 @@
 .loading-spinner {
     width: 3rem;
     height: 3rem;
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #3498db;
+    border: 3px solid var(--bg-tertiary);
+    border-top: 3px solid var(--accent-primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin: 0 auto 1rem;
@@ -386,7 +390,7 @@
 }
 
 .error-message {
-    color: #e74c3c;
+    color: var(--apiary-danger);
     font-size: 1.125rem;
 }
 
@@ -454,7 +458,7 @@
 }
 
 .hazard-item {
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--border-light);
     border-radius: 0.375rem;
     padding: 1rem;
 }
@@ -480,5 +484,5 @@
 .hazard-details {
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid #dee2e6;
+    border-top: 1px solid var(--border-light);
 }

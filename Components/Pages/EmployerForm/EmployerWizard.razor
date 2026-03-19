@@ -1,5 +1,5 @@
 @page "/employer/form/{Token}"
-@layout EmployerFormLayout
+@layout PublicFormLayout
 @rendermode InteractiveServer
 @inject IEmployerFormStateService StateService
 @inject IEmployerFormService FormService
@@ -95,6 +95,7 @@ else if (StateService.IsInitialized)
 
 @code {
     [Parameter] public string Token { get; set; } = string.Empty;
+    [CascadingParameter] public PublicFormLayout? Layout { get; set; }
 
     private int CurrentStep => StateService.CurrentStep;
     private bool IsSubmitting { get; set; }
@@ -104,6 +105,7 @@ else if (StateService.IsInitialized)
 
     protected override async Task OnInitializedAsync()
     {
+        Layout?.SetHeader("Work Experience", "Employer Acceptance Form");
         await StateService.InitializeAsync(Token);
     }
 
