@@ -23,6 +23,9 @@ namespace Apiary.Data
                 var userManager = provider.GetRequiredService<UserManager<ApplicationUser>>();
                 var roleManager = provider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
 
+                // Repair migration history if needed (database exists but history was cleared)
+                await RepairMigrationHistoryIfNeededAsync(db, logger);
+
                 // Apply pending migrations (safe in development; remove if you don't want automatic migrations)
                 await db.Database.MigrateAsync();
 
@@ -78,6 +81,59 @@ namespace Apiary.Data
             {
                 logger.LogError(ex, "An error occurred while seeding the database.");
                 throw;
+            }
+        }
+
+        private static async Task RepairMigrationHistoryIfNeededAsync(ApplicationDbContext db, ILogger logger)
+        {
+            // Check if the Schools table exists (indicating DB was created) but migration history is empty
+            var connection = db.Database.GetDbConnection();
+            await connection.OpenAsync();
+
+            try
+            {
+                using var command = connection.CreateCommand();
+                command.CommandText = @"
+                    IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Schools')
+                       AND NOT EXISTS (SELECT 1 FROM [__EFMigrationsHistory])
+                    SELECT 1 ELSE SELECT 0";
+
+                var needsRepair = (int)(await command.ExecuteScalarAsync() ?? 0) == 1;
+
+                if (needsRepair)
+                {
+                    logger.LogWarning("Migration history is empty but database exists. Repairing...");
+
+                    using var insertCommand = connection.CreateCommand();
+                    insertCommand.CommandText = @"
+                        INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion]) VALUES
+                        ('20260120060626_InitialCreate', '10.0.0'),
+                        ('20260121001302_RemoveCohortEntity', '10.0.0'),
+                        ('20260121001846_AddSchoolContactFields', '10.0.0'),
+                        ('20260121004246_UpdateStudentFields', '10.0.0'),
+                        ('20260121005039_AddEmergencyContacts', '10.0.0'),
+                        ('20260121040848_AddStudentMedicalConditions', '10.0.0'),
+                        ('20260121041647_AddCompanyEntity', '10.0.0'),
+                        ('20260121042236_AddSupervisorEntity', '10.0.0'),
+                        ('20260121044507_AddPlacementAndParentPermission', '10.0.0'),
+                        ('20260121090851_AddFormTokenEntity', '10.0.0'),
+                        ('20260122130944_AddLogbookModels', '10.0.0'),
+                        ('20260122132328_AddEvaluationAndWorkHistoryModels', '10.0.0'),
+                        ('20260123042305_MigrateToIdentity', '10.0.0'),
+                        ('20260208060711_AddStudentEmailAndAccountToken', '10.0.0'),
+                        ('20260310090935_MultiStudentPlacements', '10.0.0'),
+                        ('20260310094441_AddPlacementRole', '10.0.0'),
+                        ('20260316035804_DropStudentWorkHistoriesTable', '10.0.0'),
+                        ('20260319114253_AddPlacementDates', '10.0.0'),
+                        ('20260320084505_DropLogbookEntryCumulativeHours', '10.0.0')";
+                    await insertCommand.ExecuteNonQueryAsync();
+
+                    logger.LogInformation("Migration history repaired.");
+                }
+            }
+            finally
+            {
+                await connection.CloseAsync();
             }
         }
 

@@ -9,23 +9,23 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace Apiary.Data.Migrations
+namespace Apiary.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260123042305_MigrateToIdentity")]
-    partial class MigrateToIdentity
+    [Migration("20260320091325_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.1")
+                .HasAnnotation("ProductVersion", "10.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("FutureReady.Models.ApplicationUser", b =>
+            modelBuilder.Entity("Apiary.Models.ApplicationUser", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -116,7 +116,7 @@ namespace Apiary.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.Company", b =>
+            modelBuilder.Entity("Apiary.Models.School.Company", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -222,7 +222,7 @@ namespace Apiary.Data.Migrations
                     b.ToTable("Companies");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.EmergencyContact", b =>
+            modelBuilder.Entity("Apiary.Models.School.EmergencyContact", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -291,7 +291,7 @@ namespace Apiary.Data.Migrations
                     b.ToTable("EmergencyContacts");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.FormToken", b =>
+            modelBuilder.Entity("Apiary.Models.School.FormToken", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -334,6 +334,9 @@ namespace Apiary.Data.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<Guid?>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uniqueidentifier");
 
@@ -356,13 +359,15 @@ namespace Apiary.Data.Migrations
 
                     b.HasIndex("PlacementId");
 
+                    b.HasIndex("StudentId");
+
                     b.HasIndex("Token")
                         .IsUnique();
 
                     b.ToTable("FormTokens");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.LogbookEntry", b =>
+            modelBuilder.Entity("Apiary.Models.School.LogbookEntry", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -374,10 +379,6 @@ namespace Apiary.Data.Migrations
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
-
-                    b.Property<decimal>("CumulativeHours")
-                        .HasPrecision(6, 2)
-                        .HasColumnType("decimal(6,2)");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
@@ -404,7 +405,7 @@ namespace Apiary.Data.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
-                    b.Property<Guid>("PlacementId")
+                    b.Property<Guid>("PlacementStudentId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<byte[]>("RowVersion")
@@ -438,13 +439,13 @@ namespace Apiary.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PlacementId", "Date")
+                    b.HasIndex("PlacementStudentId", "Date")
                         .IsUnique();
 
                     b.ToTable("LogbookEntries");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.LogbookEvaluation", b =>
+            modelBuilder.Entity("Apiary.Models.School.LogbookEvaluation", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -485,7 +486,7 @@ namespace Apiary.Data.Migrations
                     b.Property<int>("OverallPerformance")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("PlacementId")
+                    b.Property<Guid>("PlacementStudentId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<byte[]>("RowVersion")
@@ -521,12 +522,12 @@ namespace Apiary.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PlacementId");
+                    b.HasIndex("PlacementStudentId");
 
                     b.ToTable("LogbookEvaluations");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.LogbookTask", b =>
+            modelBuilder.Entity("Apiary.Models.School.LogbookTask", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -557,7 +558,7 @@ namespace Apiary.Data.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("PlacementId")
+                    b.Property<Guid>("PlacementStudentId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<byte[]>("RowVersion")
@@ -577,12 +578,12 @@ namespace Apiary.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PlacementId", "DatePerformed");
+                    b.HasIndex("PlacementStudentId", "DatePerformed");
 
                     b.ToTable("LogbookTasks");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.ParentPermission", b =>
+            modelBuilder.Entity("Apiary.Models.School.ParentPermission", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -647,6 +648,9 @@ namespace Apiary.Data.Migrations
                     b.Property<bool>("ShareMedicalWithEmployer")
                         .HasColumnType("bit");
 
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uniqueidentifier");
 
@@ -663,12 +667,15 @@ namespace Apiary.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PlacementId");
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("PlacementId", "StudentId")
+                        .IsUnique();
 
                     b.ToTable("ParentPermissions");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.Placement", b =>
+            modelBuilder.Entity("Apiary.Models.School.Placement", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -727,6 +734,9 @@ namespace Apiary.Data.Migrations
                     b.Property<string>("ErgonomicDetails")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateOnly?>("FinishDate")
+                        .HasColumnType("date");
+
                     b.Property<bool>("HasBiologicalHazards")
                         .HasColumnType("bit");
 
@@ -772,8 +782,9 @@ namespace Apiary.Data.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime?>("ParentSubmittedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("PlacementRole")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("PlantMachineryDetails")
                         .HasColumnType("nvarchar(max)");
@@ -796,13 +807,13 @@ namespace Apiary.Data.Migrations
                     b.Property<bool?>("StaffMeetWorkingWithChildrenRequirements")
                         .HasColumnType("bit");
 
+                    b.Property<DateOnly?>("StartDate")
+                        .HasColumnType("date");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
-
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("SupervisorId")
                         .HasColumnType("uniqueidentifier");
@@ -832,14 +843,74 @@ namespace Apiary.Data.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.HasIndex("StudentId");
-
                     b.HasIndex("SupervisorId");
 
                     b.ToTable("Placements");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.School", b =>
+            modelBuilder.Entity("Apiary.Models.School.PlacementStudent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("DeletedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ParentSubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PlacementId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("PlacementId", "StudentId")
+                        .IsUnique();
+
+                    b.ToTable("PlacementStudents");
+                });
+
+            modelBuilder.Entity("Apiary.Models.School.School", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -905,7 +976,7 @@ namespace Apiary.Data.Migrations
                     b.ToTable("Schools");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.Student", b =>
+            modelBuilder.Entity("Apiary.Models.School.Student", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -927,6 +998,10 @@ namespace Apiary.Data.Migrations
                     b.Property<string>("DeletedBy")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -993,7 +1068,69 @@ namespace Apiary.Data.Migrations
                     b.ToTable("Students");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.StudentMedicalCondition", b =>
+            modelBuilder.Entity("Apiary.Models.School.StudentAccountToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("DeletedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.ToTable("StudentAccountTokens");
+                });
+
+            modelBuilder.Entity("Apiary.Models.School.StudentMedicalCondition", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1050,71 +1187,7 @@ namespace Apiary.Data.Migrations
                     b.ToTable("StudentMedicalConditions");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.StudentWorkHistory", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Certificates")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CommunityService")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("CurrentCourses")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("DeletedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("PartTimeEmployment")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("VetQualifications")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StudentId")
-                        .IsUnique();
-
-                    b.ToTable("StudentWorkHistories");
-                });
-
-            modelBuilder.Entity("FutureReady.Models.School.Supervisor", b =>
+            modelBuilder.Entity("Apiary.Models.School.Supervisor", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1184,7 +1257,7 @@ namespace Apiary.Data.Migrations
                     b.ToTable("Supervisors");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.Teacher", b =>
+            modelBuilder.Entity("Apiary.Models.Teacher", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1397,9 +1470,9 @@ namespace Apiary.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.EmergencyContact", b =>
+            modelBuilder.Entity("Apiary.Models.School.EmergencyContact", b =>
                 {
-                    b.HasOne("FutureReady.Models.School.Student", "Student")
+                    b.HasOne("Apiary.Models.School.Student", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1408,89 +1481,115 @@ namespace Apiary.Data.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.FormToken", b =>
+            modelBuilder.Entity("Apiary.Models.School.FormToken", b =>
                 {
-                    b.HasOne("FutureReady.Models.School.Placement", "Placement")
+                    b.HasOne("Apiary.Models.School.Placement", "Placement")
                         .WithMany()
                         .HasForeignKey("PlacementId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Apiary.Models.School.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Placement");
+
+                    b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.LogbookEntry", b =>
+            modelBuilder.Entity("Apiary.Models.School.LogbookEntry", b =>
                 {
-                    b.HasOne("FutureReady.Models.School.Placement", "Placement")
+                    b.HasOne("Apiary.Models.School.PlacementStudent", "PlacementStudent")
+                        .WithMany("LogbookEntries")
+                        .HasForeignKey("PlacementStudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PlacementStudent");
+                });
+
+            modelBuilder.Entity("Apiary.Models.School.LogbookEvaluation", b =>
+                {
+                    b.HasOne("Apiary.Models.School.PlacementStudent", "PlacementStudent")
+                        .WithMany("LogbookEvaluations")
+                        .HasForeignKey("PlacementStudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PlacementStudent");
+                });
+
+            modelBuilder.Entity("Apiary.Models.School.LogbookTask", b =>
+                {
+                    b.HasOne("Apiary.Models.School.PlacementStudent", "PlacementStudent")
+                        .WithMany("LogbookTasks")
+                        .HasForeignKey("PlacementStudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PlacementStudent");
+                });
+
+            modelBuilder.Entity("Apiary.Models.School.ParentPermission", b =>
+                {
+                    b.HasOne("Apiary.Models.School.Placement", "Placement")
                         .WithMany()
                         .HasForeignKey("PlacementId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Placement");
-                });
-
-            modelBuilder.Entity("FutureReady.Models.School.LogbookEvaluation", b =>
-                {
-                    b.HasOne("FutureReady.Models.School.Placement", "Placement")
+                    b.HasOne("Apiary.Models.School.Student", "Student")
                         .WithMany()
-                        .HasForeignKey("PlacementId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Placement");
+
+                    b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.LogbookTask", b =>
+            modelBuilder.Entity("Apiary.Models.School.Placement", b =>
                 {
-                    b.HasOne("FutureReady.Models.School.Placement", "Placement")
-                        .WithMany()
-                        .HasForeignKey("PlacementId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Placement");
-                });
-
-            modelBuilder.Entity("FutureReady.Models.School.ParentPermission", b =>
-                {
-                    b.HasOne("FutureReady.Models.School.Placement", "Placement")
-                        .WithMany()
-                        .HasForeignKey("PlacementId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Placement");
-                });
-
-            modelBuilder.Entity("FutureReady.Models.School.Placement", b =>
-                {
-                    b.HasOne("FutureReady.Models.School.Company", "Company")
+                    b.HasOne("Apiary.Models.School.Company", "Company")
                         .WithMany()
                         .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("FutureReady.Models.School.Student", "Student")
-                        .WithMany()
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FutureReady.Models.School.Supervisor", "Supervisor")
+                    b.HasOne("Apiary.Models.School.Supervisor", "Supervisor")
                         .WithMany()
                         .HasForeignKey("SupervisorId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Company");
 
-                    b.Navigation("Student");
-
                     b.Navigation("Supervisor");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.Student", b =>
+            modelBuilder.Entity("Apiary.Models.School.PlacementStudent", b =>
                 {
-                    b.HasOne("FutureReady.Models.ApplicationUser", "User")
+                    b.HasOne("Apiary.Models.School.Placement", "Placement")
+                        .WithMany("PlacementStudents")
+                        .HasForeignKey("PlacementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Apiary.Models.School.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Placement");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("Apiary.Models.School.Student", b =>
+                {
+                    b.HasOne("Apiary.Models.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -1498,9 +1597,9 @@ namespace Apiary.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.StudentMedicalCondition", b =>
+            modelBuilder.Entity("Apiary.Models.School.StudentAccountToken", b =>
                 {
-                    b.HasOne("FutureReady.Models.School.Student", "Student")
+                    b.HasOne("Apiary.Models.School.Student", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1509,9 +1608,9 @@ namespace Apiary.Data.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.StudentWorkHistory", b =>
+            modelBuilder.Entity("Apiary.Models.School.StudentMedicalCondition", b =>
                 {
-                    b.HasOne("FutureReady.Models.School.Student", "Student")
+                    b.HasOne("Apiary.Models.School.Student", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1520,9 +1619,9 @@ namespace Apiary.Data.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.School.Supervisor", b =>
+            modelBuilder.Entity("Apiary.Models.School.Supervisor", b =>
                 {
-                    b.HasOne("FutureReady.Models.School.Company", "Company")
+                    b.HasOne("Apiary.Models.School.Company", "Company")
                         .WithMany()
                         .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1531,16 +1630,16 @@ namespace Apiary.Data.Migrations
                     b.Navigation("Company");
                 });
 
-            modelBuilder.Entity("FutureReady.Models.Teacher", b =>
+            modelBuilder.Entity("Apiary.Models.Teacher", b =>
                 {
-                    b.HasOne("FutureReady.Models.School.School", "School")
+                    b.HasOne("Apiary.Models.School.School", "School")
                         .WithMany()
                         .HasForeignKey("SchoolId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("FutureReady.Models.ApplicationUser", "User")
+                    b.HasOne("Apiary.Models.ApplicationUser", "User")
                         .WithOne()
-                        .HasForeignKey("FutureReady.Models.Teacher", "UserId")
+                        .HasForeignKey("Apiary.Models.Teacher", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1560,7 +1659,7 @@ namespace Apiary.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
                 {
-                    b.HasOne("FutureReady.Models.ApplicationUser", null)
+                    b.HasOne("Apiary.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1569,7 +1668,7 @@ namespace Apiary.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
-                    b.HasOne("FutureReady.Models.ApplicationUser", null)
+                    b.HasOne("Apiary.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1584,7 +1683,7 @@ namespace Apiary.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FutureReady.Models.ApplicationUser", null)
+                    b.HasOne("Apiary.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1593,11 +1692,25 @@ namespace Apiary.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
-                    b.HasOne("FutureReady.Models.ApplicationUser", null)
+                    b.HasOne("Apiary.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Apiary.Models.School.Placement", b =>
+                {
+                    b.Navigation("PlacementStudents");
+                });
+
+            modelBuilder.Entity("Apiary.Models.School.PlacementStudent", b =>
+                {
+                    b.Navigation("LogbookEntries");
+
+                    b.Navigation("LogbookEvaluations");
+
+                    b.Navigation("LogbookTasks");
                 });
 #pragma warning restore 612, 618
         }
