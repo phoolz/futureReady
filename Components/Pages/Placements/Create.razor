@@ -1,0 +1,152 @@
+@page "/Placements/Create"
+@attribute [Authorize(Roles = Roles.Teacher)]
+@attribute [StreamRendering]
+@inject IPlacementService PlacementService
+@inject ICompanyService CompanyService
+@inject ISupervisorService SupervisorService
+@inject ITenantProvider TenantProvider
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Create Placement - Apiary</PageTitle>
+
+<h1>Create Placement</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post" @formname="create-placement">
+            <AntiforgeryToken />
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+            }
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Placement Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        Create the placement first, then add students on the Edit page.
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="Year" class="form-label">Year</label>
+                            <input type="number" id="Year" name="FormModel.Year" class="form-control" value="@(FormModel?.Year ?? DateTime.Now.Year)" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="Status" class="form-label">Status</label>
+                            <select id="Status" name="FormModel.Status" class="form-select">
+                                <option value="draft" selected="@(FormModel?.Status == "draft")">Draft</option>
+                                <option value="pending_employer" selected="@(FormModel?.Status == "pending_employer")">Pending Employer</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="CompanyId" class="form-label">Company</label>
+                            <select id="CompanyId" name="FormModel.CompanyId" class="form-select">
+                                <option value="">-- Select Company --</option>
+                                @if (Companies != null)
+                                {
+                                    @foreach (var company in Companies)
+                                    {
+                                        <option value="@company.Id" selected="@(FormModel?.CompanyId == company.Id)">@company.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="SupervisorId" class="form-label">Supervisor</label>
+                            <select id="SupervisorId" name="FormModel.SupervisorId" class="form-select">
+                                <option value="">-- Select Supervisor --</option>
+                                @if (Supervisors != null)
+                                {
+                                    @foreach (var supervisor in Supervisors)
+                                    {
+                                        <option value="@supervisor.Id" selected="@(FormModel?.SupervisorId == supervisor.Id)">@supervisor.FirstName @supervisor.LastName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Create</button>
+                <a href="/Placements" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromForm(FormName = "create-placement")]
+    public PlacementCreateModel? FormModel { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private List<Company>? Companies { get; set; }
+    private List<Supervisor>? Supervisors { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        Companies = await CompanyService.GetAllAsync(tenantId);
+        Supervisors = await SupervisorService.GetAllAsync(tenantId);
+
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+
+        if (context != null && HttpMethods.IsPost(context.Request.Method))
+        {
+            await HandlePostAsync();
+            return;
+        }
+
+        FormModel ??= new PlacementCreateModel { Year = DateTime.Now.Year, Status = "draft" };
+    }
+
+    private async Task HandlePostAsync()
+    {
+        if (FormModel == null)
+        {
+            ErrorMessage = "Invalid form data.";
+            return;
+        }
+
+        try
+        {
+            var placement = new Placement
+            {
+                CompanyId = FormModel.CompanyId,
+                SupervisorId = FormModel.SupervisorId,
+                Year = FormModel.Year,
+                Status = FormModel.Status ?? "draft"
+            };
+
+            await PlacementService.CreateAsync(placement);
+
+            var context = HttpContext ?? HttpContextAccessor.HttpContext;
+            context?.Response.Redirect($"/Placements/Edit/{placement.Id}");
+        }
+        catch (InvalidOperationException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "An error occurred while creating the placement.";
+        }
+    }
+
+    public class PlacementCreateModel
+    {
+        public Guid? CompanyId { get; set; }
+        public Guid? SupervisorId { get; set; }
+        public int? Year { get; set; }
+        public string? Status { get; set; }
+    }
+}

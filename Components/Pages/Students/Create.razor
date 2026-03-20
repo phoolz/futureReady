@@ -1,0 +1,162 @@
+@page "/Students/Create"
+@layout MainLayout
+@attribute [Authorize(Roles = Roles.Teacher)]
+@inject IStudentService StudentService
+@inject ITenantProvider TenantProvider
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Create Student - Apiary</PageTitle>
+
+<h1>Create Student</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post" @formname="create-student">
+            <AntiforgeryToken />
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+            }
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Personal Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="FirstName" class="form-label">First Name *</label>
+                            <input type="text" id="FirstName" name="FormModel.FirstName" class="form-control" value="@FormModel?.FirstName" required />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="LastName" class="form-label">Last Name *</label>
+                            <input type="text" id="LastName" name="FormModel.LastName" class="form-control" value="@FormModel?.LastName" required />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="PreferredName" class="form-label">Preferred Name</label>
+                            <input type="text" id="PreferredName" name="FormModel.PreferredName" class="form-control" value="@FormModel?.PreferredName" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="DateOfBirth" class="form-label">Date of Birth</label>
+                            <input type="date" id="DateOfBirth" name="FormModel.DateOfBirth" class="form-control" value="@FormModel?.DateOfBirth?.ToString("yyyy-MM-dd")" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="StudentNumber" class="form-label">Student Number</label>
+                            <input type="text" id="StudentNumber" name="FormModel.StudentNumber" class="form-control" value="@FormModel?.StudentNumber" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="Phone" class="form-label">Phone</label>
+                            <input type="text" id="Phone" name="FormModel.Phone" class="form-control" value="@FormModel?.Phone" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="Email" class="form-label">Email</label>
+                            <input type="email" id="Email" name="FormModel.Email" class="form-control" value="@FormModel?.Email" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Academic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="StudentType" class="form-label">Student Type</label>
+                            <select id="StudentType" name="FormModel.StudentType" class="form-select">
+                                <option value="">-- Select --</option>
+                                <option value="day" selected="@(FormModel?.StudentType == "day")">Day</option>
+                                <option value="boarding" selected="@(FormModel?.StudentType == "boarding")">Boarding</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="YearLevel" class="form-label">Year Level</label>
+                            <input type="text" id="YearLevel" name="FormModel.YearLevel" class="form-control" value="@FormModel?.YearLevel" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="GraduationYear" class="form-label">Graduation Year</label>
+                            <input type="number" id="GraduationYear" name="FormModel.GraduationYear" class="form-control" value="@FormModel?.GraduationYear" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="MedicareNumber" class="form-label">Medicare Number</label>
+                            <input type="text" id="MedicareNumber" name="FormModel.MedicareNumber" class="form-control" value="@FormModel?.MedicareNumber" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Create</button>
+                <a href="/Students" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromForm(FormName = "create-student")]
+    public Student? FormModel { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+
+        if (context != null && HttpMethods.IsPost(context.Request.Method))
+        {
+            await HandlePostAsync();
+            return;
+        }
+
+        FormModel ??= new Student();
+    }
+
+    private async Task HandlePostAsync()
+    {
+        if (FormModel == null)
+        {
+            ErrorMessage = "Invalid form data.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.FirstName))
+        {
+            ErrorMessage = "First name is required.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.LastName))
+        {
+            ErrorMessage = "Last name is required.";
+            return;
+        }
+
+        try
+        {
+            await StudentService.CreateAsync(FormModel);
+
+            var context = HttpContext ?? HttpContextAccessor.HttpContext;
+            context?.Response.Redirect("/Students");
+        }
+        catch (InvalidOperationException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "An error occurred while creating the student.";
+        }
+    }
+}

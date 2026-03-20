@@ -1,0 +1,305 @@
+@page "/employer/form/{Token}/step7"
+@layout EmployerFormLayout
+@attribute [StreamRendering]
+@inject IEmployerFormService FormService
+@inject NavigationManager Navigation
+
+<PageTitle>Employer Form - Review & Submit</PageTitle>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="error-container">
+        <p class="error-message">@ErrorMessage</p>
+        <p class="text-muted">Please contact the school if you believe this is an error.</p>
+    </div>
+}
+else if (IsSubmitted)
+{
+    <FormSection Title="Form Submitted Successfully">
+        <div class="text-center py-4">
+            <div class="text-success mb-3" style="font-size: 4rem;">&#10003;</div>
+            <h4>Thank you for completing the Employer Acceptance Form</h4>
+            <p class="text-muted">
+                Your information has been saved successfully. The school will review your submission
+                and contact you if any additional information is required.
+            </p>
+        </div>
+    </FormSection>
+}
+else if (FormData != null)
+{
+    <StudentInfoHeader
+        StudentName="@FormData.StudentName"
+        SchoolName="@FormData.SchoolName"
+        CompanyName="@FormData.CompanyName" />
+
+    <ProgressIndicator CurrentStep="7" TotalSteps="7" />
+
+    <FormSection Title="Review & Submit">
+        <p class="mb-4 text-muted">Please review all your information before submitting. Click "Edit" on any section to make changes.</p>
+
+        <!-- Workplace Details -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Workplace Details</h5>
+                <a href="/employer/form/@Token/step1" class="btn-edit">Edit</a>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Address</span>
+                    <span class="review-value">
+                        @FormData.WorkplaceDetails.StreetAddress
+                        @if (!string.IsNullOrEmpty(FormData.WorkplaceDetails.StreetAddress2))
+                        {
+                            <br />@FormData.WorkplaceDetails.StreetAddress2
+                        }
+                        <br />@FormData.WorkplaceDetails.Suburb, @FormData.WorkplaceDetails.State @FormData.WorkplaceDetails.PostalCode
+                    </span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Work Hours</span>
+                    <span class="review-value">@FormData.WorkplaceDetails.WorkStartTime - @FormData.WorkplaceDetails.WorkEndTime</span>
+                </div>
+                @if (!string.IsNullOrEmpty(FormData.WorkplaceDetails.PlacementRole))
+                {
+                    <div class="review-item">
+                        <span class="review-label">Placement Role</span>
+                        <span class="review-value">@FormData.WorkplaceDetails.PlacementRole</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(FormData.WorkplaceDetails.DressCode))
+                {
+                    <div class="review-item">
+                        <span class="review-label">Dress Code</span>
+                        <span class="review-value">@FormData.WorkplaceDetails.DressCode</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- Supervisor Details -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Supervisor Details</h5>
+                <a href="/employer/form/@Token/step2" class="btn-edit">Edit</a>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Name</span>
+                    <span class="review-value">@FormData.SupervisorDetails.FirstName @FormData.SupervisorDetails.LastName</span>
+                </div>
+                @if (!string.IsNullOrEmpty(FormData.SupervisorDetails.JobTitle))
+                {
+                    <div class="review-item">
+                        <span class="review-label">Job Title</span>
+                        <span class="review-value">@FormData.SupervisorDetails.JobTitle</span>
+                    </div>
+                }
+                <div class="review-item">
+                    <span class="review-label">Email</span>
+                    <span class="review-value">@FormData.SupervisorDetails.Email</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Phone</span>
+                    <span class="review-value">@FormData.SupervisorDetails.Phone</span>
+                </div>
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- Insurance -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Insurance & Experience</h5>
+                <a href="/employer/form/@Token/step3" class="btn-edit">Edit</a>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Public Liability Insurance ($5M+)</span>
+                    <span class="review-value @BoolClass(FormData.Insurance.HasPublicLiabilityInsurance5M)">@FormatBool(FormData.Insurance.HasPublicLiabilityInsurance5M)</span>
+                </div>
+                @if (!string.IsNullOrEmpty(FormData.Insurance.InsuranceValue))
+                {
+                    <div class="review-item">
+                        <span class="review-label">Insurance Value</span>
+                        <span class="review-value">@FormData.Insurance.InsuranceValue</span>
+                    </div>
+                }
+                <div class="review-item">
+                    <span class="review-label">Previous Work Experience Students</span>
+                    <span class="review-value @BoolClass(FormData.Insurance.HasPreviousWorkExperienceStudents)">@FormatBool(FormData.Insurance.HasPreviousWorkExperienceStudents)</span>
+                </div>
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- OHS -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Occupational Health & Safety</h5>
+                <a href="/employer/form/@Token/step4" class="btn-edit">Edit</a>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">OHS Policy</span>
+                    <span class="review-value @BoolClass(FormData.Ohs.HasOhsPolicy)">@FormatBool(FormData.Ohs.HasOhsPolicy)</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Induction Program</span>
+                    <span class="review-value @BoolClass(FormData.Ohs.HasInductionProgram)">@FormatBool(FormData.Ohs.HasInductionProgram)</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Obvious Hazards</span>
+                    <span class="review-value @BoolClass(FormData.Ohs.HasObviousHazards)">@FormatBool(FormData.Ohs.HasObviousHazards)</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Hazard Reporting Instruction</span>
+                    <span class="review-value @BoolClass(FormData.Ohs.ProvidesHazardReportingInstruction)">@FormatBool(FormData.Ohs.ProvidesHazardReportingInstruction)</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Emergency Procedures</span>
+                    <span class="review-value @BoolClass(FormData.Ohs.HasEmergencyProcedures)">@FormatBool(FormData.Ohs.HasEmergencyProcedures)</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Fire Extinguishers Checked</span>
+                    <span class="review-value @BoolClass(FormData.Ohs.HasFireExtinguishersChecked)">@FormatBool(FormData.Ohs.HasFireExtinguishersChecked)</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">First Aid Kit</span>
+                    <span class="review-value @BoolClass(FormData.Ohs.HasFirstAidKit)">@FormatBool(FormData.Ohs.HasFirstAidKit)</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Safe Amenities</span>
+                    <span class="review-value @BoolClass(FormData.Ohs.HasSafeAmenities)">@FormatBool(FormData.Ohs.HasSafeAmenities)</span>
+                </div>
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- General & Travel -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">General Information & Travel</h5>
+                <a href="/employer/form/@Token/step5" class="btn-edit">Edit</a>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Staff Informed</span>
+                    <span class="review-value @BoolClass(FormData.GeneralTravel.StaffInformedOfStudent)">@FormatBool(FormData.GeneralTravel.StaffInformedOfStudent)</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Working with Children Check</span>
+                    <span class="review-value @BoolClass(FormData.GeneralTravel.StaffMeetWorkingWithChildrenRequirements)">@FormatBool(FormData.GeneralTravel.StaffMeetWorkingWithChildrenRequirements)</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Vehicle Travel Required</span>
+                    <span class="review-value @BoolClass(FormData.GeneralTravel.RequiresVehicleTravel)">@FormatBool(FormData.GeneralTravel.RequiresVehicleTravel)</span>
+                </div>
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- Hazards Appendix -->
+        <div class="review-section">
+            <div class="review-section-header">
+                <h5 class="review-section-title">Hazards Appendix</h5>
+                <a href="/employer/form/@Token/step6" class="btn-edit">Edit</a>
+            </div>
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Chemical Hazards</span>
+                    <span class="review-value @(FormData.HazardsAppendix.HasChemicalHazards ? "yes" : "")">@(FormData.HazardsAppendix.HasChemicalHazards ? "Yes" : "No")</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Plant/Machinery Hazards</span>
+                    <span class="review-value @(FormData.HazardsAppendix.HasPlantMachineryHazards ? "yes" : "")">@(FormData.HazardsAppendix.HasPlantMachineryHazards ? "Yes" : "No")</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Biological Hazards</span>
+                    <span class="review-value @(FormData.HazardsAppendix.HasBiologicalHazards ? "yes" : "")">@(FormData.HazardsAppendix.HasBiologicalHazards ? "Yes" : "No")</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Ergonomic Hazards</span>
+                    <span class="review-value @(FormData.HazardsAppendix.HasErgonomicHazards ? "yes" : "")">@(FormData.HazardsAppendix.HasErgonomicHazards ? "Yes" : "No")</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-4">
+            <strong>Ready to submit?</strong> By clicking "Submit Form" below, you confirm that the information provided is accurate and complete.
+        </div>
+    </FormSection>
+
+    @if (!string.IsNullOrEmpty(SubmitError))
+    {
+        <div class="alert alert-danger mt-3">
+            @SubmitError
+        </div>
+    }
+
+    <form method="post" @formname="employer-step7" @onsubmit="HandleSubmit">
+        <AntiforgeryToken />
+
+        <div class="wizard-navigation">
+            <a href="/employer/form/@Token/step6" class="btn-wizard btn-previous">
+                &larr; Previous
+            </a>
+            <button type="submit" class="btn-wizard btn-submit">
+                Submit Form
+            </button>
+        </div>
+    </form>
+}
+
+@code {
+    [Parameter] public string Token { get; set; } = string.Empty;
+
+    private EmployerFormDto? FormData { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? SubmitError { get; set; }
+    private bool IsSubmitted { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        FormData = await FormService.InitializeFormAsync(Token);
+
+        if (FormData == null)
+        {
+            ErrorMessage = "This form link is invalid, has expired, or has already been used.";
+            return;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        var success = await FormService.FinalizeSubmissionAsync(Token);
+        if (success)
+        {
+            IsSubmitted = true;
+        }
+        else
+        {
+            SubmitError = "Failed to submit the form. The link may have expired or already been used.";
+        }
+    }
+
+    private string FormatBool(bool? value) => value switch
+    {
+        true => "Yes",
+        false => "No",
+        null => "Not specified"
+    };
+
+    private string BoolClass(bool? value) => value switch
+    {
+        true => "yes",
+        false => "no",
+        _ => ""
+    };
+}

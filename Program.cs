@@ -8,8 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+builder.Services.AddRazorComponents();
 
 // Add EF Core DbContext (SQL Server)
 builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
@@ -60,15 +59,13 @@ builder.Services.AddScoped<Apiary.Services.Placements.IPlacementService, Apiary.
 builder.Services.AddScoped<Apiary.Services.PlacementStudents.IPlacementStudentService, Apiary.Services.PlacementStudents.PlacementStudentService>();
 builder.Services.AddScoped<Apiary.Services.FormTokens.IFormTokenService, Apiary.Services.FormTokens.FormTokenService>();
 builder.Services.AddScoped<Apiary.Services.EmployerForm.IEmployerFormService, Apiary.Services.EmployerForm.EmployerFormService>();
-builder.Services.AddScoped<Apiary.Services.EmployerForm.IEmployerFormStateService, Apiary.Services.EmployerForm.EmployerFormStateService>();
 builder.Services.AddScoped<Apiary.Services.ParentForm.IParentFormService, Apiary.Services.ParentForm.ParentFormService>();
-builder.Services.AddScoped<Apiary.Services.ParentForm.IParentFormStateService, Apiary.Services.ParentForm.ParentFormStateService>();
 builder.Services.AddScoped<Apiary.Services.LogbookEvaluations.ILogbookEvaluationService, Apiary.Services.LogbookEvaluations.LogbookEvaluationService>();
-builder.Services.AddScoped<Apiary.Services.StudentWorkHistories.IStudentWorkHistoryService, Apiary.Services.StudentWorkHistories.StudentWorkHistoryService>();
 builder.Services.AddScoped<Apiary.Services.LogbookEntries.ILogbookEntryService, Apiary.Services.LogbookEntries.LogbookEntryService>();
 builder.Services.AddScoped<Apiary.Services.LogbookTasks.ILogbookTaskService, Apiary.Services.LogbookTasks.LogbookTaskService>();
 builder.Services.AddScoped<Apiary.Services.StudentAccountTokens.IStudentAccountTokenService, Apiary.Services.StudentAccountTokens.StudentAccountTokenService>();
 builder.Services.AddScoped<Apiary.Services.StudentActivation.IStudentActivationService, Apiary.Services.StudentActivation.StudentActivationService>();
+builder.Services.AddScoped<Apiary.Services.Users.IUserService, Apiary.Services.Users.UserService>();
 
 var app = builder.Build();
 
@@ -103,7 +100,6 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
-app.MapRazorComponents<Apiary.Components.App>()
-    .AddInteractiveServerRenderMode();
+app.MapRazorComponents<Apiary.Components.App>();
 
 app.Run();

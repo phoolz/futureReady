@@ -17,7 +17,7 @@ namespace Apiary.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.1")
+                .HasAnnotation("ProductVersion", "10.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -731,6 +731,9 @@ namespace Apiary.Migrations
                     b.Property<string>("ErgonomicDetails")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateOnly?>("FinishDate")
+                        .HasColumnType("date");
+
                     b.Property<bool>("HasBiologicalHazards")
                         .HasColumnType("bit");
 
@@ -800,6 +803,9 @@ namespace Apiary.Migrations
 
                     b.Property<bool?>("StaffMeetWorkingWithChildrenRequirements")
                         .HasColumnType("bit");
+
+                    b.Property<DateOnly?>("StartDate")
+                        .HasColumnType("date");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1176,70 +1182,6 @@ namespace Apiary.Migrations
                     b.HasIndex("StudentId");
 
                     b.ToTable("StudentMedicalConditions");
-                });
-
-            modelBuilder.Entity("Apiary.Models.School.StudentWorkHistory", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Certificates")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CommunityService")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("CurrentCourses")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("DeletedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("PartTimeEmployment")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("VetQualifications")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StudentId")
-                        .IsUnique();
-
-                    b.ToTable("StudentWorkHistories");
                 });
 
             modelBuilder.Entity("Apiary.Models.School.Supervisor", b =>
@@ -1664,17 +1606,6 @@ namespace Apiary.Migrations
                 });
 
             modelBuilder.Entity("Apiary.Models.School.StudentMedicalCondition", b =>
-                {
-                    b.HasOne("Apiary.Models.School.Student", "Student")
-                        .WithMany()
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Student");
-                });
-
-            modelBuilder.Entity("Apiary.Models.School.StudentWorkHistory", b =>
                 {
                     b.HasOne("Apiary.Models.School.Student", "Student")
                         .WithMany()

@@ -1,0 +1,616 @@
+@page "/Placements/Details/{Id:guid}"
+@attribute [Authorize(Roles = Roles.TeacherOrStudent)]
+@attribute [StreamRendering]
+@inject IPlacementService PlacementService
+@inject IFormTokenService FormTokenService
+@inject ILogbookEntryService LogbookService
+@inject IStudentAuthorizationService StudentAuthService
+@inject ITenantProvider TenantProvider
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager NavigationManager
+
+<PageTitle>Placement Details - Apiary</PageTitle>
+
+@if (Placement == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Placement Details</h1>
+        <div>
+            @if (IsTeacher)
+            {
+                <a href="/Placements/Edit/@Id" class="btn btn-primary">Edit</a>
+            }
+            <a href="/Placements" class="btn btn-secondary">Back to List</a>
+        </div>
+    </div>
+
+    @if (IsTeacher && !string.IsNullOrEmpty(FormLink))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong>@FormLinkMessage</strong>
+            <div class="mt-2">
+                <input type="text" class="form-control" value="@FormLink" id="formLinkInput" readonly />
+            </div>
+            <div class="mt-2 d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-light" onclick="navigator.clipboard.writeText(document.getElementById('formLinkInput').value)">
+                    Copy to Clipboard
+                </button>
+                <a href="@FormLink" target="_blank" class="btn btn-sm btn-outline-light">
+                    Open In New Tab
+                </a>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (IsTeacher && !string.IsNullOrEmpty(ParentFormLink))
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <strong>@ParentFormLinkMessage</strong>
+            <div class="mt-2">
+                <input type="text" class="form-control" value="@ParentFormLink" id="parentFormLinkInput" readonly />
+            </div>
+            <div class="mt-2 d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-light" onclick="navigator.clipboard.writeText(document.getElementById('parentFormLinkInput').value)">
+                    Copy to Clipboard
+                </button>
+                <a href="@ParentFormLink" target="_blank" class="btn btn-sm btn-outline-light">
+                    Open In New Tab
+                </a>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Placement Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Company</dt>
+                        <dd class="col-sm-8">
+                            @if (Placement.Company != null)
+                            {
+                                @Placement.Company.Name
+                            }
+                            else
+                            {
+                                <span class="text-muted">Not assigned</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">Supervisor</dt>
+                        <dd class="col-sm-8">
+                            @if (Placement.Supervisor != null)
+                            {
+                                @($"{Placement.Supervisor.FirstName} {Placement.Supervisor.LastName}")
+                                @if (!string.IsNullOrEmpty(Placement.Supervisor.Email))
+                                {
+                                    <span class="text-muted">(@Placement.Supervisor.Email)</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">Not assigned</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">Year</dt>
+                        <dd class="col-sm-8">@Placement.Year</dd>
+
+                        <dt class="col-sm-4">Placement Role</dt>
+                        <dd class="col-sm-8">
+                            @if (!string.IsNullOrEmpty(Placement.PlacementRole))
+                            {
+                                @Placement.PlacementRole
+                            }
+                            else
+                            {
+                                <span class="text-muted">Not specified</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8">
+                            @{
+                                var statusClass = Placement.Status switch
+                                {
+                                    "confirmed" => "bg-success",
+                                    "pending_employer" => "bg-warning text-dark",
+                                    "pending_parent" => "bg-info",
+                                    "pending_parents" => "bg-info",
+                                    "partial" => "bg-info",
+                                    _ => "bg-secondary"
+                                };
+                            }
+                            <span class="badge @statusClass">@Placement.Status</span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Students (@PlacementStudents.Count)</h5>
+                </div>
+                <div class="card-body">
+                    @if (PlacementStudents.Any())
+                    {
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Status</th>
+                                    <th>Parent Submitted</th>
+                                    @if (IsTeacher)
+                                    {
+                                        <th>Actions</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var ps in PlacementStudents)
+                                {
+                                    var studentStatusClass = ps.Status switch
+                                    {
+                                        "confirmed" => "bg-success",
+                                        "pending_parent" => "bg-warning text-dark",
+                                        "withdrawn" => "bg-secondary",
+                                        _ => "bg-info"
+                                    };
+                                    var studentStatusText = ps.Status switch
+                                    {
+                                        "confirmed" => "Confirmed",
+                                        "pending_parent" => "Pending Parent",
+                                        "withdrawn" => "Withdrawn",
+                                        _ => ps.Status ?? "Unknown"
+                                    };
+                                    var activeParentToken = ParentTokens.FirstOrDefault(t => t.StudentId == ps.StudentId && t.IsValid);
+
+                                    <tr>
+                                        <td>@(ps.Student != null ? $"{ps.Student.FirstName} {ps.Student.LastName}" : "Unknown")</td>
+                                        <td><span class="badge @studentStatusClass">@studentStatusText</span></td>
+                                        <td>
+                                            @if (ps.ParentSubmittedAt.HasValue)
+                                            {
+                                                @ps.ParentSubmittedAt.Value.ToString("d MMM yyyy")
+                                            }
+                                            else if (activeParentToken != null)
+                                            {
+                                                <span class="text-muted">Link sent (expires @activeParentToken.ExpiresAt.ToString("d MMM"))</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">—</span>
+                                            }
+                                        </td>
+                                        @if (IsTeacher)
+                                        {
+                                            <td>
+                                                @if (!ps.ParentSubmittedAt.HasValue)
+                                                {
+                                                    <form method="post" @formname="@($"send-parent-form-{ps.StudentId}")" style="display:inline;">
+                                                        <AntiforgeryToken />
+                                                        <input type="hidden" name="SendParentForm.PlacementId" value="@Id" />
+                                                        <input type="hidden" name="SendParentForm.StudentId" value="@ps.StudentId" />
+                                                        <button type="submit" class="btn btn-success btn-sm" title="Generate parent form link">
+                                                            @(activeParentToken != null ? "Regenerate" : "Generate") Link
+                                                        </button>
+                                                    </form>
+                                                }
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No students assigned to this placement.</p>
+                    }
+                </div>
+            </div>
+
+            @if (Placement.DressRequirement != null || Placement.WorkStartTime != null || Placement.WorkEndTime != null)
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Work Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            @if (Placement.WorkStartTime != null || Placement.WorkEndTime != null)
+                            {
+                                <dt class="col-sm-4">Work Hours</dt>
+                                <dd class="col-sm-8">@Placement.WorkStartTime - @Placement.WorkEndTime</dd>
+                            }
+
+                            @if (Placement.DressRequirement != null)
+                            {
+                                <dt class="col-sm-4">Dress Requirement</dt>
+                                <dd class="col-sm-8">@Placement.DressRequirement</dd>
+                            }
+                        </dl>
+                    </div>
+                </div>
+            }
+
+            @if (PlacementStudents.Any())
+            {
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Logbook Entries</h5>
+                        <div class="d-flex gap-2">
+                            <a href="/LogbookEntries/@Id" class="btn btn-outline-primary btn-sm">View Full Logbook</a>
+                            <a href="/student/logbook/@Id" class="btn btn-success btn-sm">Add Entry</a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @if (LogbookData != null && LogbookData.TotalEntries > 0)
+                        {
+                            <div class="row mb-3">
+                                <div class="col-md-4 text-center">
+                                    <div class="border rounded p-3">
+                                        <h4 class="mb-0">@LogbookData.TotalHours.ToString("0.#")</h4>
+                                        <small class="text-muted">Total Hours</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <div class="border rounded p-3">
+                                        <h4 class="mb-0">@LogbookData.VerifiedCount</h4>
+                                        <small class="text-muted">Verified</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <div class="border rounded p-3">
+                                        <h4 class="mb-0">@LogbookData.TotalEntries</h4>
+                                        <small class="text-muted">Total Entries</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h6>Recent Entries</h6>
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Start</th>
+                                        <th>Finish</th>
+                                        <th>Hours</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var entry in LogbookData.Entries)
+                                    {
+                                        <tr>
+                                            <td>@entry.Date.ToString("d MMM yyyy")</td>
+                                            <td>@entry.StartTime</td>
+                                            <td>@entry.FinishTime</td>
+                                            <td>@entry.TotalHoursWorked.ToString("0.#")</td>
+                                            <td>
+                                                @if (entry.SupervisorVerified)
+                                                {
+                                                    <span class="badge bg-success">Verified</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning text-dark">Pending</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <a href="/student/logbook/@Id/@entry.Date.ToString("yyyy-MM-dd")" class="btn btn-outline-primary btn-sm">Edit</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <div class="text-center py-4">
+                                <p class="text-muted mt-2">No logbook entries yet.</p>
+                                <a href="/student/logbook/@Id" class="btn btn-primary">Add First Entry</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (IsTeacher)
+            {
+                var activeEmployerToken = EmployerTokens.FirstOrDefault(t => t.IsValid);
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Employer Form</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Form Type</th>
+                                    <th>Status</th>
+                                    <th>Expires</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Employer Acceptance</strong></td>
+                                    <td>
+                                        @if (Placement.EmployerSubmittedAt.HasValue)
+                                        {
+                                            <span class="badge bg-success">Submitted @Placement.EmployerSubmittedAt.Value.ToString("d MMM yyyy")</span>
+                                        }
+                                        else if (activeEmployerToken != null)
+                                        {
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">No active link</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (activeEmployerToken != null)
+                                        {
+                                            @activeEmployerToken.ExpiresAt.ToString("g")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-1 flex-wrap">
+                                            @if (Placement.EmployerSubmittedAt.HasValue)
+                                            {
+                                                <a href="/Placements/EmployerFormReview/@Id" class="btn btn-outline-primary btn-sm">Review</a>
+                                            }
+                                            @if (activeEmployerToken != null)
+                                            {
+                                                <form method="post" @formname="resend-employer-form" style="display:inline;">
+                                                    <AntiforgeryToken />
+                                                    <input type="hidden" name="ResendEmployerForm.PlacementId" value="@Id" />
+                                                    <input type="hidden" name="ResendEmployerForm.TokenId" value="@activeEmployerToken.Id" />
+                                                    <button type="submit" class="btn btn-outline-primary btn-sm" title="Revoke and generate new link">Resend</button>
+                                                </form>
+                                                <form method="post" @formname="delete-employer-token" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this form link?');">
+                                                    <AntiforgeryToken />
+                                                    <input type="hidden" name="DeleteEmployerToken.PlacementId" value="@Id" />
+                                                    <input type="hidden" name="DeleteEmployerToken.TokenId" value="@activeEmployerToken.Id" />
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete link">Delete</button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <form method="post" @formname="send-employer-form" style="display:inline;">
+                                                    <AntiforgeryToken />
+                                                    <input type="hidden" name="SendEmployerForm.PlacementId" value="@Id" />
+                                                    <button type="submit" class="btn btn-success btn-sm">Generate Link</button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private Placement? Placement { get; set; }
+    private List<PlacementStudent> PlacementStudents { get; set; } = new();
+    private List<FormToken> EmployerTokens { get; set; } = new();
+    private List<FormToken> ParentTokens { get; set; } = new();
+    private LogbookEntriesListViewModel? LogbookData { get; set; }
+    private bool IsTeacher { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? SuccessMessage { get; set; }
+    private string? FormLink { get; set; }
+    private string? FormLinkMessage { get; set; }
+    private string? ParentFormLink { get; set; }
+    private string? ParentFormLinkMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+        IsTeacher = context?.User?.IsInRole(Roles.Teacher) ?? false;
+
+        if (context != null && HttpMethods.IsPost(context.Request.Method))
+        {
+            await HandlePostAsync(context);
+        }
+
+        await LoadPlacementAsync();
+    }
+
+    private async Task LoadPlacementAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+
+        Placement = await PlacementService.GetByIdWithDetailsAsync(Id, tenantId);
+        if (Placement == null) return;
+
+        // Students can only view placements they're assigned to
+        if (context?.User?.IsInRole(Roles.Student) == true)
+        {
+            var studentId = await StudentAuthService.GetCurrentUserStudentIdAsync();
+            if (!studentId.HasValue || !Placement.PlacementStudents.Any(ps => ps.StudentId == studentId.Value))
+            {
+                Placement = null;
+                return;
+            }
+        }
+
+        PlacementStudents = Placement.PlacementStudents?.Where(ps => !ps.IsDeleted).ToList() ?? new();
+
+        // Load form tokens
+        var formTokens = await FormTokenService.GetByPlacementAsync(Id, tenantId);
+        EmployerTokens = formTokens.Where(t => t.FormType == "employer_acceptance").ToList();
+        ParentTokens = formTokens.Where(t => t.FormType == "parent_permission").ToList();
+
+        // Load logbook entries
+        if (PlacementStudents.Any())
+        {
+            var firstPlacementStudent = PlacementStudents.First();
+            var entries = await LogbookService.GetByPlacementStudentIdAsync(firstPlacementStudent.Id, tenantId);
+            var sortedEntries = entries.OrderBy(e => e.Date).ToList();
+
+            decimal cumulative = 0;
+            foreach (var entry in sortedEntries)
+            {
+                cumulative += entry.TotalHoursWorked;
+                entry.CumulativeHours = cumulative;
+            }
+
+            LogbookData = new LogbookEntriesListViewModel
+            {
+                PlacementId = Id,
+                TotalHours = cumulative,
+                VerifiedCount = sortedEntries.Count(e => e.SupervisorVerified),
+                TotalEntries = sortedEntries.Count,
+                Entries = sortedEntries.OrderByDescending(e => e.Date).Take(5).Select(e => new LogbookEntryViewModel
+                {
+                    Id = e.Id,
+                    Date = e.Date,
+                    StartTime = e.StartTime,
+                    FinishTime = e.FinishTime,
+                    TotalHoursWorked = e.TotalHoursWorked,
+                    CumulativeHours = e.CumulativeHours,
+                    SupervisorVerified = e.SupervisorVerified
+                }).ToList()
+            };
+        }
+    }
+
+    private async Task HandlePostAsync(HttpContext context)
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        var form = context.Request.Form;
+
+        if (form.ContainsKey("SendEmployerForm.PlacementId"))
+        {
+            await HandleSendEmployerFormAsync(tenantId, context);
+        }
+        else if (form.ContainsKey("ResendEmployerForm.PlacementId"))
+        {
+            var tokenId = Guid.Parse(form["ResendEmployerForm.TokenId"]!);
+            await HandleResendEmployerFormAsync(tokenId, tenantId, context);
+        }
+        else if (form.ContainsKey("DeleteEmployerToken.PlacementId"))
+        {
+            var tokenId = Guid.Parse(form["DeleteEmployerToken.TokenId"]!);
+            await HandleDeleteEmployerTokenAsync(tokenId, tenantId);
+        }
+        else if (form.ContainsKey("SendParentForm.PlacementId"))
+        {
+            var studentId = Guid.Parse(form["SendParentForm.StudentId"]!);
+            await HandleSendParentFormForStudentAsync(studentId, tenantId, context);
+        }
+    }
+
+    private async Task HandleSendEmployerFormAsync(Guid? tenantId, HttpContext context)
+    {
+        var placement = await PlacementService.GetByIdWithDetailsAsync(Id, tenantId);
+        if (placement == null) return;
+
+        // Revoke all existing active employer form tokens
+        var existingTokens = await FormTokenService.GetByPlacementAsync(Id, tenantId);
+        foreach (var existingToken in existingTokens.Where(t => t.FormType == "employer_acceptance" && t.IsValid))
+        {
+            await FormTokenService.RevokeTokenByIdAsync(existingToken.Id, tenantId);
+        }
+
+        var email = placement.Supervisor?.Email;
+        var formToken = await FormTokenService.GenerateTokenAsync(Id, "employer_acceptance", email, null, tenantId);
+
+        var baseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
+        FormLink = $"{baseUrl}/employer/form/{formToken.Token}";
+        FormLinkMessage = "Employer form link generated. Copy and send to the employer:";
+    }
+
+    private async Task HandleResendEmployerFormAsync(Guid tokenId, Guid? tenantId, HttpContext context)
+    {
+        var placement = await PlacementService.GetByIdWithDetailsAsync(Id, tenantId);
+        if (placement == null) return;
+
+        await FormTokenService.RevokeTokenByIdAsync(tokenId, tenantId);
+
+        var email = placement.Supervisor?.Email;
+        var formToken = await FormTokenService.GenerateTokenAsync(Id, "employer_acceptance", email, null, tenantId);
+
+        var baseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
+        FormLink = $"{baseUrl}/employer/form/{formToken.Token}";
+        FormLinkMessage = "New employer form link generated (previous link revoked). Copy and send to the employer:";
+    }
+
+    private async Task HandleDeleteEmployerTokenAsync(Guid tokenId, Guid? tenantId)
+    {
+        await FormTokenService.RevokeTokenByIdAsync(tokenId, tenantId);
+        SuccessMessage = "Form token deleted successfully.";
+    }
+
+    private async Task HandleSendParentFormForStudentAsync(Guid studentId, Guid? tenantId, HttpContext context)
+    {
+        var placement = await PlacementService.GetByIdWithDetailsAsync(Id, tenantId);
+        if (placement == null) return;
+
+        var placementStudent = placement.PlacementStudents.FirstOrDefault(ps => ps.StudentId == studentId && !ps.IsDeleted);
+        if (placementStudent == null)
+        {
+            ErrorMessage = "Student is not assigned to this placement.";
+            return;
+        }
+
+        // Revoke all existing active parent form tokens for this student
+        var existingTokens = await FormTokenService.GetByPlacementAsync(Id, tenantId);
+        foreach (var existingToken in existingTokens.Where(t => t.FormType == "parent_permission" && t.StudentId == studentId && t.IsValid))
+        {
+            await FormTokenService.RevokeTokenByIdAsync(existingToken.Id, tenantId);
+        }
+
+        var formToken = await FormTokenService.GenerateTokenAsync(Id, "parent_permission", null, studentId, tenantId);
+
+        var baseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
+        ParentFormLink = $"{baseUrl}/parent/form/{formToken.Token}";
+        ParentFormLinkMessage = $"Parent permission form link generated for {placementStudent.Student?.FullName ?? "student"}. Copy and send to the parent/guardian:";
+    }
+}

@@ -1,0 +1,193 @@
+@page "/Supervisors/Edit/{Id:guid}"
+@layout MainLayout
+@attribute [Authorize(Roles = Roles.Teacher)]
+@inject ISupervisorService SupervisorService
+@inject ICompanyService CompanyService
+@inject ITenantProvider TenantProvider
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Edit Supervisor - Apiary</PageTitle>
+
+<h1>Edit Supervisor</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <form method="post" @formname="edit-supervisor">
+            <AntiforgeryToken />
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+            }
+
+            <input type="hidden" name="FormModel.Id" value="@FormModel?.Id" />
+            <input type="hidden" name="RowVersionBase64" value="@RowVersionBase64" />
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Supervisor Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="CompanyId" class="form-label">Company</label>
+                        <select id="CompanyId" name="FormModel.CompanyId" class="form-select">
+                            <option value="">-- Select Company --</option>
+                            @if (Companies != null)
+                            {
+                                @foreach (var company in Companies)
+                                {
+                                    <option value="@company.Id" selected="@(FormModel?.CompanyId == company.Id)">@company.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="FirstName" class="form-label">First Name</label>
+                            <input type="text" id="FirstName" name="FormModel.FirstName" class="form-control" value="@FormModel?.FirstName" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="LastName" class="form-label">Last Name</label>
+                            <input type="text" id="LastName" name="FormModel.LastName" class="form-control" value="@FormModel?.LastName" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="JobTitle" class="form-label">Job Title</label>
+                        <input type="text" id="JobTitle" name="FormModel.JobTitle" class="form-control" value="@FormModel?.JobTitle" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="Email" class="form-label">Email</label>
+                        <input type="email" id="Email" name="FormModel.Email" class="form-control" value="@FormModel?.Email" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="Phone" class="form-label">Phone</label>
+                        <input type="text" id="Phone" name="FormModel.Phone" class="form-control" value="@FormModel?.Phone" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="/Supervisors" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [SupplyParameterFromForm(FormName = "edit-supervisor")]
+    public Supervisor? FormModel { get; set; }
+
+    [SupplyParameterFromForm(FormName = "edit-supervisor")]
+    public string? RowVersionBase64 { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private List<Company>? Companies { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        Companies = await CompanyService.GetAllAsync(tenantId);
+
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+
+        if (context != null && HttpMethods.IsPost(context.Request.Method))
+        {
+            await HandlePostAsync();
+            return;
+        }
+
+        await LoadSupervisorAsync();
+    }
+
+    private async Task LoadSupervisorAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        FormModel = await SupervisorService.GetByIdAsync(Id, tenantId);
+
+        if (FormModel == null)
+        {
+            var context = HttpContext ?? HttpContextAccessor.HttpContext;
+            context?.Response.Redirect("/Supervisors");
+        }
+        else
+        {
+            RowVersionBase64 = FormModel.RowVersion != null ? Convert.ToBase64String(FormModel.RowVersion) : null;
+        }
+    }
+
+    private async Task HandlePostAsync()
+    {
+        if (FormModel == null)
+        {
+            ErrorMessage = "Invalid form data.";
+            return;
+        }
+
+        if (FormModel.Id != Id)
+        {
+            ErrorMessage = "Invalid supervisor ID.";
+            return;
+        }
+
+        if (FormModel.CompanyId == Guid.Empty)
+        {
+            ErrorMessage = "Please select a company.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.FirstName))
+        {
+            ErrorMessage = "First name is required.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.LastName))
+        {
+            ErrorMessage = "Last name is required.";
+            return;
+        }
+
+        try
+        {
+            var tenantId = TenantProvider.GetCurrentTenantId();
+            byte[]? rowVersion = null;
+            if (!string.IsNullOrEmpty(RowVersionBase64))
+            {
+                rowVersion = Convert.FromBase64String(RowVersionBase64);
+            }
+            await SupervisorService.UpdateAsync(FormModel, rowVersion, tenantId);
+
+            var context = HttpContext ?? HttpContextAccessor.HttpContext;
+            context?.Response.Redirect("/Supervisors");
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+        {
+            var exists = await SupervisorService.ExistsAsync(Id, TenantProvider.GetCurrentTenantId());
+            if (!exists)
+            {
+                var context = HttpContext ?? HttpContextAccessor.HttpContext;
+                context?.Response.Redirect("/Supervisors");
+            }
+            else
+            {
+                ErrorMessage = "The record has been modified by another user. Please reload and try again.";
+                await LoadSupervisorAsync();
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "An error occurred while updating the supervisor.";
+        }
+    }
+}

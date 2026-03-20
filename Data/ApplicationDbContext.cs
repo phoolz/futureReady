@@ -36,7 +36,6 @@ namespace Apiary.Data
         public DbSet<LogbookEntry> LogbookEntries { get; set; } = null!;
         public DbSet<LogbookTask> LogbookTasks { get; set; } = null!;
         public DbSet<LogbookEvaluation> LogbookEvaluations { get; set; } = null!;
-        public DbSet<StudentWorkHistory> StudentWorkHistories { get; set; } = null!;
         public DbSet<StudentAccountToken> StudentAccountTokens { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -225,13 +224,6 @@ namespace Apiary.Data
                 entity.Property(e => e.SupervisorName).HasMaxLength(200);
                 entity.HasOne(e => e.PlacementStudent).WithMany(ps => ps.LogbookEvaluations).HasForeignKey(e => e.PlacementStudentId).OnDelete(DeleteBehavior.Cascade);
                 entity.HasIndex(e => e.PlacementStudentId);
-            });
-
-            modelBuilder.Entity<StudentWorkHistory>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.Student).WithMany().HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Cascade);
-                entity.HasIndex(e => e.StudentId).IsUnique();
             });
 
             modelBuilder.Entity<StudentAccountToken>(entity =>

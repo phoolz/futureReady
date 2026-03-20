@@ -1,0 +1,136 @@
+@page "/parent/form/{Token}/step1"
+@layout ParentFormLayout
+@attribute [StreamRendering]
+@inject IParentFormService FormService
+@inject NavigationManager Navigation
+
+<PageTitle>Parent Form - Student Details</PageTitle>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="error-container">
+        <p class="error-message">@ErrorMessage</p>
+        <p class="text-muted">Please contact the school if you believe this is an error.</p>
+    </div>
+}
+else if (FormData != null)
+{
+    <ParentInfoHeader
+        StudentName="@FormData.StudentName"
+        SchoolName="@FormData.SchoolName" />
+
+    <ParentProgressIndicator CurrentStep="1" TotalSteps="7" />
+
+    <form method="post" @formname="parent-step1" @onsubmit="HandleSubmit">
+        <AntiforgeryToken />
+
+        <FormSection Title="Student Details">
+            <p class="mb-4 text-muted">Please confirm the student's details and provide any updates.</p>
+
+            <div class="form-group">
+                <label class="form-label">Student Name</label>
+                <div class="form-control-static">@FormData.StudentName</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">Student Type</label>
+                <div class="yes-no-toggle">
+                    <button type="button"
+                            class="toggle-btn @(Model?.StudentType == "day" ? "selected-yes" : "")"
+                            onclick="document.getElementById('type-day').checked = true; this.classList.add('selected-yes'); this.nextElementSibling.classList.remove('selected-yes');">
+                        Day Student
+                    </button>
+                    <button type="button"
+                            class="toggle-btn @(Model?.StudentType == "boarding" ? "selected-yes" : "")"
+                            onclick="document.getElementById('type-boarding').checked = true; this.previousElementSibling.classList.remove('selected-yes'); this.classList.add('selected-yes');">
+                        Boarding Student
+                    </button>
+                </div>
+                <input type="radio" id="type-day" name="Model.StudentType" value="day" checked="@(Model?.StudentType == "day")" style="display:none" />
+                <input type="radio" id="type-boarding" name="Model.StudentType" value="boarding" checked="@(Model?.StudentType == "boarding")" style="display:none" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">Student Mobile Number</label>
+                <input type="tel" class="form-control" name="Model.MobileNumber" value="@Model?.MobileNumber" placeholder="Enter student's mobile number" />
+                <small class="text-muted">This number will be used for emergency contact during the placement.</small>
+            </div>
+        </FormSection>
+
+        @if (!string.IsNullOrEmpty(ValidationError))
+        {
+            <div class="alert alert-danger mt-3">
+                @ValidationError
+            </div>
+        }
+
+        <div class="wizard-navigation">
+            <div></div>
+            <button type="submit" class="btn-wizard btn-next">
+                Next &rarr;
+            </button>
+        </div>
+    </form>
+}
+
+@code {
+    [Parameter] public string Token { get; set; } = string.Empty;
+
+    [SupplyParameterFromForm(FormName = "parent-step1")]
+    private StudentFormModel? Model { get; set; }
+
+    private ParentFormDto? FormData { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? ValidationError { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        FormData = await FormService.InitializeFormAsync(Token);
+
+        if (FormData == null)
+        {
+            ErrorMessage = "This form link is invalid, has expired, or has already been used.";
+            return;
+        }
+
+        Model ??= new StudentFormModel
+        {
+            StudentType = FormData.StudentDetails.StudentType,
+            MobileNumber = FormData.StudentDetails.MobileNumber
+        };
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (Model == null) return;
+
+        if (string.IsNullOrWhiteSpace(Model.StudentType) ||
+            string.IsNullOrWhiteSpace(Model.MobileNumber))
+        {
+            ValidationError = "Please complete all required fields before proceeding.";
+            return;
+        }
+
+        var dto = new StudentDetailsDto
+        {
+            StudentType = Model.StudentType!,
+            MobileNumber = Model.MobileNumber!
+        };
+
+        var success = await FormService.SaveStudentDetailsAsync(Token, dto);
+        if (success)
+        {
+            Navigation.NavigateTo($"/parent/form/{Token}/step2", forceLoad: true);
+        }
+        else
+        {
+            ValidationError = "Failed to save. The link may have expired or already been used.";
+        }
+    }
+
+    private class StudentFormModel
+    {
+        public string? StudentType { get; set; }
+        public string? MobileNumber { get; set; }
+    }
+}

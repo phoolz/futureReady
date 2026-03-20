@@ -1,0 +1,149 @@
+@page "/parent/form/{Token}/step2"
+@layout ParentFormLayout
+@attribute [StreamRendering]
+@inject IParentFormService FormService
+@inject NavigationManager Navigation
+
+<PageTitle>Parent Form - Emergency Contact</PageTitle>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="error-container">
+        <p class="error-message">@ErrorMessage</p>
+        <p class="text-muted">Please contact the school if you believe this is an error.</p>
+    </div>
+}
+else if (FormData != null)
+{
+    <ParentInfoHeader
+        StudentName="@FormData.StudentName"
+        SchoolName="@FormData.SchoolName" />
+
+    <ParentProgressIndicator CurrentStep="2" TotalSteps="7" />
+
+    <form method="post" @formname="parent-step2" @onsubmit="HandleSubmit">
+        <AntiforgeryToken />
+
+        <FormSection Title="Emergency Contact">
+            <p class="mb-4 text-muted">Please provide an emergency contact who can be reached during the student's work placement.</p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label required">First Name</label>
+                        <input type="text" class="form-control" name="Model.FirstName" value="@Model?.FirstName" placeholder="Enter first name" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label required">Last Name</label>
+                        <input type="text" class="form-control" name="Model.LastName" value="@Model?.LastName" placeholder="Enter last name" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">Mobile Number</label>
+                <input type="tel" class="form-control" name="Model.MobileNumber" value="@Model?.MobileNumber" placeholder="Enter mobile number" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">Relationship to Student</label>
+                <select class="form-control" name="Model.Relationship">
+                    <option value="">Select relationship...</option>
+                    <option value="Mother" selected="@(Model?.Relationship == "Mother")">Mother</option>
+                    <option value="Father" selected="@(Model?.Relationship == "Father")">Father</option>
+                    <option value="Guardian" selected="@(Model?.Relationship == "Guardian")">Guardian</option>
+                    <option value="Grandparent" selected="@(Model?.Relationship == "Grandparent")">Grandparent</option>
+                    <option value="Other" selected="@(Model?.Relationship == "Other")">Other</option>
+                </select>
+            </div>
+        </FormSection>
+
+        @if (!string.IsNullOrEmpty(ValidationError))
+        {
+            <div class="alert alert-danger mt-3">
+                @ValidationError
+            </div>
+        }
+
+        <div class="wizard-navigation">
+            <a href="/parent/form/@Token/step1" class="btn-wizard btn-previous">
+                &larr; Previous
+            </a>
+            <button type="submit" class="btn-wizard btn-next">
+                Next &rarr;
+            </button>
+        </div>
+    </form>
+}
+
+@code {
+    [Parameter] public string Token { get; set; } = string.Empty;
+
+    [SupplyParameterFromForm(FormName = "parent-step2")]
+    private EmergencyContactFormModel? Model { get; set; }
+
+    private ParentFormDto? FormData { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? ValidationError { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        FormData = await FormService.InitializeFormAsync(Token);
+
+        if (FormData == null)
+        {
+            ErrorMessage = "This form link is invalid, has expired, or has already been used.";
+            return;
+        }
+
+        Model ??= new EmergencyContactFormModel
+        {
+            FirstName = FormData.EmergencyContact.FirstName,
+            LastName = FormData.EmergencyContact.LastName,
+            MobileNumber = FormData.EmergencyContact.MobileNumber,
+            Relationship = FormData.EmergencyContact.Relationship
+        };
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (Model == null) return;
+
+        if (string.IsNullOrWhiteSpace(Model.FirstName) ||
+            string.IsNullOrWhiteSpace(Model.LastName) ||
+            string.IsNullOrWhiteSpace(Model.MobileNumber) ||
+            string.IsNullOrWhiteSpace(Model.Relationship))
+        {
+            ValidationError = "Please complete all required fields before proceeding.";
+            return;
+        }
+
+        var dto = new EmergencyContactDto
+        {
+            FirstName = Model.FirstName!,
+            LastName = Model.LastName!,
+            MobileNumber = Model.MobileNumber!,
+            Relationship = Model.Relationship!
+        };
+
+        var success = await FormService.SaveEmergencyContactAsync(Token, dto);
+        if (success)
+        {
+            Navigation.NavigateTo($"/parent/form/{Token}/step3", forceLoad: true);
+        }
+        else
+        {
+            ValidationError = "Failed to save. The link may have expired or already been used.";
+        }
+    }
+
+    private class EmergencyContactFormModel
+    {
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+        public string? MobileNumber { get; set; }
+        public string? Relationship { get; set; }
+    }
+}

@@ -1,0 +1,135 @@
+@page "/Companies"
+@layout MainLayout
+@attribute [Authorize(Roles = Roles.Teacher)]
+@attribute [StreamRendering]
+@inject ICompanyService CompanyService
+@inject ITenantProvider TenantProvider
+
+<PageTitle>Companies - Apiary</PageTitle>
+
+<div class="list-header">
+    <div class="list-header-content">
+        <h1>Companies</h1>
+        <p>Manage placement host companies</p>
+    </div>
+    <div class="list-header-actions">
+        <div class="search-input">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" id="searchInput" placeholder="Search companies..." onkeyup="filterTable()">
+        </div>
+        <a href="/Companies/Create" class="btn-add">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Add Company
+        </a>
+    </div>
+</div>
+
+<div class="list-table">
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>Company</th>
+                <th>Industry</th>
+                <th>Location</th>
+                <th>Insurance</th>
+                <th>Previous WE</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @if (Companies != null)
+        {
+            @foreach (var item in Companies)
+            {
+                <tr class="clickable" onclick="window.location='/Companies/Details/@item.Id'">
+                    <td class="cell-primary">@item.Name</td>
+                    <td class="cell-secondary">@(item.Industry ?? "—")</td>
+                    <td class="cell-secondary">
+                        @if (!string.IsNullOrEmpty(item.City) || !string.IsNullOrEmpty(item.State))
+                        {
+                            @($"{item.City}{(!string.IsNullOrEmpty(item.City) && !string.IsNullOrEmpty(item.State) ? ", " : "")}{item.State}")
+                        }
+                        else
+                        {
+                            <span>—</span>
+                        }
+                    </td>
+                    <td>
+                        <span class="indicator">
+                            <span class="indicator-dot @(item.PublicLiabilityInsurance5M ? "yes" : "no")"></span>
+                            @(item.PublicLiabilityInsurance5M ? "Yes" : "No")
+                        </span>
+                    </td>
+                    <td>
+                        <span class="indicator">
+                            <span class="indicator-dot @(item.HasPreviousWorkExperienceStudents ? "yes" : "no")"></span>
+                            @(item.HasPreviousWorkExperienceStudents ? "Yes" : "No")
+                        </span>
+                    </td>
+                    <td>
+                        <div class="row-actions">
+                            <a href="/Companies/Details/@item.Id" class="row-action action-view" title="View" onclick="event.stopPropagation()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                            </a>
+                            <a href="/Companies/Edit/@item.Id" class="row-action action-edit" title="Edit" onclick="event.stopPropagation()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                                </svg>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+        </tbody>
+    </table>
+    @if (Companies != null && !Companies.Any())
+    {
+        <div class="list-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2"/>
+                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+            </svg>
+            <p>No companies found. Add your first company to get started.</p>
+        </div>
+    }
+</div>
+
+<script>
+    function filterTable() {
+        var input = document.getElementById("searchInput");
+        var filter = input.value.toLowerCase();
+        var table = document.getElementById("dataTable");
+        var rows = table.getElementsByTagName("tr");
+
+        for (var i = 1; i < rows.length; i++) {
+            var cells = rows[i].getElementsByTagName("td");
+            var match = false;
+            for (var j = 0; j < cells.length; j++) {
+                if (cells[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                    match = true;
+                    break;
+                }
+            }
+            rows[i].style.display = match ? "" : "none";
+        }
+    }
+</script>
+
+@code {
+    private List<Company>? Companies { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        Companies = await CompanyService.GetAllAsync(tenantId);
+    }
+}

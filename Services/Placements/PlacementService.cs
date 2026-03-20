@@ -113,6 +113,8 @@ namespace Apiary.Services.Placements
             existing.CompanyId = placement.CompanyId;
             existing.SupervisorId = placement.SupervisorId;
             existing.Year = placement.Year;
+            existing.StartDate = placement.StartDate;
+            existing.FinishDate = placement.FinishDate;
             existing.Status = placement.Status;
             existing.PlacementRole = placement.PlacementRole;
             existing.DressRequirement = placement.DressRequirement;

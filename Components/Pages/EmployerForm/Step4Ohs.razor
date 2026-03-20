@@ -1,0 +1,260 @@
+@page "/employer/form/{Token}/step4"
+@layout EmployerFormLayout
+@attribute [StreamRendering]
+@inject IEmployerFormService FormService
+@inject NavigationManager Navigation
+
+<PageTitle>Employer Form - OHS</PageTitle>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="error-container">
+        <p class="error-message">@ErrorMessage</p>
+        <p class="text-muted">Please contact the school if you believe this is an error.</p>
+    </div>
+}
+else if (FormData != null)
+{
+    <StudentInfoHeader
+        StudentName="@FormData.StudentName"
+        SchoolName="@FormData.SchoolName"
+        CompanyName="@FormData.CompanyName" />
+
+    <ProgressIndicator CurrentStep="4" TotalSteps="7" />
+
+    <form method="post" @formname="employer-step4" @onsubmit="HandleSubmit">
+        <AntiforgeryToken />
+
+        <FormSection Title="Occupational Health & Safety">
+            <p class="mb-4 text-muted">Please answer the following questions about workplace health and safety at your organisation.</p>
+
+            <div class="form-group">
+                <label class="form-label required">Do you have an OHS policy?</label>
+                <div class="yes-no-toggle">
+                    <button type="button" class="toggle-btn @(Model?.HasOhsPolicy == true ? "selected-yes" : "")"
+                            onclick="document.getElementById('ohs-yes').checked = true; this.classList.add('selected-yes'); this.nextElementSibling.classList.remove('selected-no');">Yes</button>
+                    <button type="button" class="toggle-btn @(Model?.HasOhsPolicy == false ? "selected-no" : "")"
+                            onclick="document.getElementById('ohs-no').checked = true; this.previousElementSibling.classList.remove('selected-yes'); this.classList.add('selected-no');">No</button>
+                </div>
+                <input type="radio" id="ohs-yes" name="Model.HasOhsPolicy" value="true" checked="@(Model?.HasOhsPolicy == true)" style="display:none" />
+                <input type="radio" id="ohs-no" name="Model.HasOhsPolicy" value="false" checked="@(Model?.HasOhsPolicy == false)" style="display:none" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">Do you have an induction program for new workers?</label>
+                <div class="yes-no-toggle">
+                    <button type="button" class="toggle-btn @(Model?.HasInductionProgram == true ? "selected-yes" : "")"
+                            onclick="document.getElementById('induction-yes').checked = true; this.classList.add('selected-yes'); this.nextElementSibling.classList.remove('selected-no');">Yes</button>
+                    <button type="button" class="toggle-btn @(Model?.HasInductionProgram == false ? "selected-no" : "")"
+                            onclick="document.getElementById('induction-no').checked = true; this.previousElementSibling.classList.remove('selected-yes'); this.classList.add('selected-no');">No</button>
+                </div>
+                <input type="radio" id="induction-yes" name="Model.HasInductionProgram" value="true" checked="@(Model?.HasInductionProgram == true)" style="display:none" />
+                <input type="radio" id="induction-no" name="Model.HasInductionProgram" value="false" checked="@(Model?.HasInductionProgram == false)" style="display:none" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">How will the student be briefed on safety procedures?</label>
+                <textarea class="form-control" name="Model.SafetyBriefingMethod" rows="2" placeholder="Describe how the student will be briefed on safety procedures">@Model?.SafetyBriefingMethod</textarea>
+            </div>
+
+            <hr class="my-4" />
+
+            <div class="form-group">
+                <label class="form-label required">Are there any obvious hazards in the workplace?</label>
+                <div class="yes-no-toggle">
+                    <button type="button" class="toggle-btn @(Model?.HasObviousHazards == true ? "selected-yes" : "")"
+                            onclick="document.getElementById('hazards-yes').checked = true; this.classList.add('selected-yes'); this.nextElementSibling.classList.remove('selected-no');">Yes</button>
+                    <button type="button" class="toggle-btn @(Model?.HasObviousHazards == false ? "selected-no" : "")"
+                            onclick="document.getElementById('hazards-no').checked = true; this.previousElementSibling.classList.remove('selected-yes'); this.classList.add('selected-no');">No</button>
+                </div>
+                <input type="radio" id="hazards-yes" name="Model.HasObviousHazards" value="true" checked="@(Model?.HasObviousHazards == true)" style="display:none" />
+                <input type="radio" id="hazards-no" name="Model.HasObviousHazards" value="false" checked="@(Model?.HasObviousHazards == false)" style="display:none" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Please provide details of the hazards</label>
+                <textarea class="form-control" name="Model.HazardDetails" rows="3" placeholder="Describe the hazards present in the workplace">@Model?.HazardDetails</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">What training will be provided to prevent injury?</label>
+                <textarea class="form-control" name="Model.InjuryPreventionTraining" rows="2" placeholder="Describe training that will be provided">@Model?.InjuryPreventionTraining</textarea>
+            </div>
+
+            <hr class="my-4" />
+
+            <div class="form-group">
+                <label class="form-label required">Will the student be instructed on how to report hazards?</label>
+                <div class="yes-no-toggle">
+                    <button type="button" class="toggle-btn @(Model?.ProvidesHazardReportingInstruction == true ? "selected-yes" : "")"
+                            onclick="document.getElementById('reporting-yes').checked = true; this.classList.add('selected-yes'); this.nextElementSibling.classList.remove('selected-no');">Yes</button>
+                    <button type="button" class="toggle-btn @(Model?.ProvidesHazardReportingInstruction == false ? "selected-no" : "")"
+                            onclick="document.getElementById('reporting-no').checked = true; this.previousElementSibling.classList.remove('selected-yes'); this.classList.add('selected-no');">No</button>
+                </div>
+                <input type="radio" id="reporting-yes" name="Model.ProvidesHazardReportingInstruction" value="true" checked="@(Model?.ProvidesHazardReportingInstruction == true)" style="display:none" />
+                <input type="radio" id="reporting-no" name="Model.ProvidesHazardReportingInstruction" value="false" checked="@(Model?.ProvidesHazardReportingInstruction == false)" style="display:none" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">Do you have documented emergency procedures?</label>
+                <div class="yes-no-toggle">
+                    <button type="button" class="toggle-btn @(Model?.HasEmergencyProcedures == true ? "selected-yes" : "")"
+                            onclick="document.getElementById('emergency-yes').checked = true; this.classList.add('selected-yes'); this.nextElementSibling.classList.remove('selected-no');">Yes</button>
+                    <button type="button" class="toggle-btn @(Model?.HasEmergencyProcedures == false ? "selected-no" : "")"
+                            onclick="document.getElementById('emergency-no').checked = true; this.previousElementSibling.classList.remove('selected-yes'); this.classList.add('selected-no');">No</button>
+                </div>
+                <input type="radio" id="emergency-yes" name="Model.HasEmergencyProcedures" value="true" checked="@(Model?.HasEmergencyProcedures == true)" style="display:none" />
+                <input type="radio" id="emergency-no" name="Model.HasEmergencyProcedures" value="false" checked="@(Model?.HasEmergencyProcedures == false)" style="display:none" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">Are fire extinguishers checked and maintained?</label>
+                <div class="yes-no-toggle">
+                    <button type="button" class="toggle-btn @(Model?.HasFireExtinguishersChecked == true ? "selected-yes" : "")"
+                            onclick="document.getElementById('fire-yes').checked = true; this.classList.add('selected-yes'); this.nextElementSibling.classList.remove('selected-no');">Yes</button>
+                    <button type="button" class="toggle-btn @(Model?.HasFireExtinguishersChecked == false ? "selected-no" : "")"
+                            onclick="document.getElementById('fire-no').checked = true; this.previousElementSibling.classList.remove('selected-yes'); this.classList.add('selected-no');">No</button>
+                </div>
+                <input type="radio" id="fire-yes" name="Model.HasFireExtinguishersChecked" value="true" checked="@(Model?.HasFireExtinguishersChecked == true)" style="display:none" />
+                <input type="radio" id="fire-no" name="Model.HasFireExtinguishersChecked" value="false" checked="@(Model?.HasFireExtinguishersChecked == false)" style="display:none" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">Is there a first aid kit available?</label>
+                <div class="yes-no-toggle">
+                    <button type="button" class="toggle-btn @(Model?.HasFirstAidKit == true ? "selected-yes" : "")"
+                            onclick="document.getElementById('firstaid-yes').checked = true; this.classList.add('selected-yes'); this.nextElementSibling.classList.remove('selected-no');">Yes</button>
+                    <button type="button" class="toggle-btn @(Model?.HasFirstAidKit == false ? "selected-no" : "")"
+                            onclick="document.getElementById('firstaid-no').checked = true; this.previousElementSibling.classList.remove('selected-yes'); this.classList.add('selected-no');">No</button>
+                </div>
+                <input type="radio" id="firstaid-yes" name="Model.HasFirstAidKit" value="true" checked="@(Model?.HasFirstAidKit == true)" style="display:none" />
+                <input type="radio" id="firstaid-no" name="Model.HasFirstAidKit" value="false" checked="@(Model?.HasFirstAidKit == false)" style="display:none" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">Are amenities (toilets, eating areas) safe and accessible?</label>
+                <div class="yes-no-toggle">
+                    <button type="button" class="toggle-btn @(Model?.HasSafeAmenities == true ? "selected-yes" : "")"
+                            onclick="document.getElementById('amenities-yes').checked = true; this.classList.add('selected-yes'); this.nextElementSibling.classList.remove('selected-no');">Yes</button>
+                    <button type="button" class="toggle-btn @(Model?.HasSafeAmenities == false ? "selected-no" : "")"
+                            onclick="document.getElementById('amenities-no').checked = true; this.previousElementSibling.classList.remove('selected-yes'); this.classList.add('selected-no');">No</button>
+                </div>
+                <input type="radio" id="amenities-yes" name="Model.HasSafeAmenities" value="true" checked="@(Model?.HasSafeAmenities == true)" style="display:none" />
+                <input type="radio" id="amenities-no" name="Model.HasSafeAmenities" value="false" checked="@(Model?.HasSafeAmenities == false)" style="display:none" />
+            </div>
+        </FormSection>
+
+        @if (!string.IsNullOrEmpty(ValidationError))
+        {
+            <div class="alert alert-danger mt-3">
+                @ValidationError
+            </div>
+        }
+
+        <div class="wizard-navigation">
+            <a href="/employer/form/@Token/step3" class="btn-wizard btn-previous">
+                &larr; Previous
+            </a>
+            <button type="submit" class="btn-wizard btn-next">
+                Next &rarr;
+            </button>
+        </div>
+    </form>
+}
+
+@code {
+    [Parameter] public string Token { get; set; } = string.Empty;
+
+    [SupplyParameterFromForm(FormName = "employer-step4")]
+    private OhsFormModel? Model { get; set; }
+
+    private EmployerFormDto? FormData { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? ValidationError { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        FormData = await FormService.InitializeFormAsync(Token);
+
+        if (FormData == null)
+        {
+            ErrorMessage = "This form link is invalid, has expired, or has already been used.";
+            return;
+        }
+
+        // Initialize form model with existing data
+        Model ??= new OhsFormModel
+        {
+            HasOhsPolicy = FormData.Ohs.HasOhsPolicy,
+            HasInductionProgram = FormData.Ohs.HasInductionProgram,
+            SafetyBriefingMethod = FormData.Ohs.SafetyBriefingMethod,
+            HasObviousHazards = FormData.Ohs.HasObviousHazards,
+            HazardDetails = FormData.Ohs.HazardDetails,
+            InjuryPreventionTraining = FormData.Ohs.InjuryPreventionTraining,
+            ProvidesHazardReportingInstruction = FormData.Ohs.ProvidesHazardReportingInstruction,
+            HasEmergencyProcedures = FormData.Ohs.HasEmergencyProcedures,
+            HasFireExtinguishersChecked = FormData.Ohs.HasFireExtinguishersChecked,
+            HasFirstAidKit = FormData.Ohs.HasFirstAidKit,
+            HasSafeAmenities = FormData.Ohs.HasSafeAmenities
+        };
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (Model == null) return;
+
+        // Validate required fields
+        if (Model.HasOhsPolicy == null ||
+            Model.HasInductionProgram == null ||
+            Model.HasObviousHazards == null ||
+            Model.ProvidesHazardReportingInstruction == null ||
+            Model.HasEmergencyProcedures == null ||
+            Model.HasFireExtinguishersChecked == null ||
+            Model.HasFirstAidKit == null ||
+            Model.HasSafeAmenities == null)
+        {
+            ValidationError = "Please complete all required fields before proceeding.";
+            return;
+        }
+
+        var dto = new OhsDto
+        {
+            HasOhsPolicy = Model.HasOhsPolicy,
+            HasInductionProgram = Model.HasInductionProgram,
+            SafetyBriefingMethod = Model.SafetyBriefingMethod,
+            HasObviousHazards = Model.HasObviousHazards,
+            HazardDetails = Model.HazardDetails,
+            InjuryPreventionTraining = Model.InjuryPreventionTraining,
+            ProvidesHazardReportingInstruction = Model.ProvidesHazardReportingInstruction,
+            HasEmergencyProcedures = Model.HasEmergencyProcedures,
+            HasFireExtinguishersChecked = Model.HasFireExtinguishersChecked,
+            HasFirstAidKit = Model.HasFirstAidKit,
+            HasSafeAmenities = Model.HasSafeAmenities
+        };
+
+        var success = await FormService.SaveOhsAsync(Token, dto);
+        if (success)
+        {
+            Navigation.NavigateTo($"/employer/form/{Token}/step5", forceLoad: true);
+        }
+        else
+        {
+            ValidationError = "Failed to save. The link may have expired or already been used.";
+        }
+    }
+
+    private class OhsFormModel
+    {
+        public bool? HasOhsPolicy { get; set; }
+        public bool? HasInductionProgram { get; set; }
+        public string? SafetyBriefingMethod { get; set; }
+        public bool? HasObviousHazards { get; set; }
+        public string? HazardDetails { get; set; }
+        public string? InjuryPreventionTraining { get; set; }
+        public bool? ProvidesHazardReportingInstruction { get; set; }
+        public bool? HasEmergencyProcedures { get; set; }
+        public bool? HasFireExtinguishersChecked { get; set; }
+        public bool? HasFirstAidKit { get; set; }
+        public bool? HasSafeAmenities { get; set; }
+    }
+}

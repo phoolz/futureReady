@@ -6,7 +6,7 @@ Apiary is a Work Experience Placement Management SaaS application for schools. I
 
 ## Tech Stack
 
-- .NET 9, ASP.NET Core MVC
+- .NET 10, ASP.NET Core MVC
 - EF Core 8, SQL Server
 - Blazor components for multi-step forms
 - Multi-tenant architecture (school = tenant)

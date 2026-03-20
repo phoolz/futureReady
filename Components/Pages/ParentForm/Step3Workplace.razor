@@ -1,0 +1,292 @@
+@page "/parent/form/{Token}/step3"
+@layout ParentFormLayout
+@attribute [StreamRendering]
+@inject IParentFormService FormService
+@inject NavigationManager Navigation
+
+<PageTitle>Parent Form - Workplace Details</PageTitle>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="error-container">
+        <p class="error-message">@ErrorMessage</p>
+        <p class="text-muted">Please contact the school if you believe this is an error.</p>
+    </div>
+}
+else if (FormData != null)
+{
+    <ParentInfoHeader
+        StudentName="@FormData.StudentName"
+        SchoolName="@FormData.SchoolName" />
+
+    <ParentProgressIndicator CurrentStep="3" TotalSteps="7" />
+
+    <form method="post" @formname="parent-step3" @onsubmit="HandleSubmit">
+        <AntiforgeryToken />
+
+        <FormSection Title="Workplace Details">
+            @if (FormData.WorkplaceDetails.IsCompanyPreset)
+            {
+                <p class="mb-4 text-muted">The workplace details have been provided by the school. Please review and confirm they are correct.</p>
+
+                <div class="review-grid">
+                    <div class="review-item">
+                        <span class="review-label">Company Name</span>
+                        <span class="review-value">@FormData.WorkplaceDetails.CompanyName</span>
+                    </div>
+                    <div class="review-item">
+                        <span class="review-label">Contact Person</span>
+                        <span class="review-value">@FormData.WorkplaceDetails.ContactFirstName @FormData.WorkplaceDetails.ContactLastName</span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(FormData.WorkplaceDetails.ContactEmail))
+                    {
+                        <div class="review-item">
+                            <span class="review-label">Contact Email</span>
+                            <span class="review-value">@FormData.WorkplaceDetails.ContactEmail</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(FormData.WorkplaceDetails.ContactPhone))
+                    {
+                        <div class="review-item">
+                            <span class="review-label">Contact Phone</span>
+                            <span class="review-value">@FormData.WorkplaceDetails.ContactPhone</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(FormData.WorkplaceDetails.Industry))
+                    {
+                        <div class="review-item">
+                            <span class="review-label">Industry</span>
+                            <span class="review-value">@FormData.WorkplaceDetails.Industry</span>
+                        </div>
+                    }
+                    <div class="review-item">
+                        <span class="review-label">Address</span>
+                        <span class="review-value">
+                            @FormData.WorkplaceDetails.StreetAddress
+                            @if (!string.IsNullOrEmpty(FormData.WorkplaceDetails.StreetAddress2))
+                            {
+                                <br />@FormData.WorkplaceDetails.StreetAddress2
+                            }
+                            <br />@FormData.WorkplaceDetails.City, @FormData.WorkplaceDetails.State @FormData.WorkplaceDetails.PostalCode
+                        </span>
+                    </div>
+                </div>
+
+                <input type="hidden" name="Model.IsCompanyPreset" value="true" />
+            }
+            else
+            {
+                <p class="mb-4 text-muted">Please provide the details of where the student will be working.</p>
+
+                <input type="hidden" name="Model.IsCompanyPreset" value="false" />
+
+                <div class="form-group">
+                    <label class="form-label required">Company Name</label>
+                    <input type="text" class="form-control" name="Model.CompanyName" value="@Model?.CompanyName" placeholder="Enter company name" />
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label required">Contact First Name</label>
+                            <input type="text" class="form-control" name="Model.ContactFirstName" value="@Model?.ContactFirstName" placeholder="Enter first name" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label required">Contact Last Name</label>
+                            <input type="text" class="form-control" name="Model.ContactLastName" value="@Model?.ContactLastName" placeholder="Enter last name" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label required">Contact Email</label>
+                            <input type="email" class="form-control" name="Model.ContactEmail" value="@Model?.ContactEmail" placeholder="Enter email address" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label required">Contact Phone</label>
+                            <input type="tel" class="form-control" name="Model.ContactPhone" value="@Model?.ContactPhone" placeholder="Enter phone number" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Industry</label>
+                    <input type="text" class="form-control" name="Model.Industry" value="@Model?.Industry" placeholder="e.g., Healthcare, Retail, Technology" />
+                </div>
+
+                <hr class="my-4" />
+                <h5>Workplace Address</h5>
+
+                <div class="form-group">
+                    <label class="form-label required">Street Address</label>
+                    <input type="text" class="form-control" name="Model.StreetAddress" value="@Model?.StreetAddress" placeholder="Enter street address" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Street Address 2</label>
+                    <input type="text" class="form-control" name="Model.StreetAddress2" value="@Model?.StreetAddress2" placeholder="Apartment, suite, unit, etc. (optional)" />
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label required">City</label>
+                            <input type="text" class="form-control" name="Model.City" value="@Model?.City" placeholder="Enter city" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label required">State</label>
+                            <select class="form-control" name="Model.State">
+                                <option value="">Select state...</option>
+                                <option value="NSW" selected="@(Model?.State == "NSW")">New South Wales</option>
+                                <option value="VIC" selected="@(Model?.State == "VIC")">Victoria</option>
+                                <option value="QLD" selected="@(Model?.State == "QLD")">Queensland</option>
+                                <option value="WA" selected="@(Model?.State == "WA")">Western Australia</option>
+                                <option value="SA" selected="@(Model?.State == "SA")">South Australia</option>
+                                <option value="TAS" selected="@(Model?.State == "TAS")">Tasmania</option>
+                                <option value="ACT" selected="@(Model?.State == "ACT")">Australian Capital Territory</option>
+                                <option value="NT" selected="@(Model?.State == "NT")">Northern Territory</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label required">Postal Code</label>
+                            <input type="text" class="form-control" name="Model.PostalCode" value="@Model?.PostalCode" placeholder="Enter postal code" />
+                        </div>
+                    </div>
+                </div>
+            }
+        </FormSection>
+
+        @if (!string.IsNullOrEmpty(ValidationError))
+        {
+            <div class="alert alert-danger mt-3">
+                @ValidationError
+            </div>
+        }
+
+        <div class="wizard-navigation">
+            <a href="/parent/form/@Token/step2" class="btn-wizard btn-previous">
+                &larr; Previous
+            </a>
+            <button type="submit" class="btn-wizard btn-next">
+                Next &rarr;
+            </button>
+        </div>
+    </form>
+}
+
+@code {
+    [Parameter] public string Token { get; set; } = string.Empty;
+
+    [SupplyParameterFromForm(FormName = "parent-step3")]
+    private WorkplaceFormModel? Model { get; set; }
+
+    private ParentFormDto? FormData { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? ValidationError { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        FormData = await FormService.InitializeFormAsync(Token);
+
+        if (FormData == null)
+        {
+            ErrorMessage = "This form link is invalid, has expired, or has already been used.";
+            return;
+        }
+
+        Model ??= new WorkplaceFormModel
+        {
+            IsCompanyPreset = FormData.WorkplaceDetails.IsCompanyPreset,
+            CompanyName = FormData.WorkplaceDetails.CompanyName,
+            ContactFirstName = FormData.WorkplaceDetails.ContactFirstName,
+            ContactLastName = FormData.WorkplaceDetails.ContactLastName,
+            ContactEmail = FormData.WorkplaceDetails.ContactEmail,
+            ContactPhone = FormData.WorkplaceDetails.ContactPhone,
+            Industry = FormData.WorkplaceDetails.Industry,
+            StreetAddress = FormData.WorkplaceDetails.StreetAddress,
+            StreetAddress2 = FormData.WorkplaceDetails.StreetAddress2,
+            City = FormData.WorkplaceDetails.City,
+            State = FormData.WorkplaceDetails.State,
+            PostalCode = FormData.WorkplaceDetails.PostalCode
+        };
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (Model == null) return;
+
+        // If company is preset, no validation needed - just proceed
+        if (Model.IsCompanyPreset)
+        {
+            Navigation.NavigateTo($"/parent/form/{Token}/step4", forceLoad: true);
+            return;
+        }
+
+        // Validate required fields for non-preset company
+        if (string.IsNullOrWhiteSpace(Model.CompanyName) ||
+            string.IsNullOrWhiteSpace(Model.ContactFirstName) ||
+            string.IsNullOrWhiteSpace(Model.ContactLastName) ||
+            string.IsNullOrWhiteSpace(Model.ContactEmail) ||
+            string.IsNullOrWhiteSpace(Model.ContactPhone) ||
+            string.IsNullOrWhiteSpace(Model.StreetAddress) ||
+            string.IsNullOrWhiteSpace(Model.City) ||
+            string.IsNullOrWhiteSpace(Model.State) ||
+            string.IsNullOrWhiteSpace(Model.PostalCode))
+        {
+            ValidationError = "Please complete all required fields before proceeding.";
+            return;
+        }
+
+        var dto = new WorkplaceDetailsDto
+        {
+            IsCompanyPreset = false,
+            CompanyName = Model.CompanyName!,
+            ContactFirstName = Model.ContactFirstName!,
+            ContactLastName = Model.ContactLastName!,
+            ContactEmail = Model.ContactEmail!,
+            ContactPhone = Model.ContactPhone!,
+            Industry = Model.Industry,
+            StreetAddress = Model.StreetAddress!,
+            StreetAddress2 = Model.StreetAddress2,
+            City = Model.City!,
+            State = Model.State!,
+            PostalCode = Model.PostalCode!
+        };
+
+        var success = await FormService.SaveWorkplaceDetailsAsync(Token, dto);
+        if (success)
+        {
+            Navigation.NavigateTo($"/parent/form/{Token}/step4", forceLoad: true);
+        }
+        else
+        {
+            ValidationError = "Failed to save. The link may have expired or already been used.";
+        }
+    }
+
+    private class WorkplaceFormModel
+    {
+        public bool IsCompanyPreset { get; set; }
+        public string? CompanyName { get; set; }
+        public string? ContactFirstName { get; set; }
+        public string? ContactLastName { get; set; }
+        public string? ContactEmail { get; set; }
+        public string? ContactPhone { get; set; }
+        public string? Industry { get; set; }
+        public string? StreetAddress { get; set; }
+        public string? StreetAddress2 { get; set; }
+        public string? City { get; set; }
+        public string? State { get; set; }
+        public string? PostalCode { get; set; }
+    }
+}

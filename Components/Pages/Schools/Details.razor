@@ -1,0 +1,76 @@
+@page "/Schools/Details/{Id:guid}"
+@layout MainLayout
+@attribute [Authorize(Roles = Roles.SiteAdmin)]
+@attribute [StreamRendering]
+@inject ISchoolService SchoolService
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>School Details - Apiary</PageTitle>
+
+@if (School == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>@School.Name</h1>
+        <div class="d-flex gap-2">
+            <a href="/Schools/Edit/@School.Id" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            <a href="/Schools/Delete/@School.Id" class="btn btn-outline-danger">
+                <i class="bi bi-trash"></i> Delete
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">School Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Name</dt>
+                        <dd class="col-sm-8">@School.Name</dd>
+
+                        <dt class="col-sm-4">Tenant Key</dt>
+                        <dd class="col-sm-8">@School.TenantKey</dd>
+
+                        <dt class="col-sm-4">Timezone</dt>
+                        <dd class="col-sm-8">@School.Timezone</dd>
+
+                        <dt class="col-sm-4">Contact Email</dt>
+                        <dd class="col-sm-8">@(School.ContactEmail ?? "—")</dd>
+
+                        <dt class="col-sm-4">Contact Phone</dt>
+                        <dd class="col-sm-8">@(School.ContactPhone ?? "—")</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div>
+                <a href="/Schools" class="btn btn-secondary">Back to List</a>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private School? School { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        School = await SchoolService.GetByIdAsync(Id);
+
+        if (School == null)
+        {
+            HttpContextAccessor.HttpContext?.Response.Redirect("/Schools");
+        }
+    }
+}

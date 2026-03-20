@@ -1,0 +1,206 @@
+@page "/employer/form/{Token}/step5"
+@layout EmployerFormLayout
+@attribute [StreamRendering]
+@inject IEmployerFormService FormService
+@inject NavigationManager Navigation
+
+<PageTitle>Employer Form - General & Travel</PageTitle>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="error-container">
+        <p class="error-message">@ErrorMessage</p>
+        <p class="text-muted">Please contact the school if you believe this is an error.</p>
+    </div>
+}
+else if (FormData != null)
+{
+    <StudentInfoHeader
+        StudentName="@FormData.StudentName"
+        SchoolName="@FormData.SchoolName"
+        CompanyName="@FormData.CompanyName" />
+
+    <ProgressIndicator CurrentStep="5" TotalSteps="7" />
+
+    <form method="post" @formname="employer-step5" @onsubmit="HandleSubmit">
+        <AntiforgeryToken />
+
+        <FormSection Title="General Information & Travel">
+            <p class="mb-4 text-muted">Please provide information about staff awareness and any vehicle travel requirements during the placement.</p>
+
+            <h4 class="mb-3">Staff Information</h4>
+
+            <div class="form-group">
+                <label class="form-label required">Will staff be informed of the student's placement?</label>
+                <div class="yes-no-toggle">
+                    <button type="button" class="toggle-btn @(Model?.StaffInformedOfStudent == true ? "selected-yes" : "")"
+                            onclick="document.getElementById('informed-yes').checked = true; this.classList.add('selected-yes'); this.nextElementSibling.classList.remove('selected-no');">Yes</button>
+                    <button type="button" class="toggle-btn @(Model?.StaffInformedOfStudent == false ? "selected-no" : "")"
+                            onclick="document.getElementById('informed-no').checked = true; this.previousElementSibling.classList.remove('selected-yes'); this.classList.add('selected-no');">No</button>
+                </div>
+                <input type="radio" id="informed-yes" name="Model.StaffInformedOfStudent" value="true" checked="@(Model?.StaffInformedOfStudent == true)" style="display:none" />
+                <input type="radio" id="informed-no" name="Model.StaffInformedOfStudent" value="false" checked="@(Model?.StaffInformedOfStudent == false)" style="display:none" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">Do all relevant staff meet Working with Children Check requirements?</label>
+                <div class="yes-no-toggle">
+                    <button type="button" class="toggle-btn @(Model?.StaffMeetWorkingWithChildrenRequirements == true ? "selected-yes" : "")"
+                            onclick="document.getElementById('wwcc-yes').checked = true; this.classList.add('selected-yes'); this.nextElementSibling.classList.remove('selected-no');">Yes</button>
+                    <button type="button" class="toggle-btn @(Model?.StaffMeetWorkingWithChildrenRequirements == false ? "selected-no" : "")"
+                            onclick="document.getElementById('wwcc-no').checked = true; this.previousElementSibling.classList.remove('selected-yes'); this.classList.add('selected-no');">No</button>
+                </div>
+                <input type="radio" id="wwcc-yes" name="Model.StaffMeetWorkingWithChildrenRequirements" value="true" checked="@(Model?.StaffMeetWorkingWithChildrenRequirements == true)" style="display:none" />
+                <input type="radio" id="wwcc-no" name="Model.StaffMeetWorkingWithChildrenRequirements" value="false" checked="@(Model?.StaffMeetWorkingWithChildrenRequirements == false)" style="display:none" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">Is any additional information required from the student or school?</label>
+                <div class="yes-no-toggle">
+                    <button type="button" class="toggle-btn @(Model?.AdditionalInfoRequired == true ? "selected-yes" : "")"
+                            onclick="document.getElementById('addinfo-yes').checked = true; this.classList.add('selected-yes'); this.nextElementSibling.classList.remove('selected-no');">Yes</button>
+                    <button type="button" class="toggle-btn @(Model?.AdditionalInfoRequired == false ? "selected-no" : "")"
+                            onclick="document.getElementById('addinfo-no').checked = true; this.previousElementSibling.classList.remove('selected-yes'); this.classList.add('selected-no');">No</button>
+                </div>
+                <input type="radio" id="addinfo-yes" name="Model.AdditionalInfoRequired" value="true" checked="@(Model?.AdditionalInfoRequired == true)" style="display:none" />
+                <input type="radio" id="addinfo-no" name="Model.AdditionalInfoRequired" value="false" checked="@(Model?.AdditionalInfoRequired == false)" style="display:none" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Please provide details</label>
+                <textarea class="form-control" name="Model.AdditionalInfoDetails" rows="3" placeholder="Describe what additional information is required">@Model?.AdditionalInfoDetails</textarea>
+            </div>
+
+            <hr class="my-4" />
+
+            <h4 class="mb-3">Vehicle Travel</h4>
+
+            <div class="form-group">
+                <label class="form-label required">Will the student be required to travel in a vehicle during the placement?</label>
+                <div class="yes-no-toggle">
+                    <button type="button" class="toggle-btn @(Model?.RequiresVehicleTravel == true ? "selected-yes" : "")"
+                            onclick="document.getElementById('travel-yes').checked = true; this.classList.add('selected-yes'); this.nextElementSibling.classList.remove('selected-no');">Yes</button>
+                    <button type="button" class="toggle-btn @(Model?.RequiresVehicleTravel == false ? "selected-no" : "")"
+                            onclick="document.getElementById('travel-no').checked = true; this.previousElementSibling.classList.remove('selected-yes'); this.classList.add('selected-no');">No</button>
+                </div>
+                <input type="radio" id="travel-yes" name="Model.RequiresVehicleTravel" value="true" checked="@(Model?.RequiresVehicleTravel == true)" style="display:none" />
+                <input type="radio" id="travel-no" name="Model.RequiresVehicleTravel" value="false" checked="@(Model?.RequiresVehicleTravel == false)" style="display:none" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Please provide vehicle travel details</label>
+                <textarea class="form-control" name="Model.VehicleDetails" rows="2" placeholder="Describe the purpose and nature of vehicle travel">@Model?.VehicleDetails</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Driver's experience</label>
+                <textarea class="form-control" name="Model.DriverExperience" rows="2" placeholder="Describe the driver's experience">@Model?.DriverExperience</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Driver's licence type</label>
+                <input type="text" class="form-control" name="Model.LicenceType" value="@Model?.LicenceType" placeholder="e.g., Full, P2, etc." />
+            </div>
+        </FormSection>
+
+        @if (!string.IsNullOrEmpty(ValidationError))
+        {
+            <div class="alert alert-danger mt-3">
+                @ValidationError
+            </div>
+        }
+
+        <div class="wizard-navigation">
+            <a href="/employer/form/@Token/step4" class="btn-wizard btn-previous">
+                &larr; Previous
+            </a>
+            <button type="submit" class="btn-wizard btn-next">
+                Next &rarr;
+            </button>
+        </div>
+    </form>
+}
+
+@code {
+    [Parameter] public string Token { get; set; } = string.Empty;
+
+    [SupplyParameterFromForm(FormName = "employer-step5")]
+    private GeneralTravelFormModel? Model { get; set; }
+
+    private EmployerFormDto? FormData { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? ValidationError { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        FormData = await FormService.InitializeFormAsync(Token);
+
+        if (FormData == null)
+        {
+            ErrorMessage = "This form link is invalid, has expired, or has already been used.";
+            return;
+        }
+
+        // Initialize form model with existing data
+        Model ??= new GeneralTravelFormModel
+        {
+            StaffInformedOfStudent = FormData.GeneralTravel.StaffInformedOfStudent,
+            StaffMeetWorkingWithChildrenRequirements = FormData.GeneralTravel.StaffMeetWorkingWithChildrenRequirements,
+            AdditionalInfoRequired = FormData.GeneralTravel.AdditionalInfoRequired,
+            AdditionalInfoDetails = FormData.GeneralTravel.AdditionalInfoDetails,
+            RequiresVehicleTravel = FormData.GeneralTravel.RequiresVehicleTravel,
+            VehicleDetails = FormData.GeneralTravel.VehicleDetails,
+            DriverExperience = FormData.GeneralTravel.DriverExperience,
+            LicenceType = FormData.GeneralTravel.LicenceType
+        };
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (Model == null) return;
+
+        // Validate required fields
+        if (Model.StaffInformedOfStudent == null ||
+            Model.StaffMeetWorkingWithChildrenRequirements == null ||
+            Model.AdditionalInfoRequired == null ||
+            Model.RequiresVehicleTravel == null)
+        {
+            ValidationError = "Please complete all required fields before proceeding.";
+            return;
+        }
+
+        var dto = new GeneralTravelDto
+        {
+            StaffInformedOfStudent = Model.StaffInformedOfStudent,
+            StaffMeetWorkingWithChildrenRequirements = Model.StaffMeetWorkingWithChildrenRequirements,
+            AdditionalInfoRequired = Model.AdditionalInfoRequired,
+            AdditionalInfoDetails = Model.AdditionalInfoDetails,
+            RequiresVehicleTravel = Model.RequiresVehicleTravel,
+            VehicleDetails = Model.VehicleDetails,
+            DriverExperience = Model.DriverExperience,
+            LicenceType = Model.LicenceType
+        };
+
+        var success = await FormService.SaveGeneralTravelAsync(Token, dto);
+        if (success)
+        {
+            Navigation.NavigateTo($"/employer/form/{Token}/step6", forceLoad: true);
+        }
+        else
+        {
+            ValidationError = "Failed to save. The link may have expired or already been used.";
+        }
+    }
+
+    private class GeneralTravelFormModel
+    {
+        public bool? StaffInformedOfStudent { get; set; }
+        public bool? StaffMeetWorkingWithChildrenRequirements { get; set; }
+        public bool? AdditionalInfoRequired { get; set; }
+        public string? AdditionalInfoDetails { get; set; }
+        public bool? RequiresVehicleTravel { get; set; }
+        public string? VehicleDetails { get; set; }
+        public string? DriverExperience { get; set; }
+        public string? LicenceType { get; set; }
+    }
+}

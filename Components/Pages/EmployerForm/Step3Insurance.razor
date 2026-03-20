@@ -1,0 +1,158 @@
+@page "/employer/form/{Token}/step3"
+@layout EmployerFormLayout
+@attribute [StreamRendering]
+@inject IEmployerFormService FormService
+@inject NavigationManager Navigation
+
+<PageTitle>Employer Form - Insurance</PageTitle>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="error-container">
+        <p class="error-message">@ErrorMessage</p>
+        <p class="text-muted">Please contact the school if you believe this is an error.</p>
+    </div>
+}
+else if (FormData != null)
+{
+    <StudentInfoHeader
+        StudentName="@FormData.StudentName"
+        SchoolName="@FormData.SchoolName"
+        CompanyName="@FormData.CompanyName" />
+
+    <ProgressIndicator CurrentStep="3" TotalSteps="7" />
+
+    <form method="post" @formname="employer-step3" @onsubmit="HandleSubmit">
+        <AntiforgeryToken />
+
+        <FormSection Title="Insurance & Experience">
+            <p class="mb-4 text-muted">Please provide information about your public liability insurance and previous experience with work experience students.</p>
+
+            <div class="form-group">
+                <label class="form-label required">Do you have Public Liability Insurance of at least $5 million?</label>
+                <div class="yes-no-toggle">
+                    <button type="button"
+                            class="toggle-btn @(Model?.HasPublicLiabilityInsurance5M == true ? "selected-yes" : "")"
+                            onclick="document.getElementById('insurance-yes').checked = true; this.classList.add('selected-yes'); this.nextElementSibling.classList.remove('selected-no');">
+                        Yes
+                    </button>
+                    <button type="button"
+                            class="toggle-btn @(Model?.HasPublicLiabilityInsurance5M == false ? "selected-no" : "")"
+                            onclick="document.getElementById('insurance-no').checked = true; this.previousElementSibling.classList.remove('selected-yes'); this.classList.add('selected-no');">
+                        No
+                    </button>
+                </div>
+                <input type="radio" id="insurance-yes" name="Model.HasPublicLiabilityInsurance5M" value="true" checked="@(Model?.HasPublicLiabilityInsurance5M == true)" style="display:none" />
+                <input type="radio" id="insurance-no" name="Model.HasPublicLiabilityInsurance5M" value="false" checked="@(Model?.HasPublicLiabilityInsurance5M == false)" style="display:none" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Insurance Value (if known)</label>
+                <input type="text" class="form-control" name="Model.InsuranceValue" value="@Model?.InsuranceValue" placeholder="e.g., $10 million" />
+            </div>
+
+            <hr class="my-4" />
+
+            <div class="form-group">
+                <label class="form-label required">Have you had previous work experience students?</label>
+                <div class="yes-no-toggle">
+                    <button type="button"
+                            class="toggle-btn @(Model?.HasPreviousWorkExperienceStudents == true ? "selected-yes" : "")"
+                            onclick="document.getElementById('previous-yes').checked = true; this.classList.add('selected-yes'); this.nextElementSibling.classList.remove('selected-no');">
+                        Yes
+                    </button>
+                    <button type="button"
+                            class="toggle-btn @(Model?.HasPreviousWorkExperienceStudents == false ? "selected-no" : "")"
+                            onclick="document.getElementById('previous-no').checked = true; this.previousElementSibling.classList.remove('selected-yes'); this.classList.add('selected-no');">
+                        No
+                    </button>
+                </div>
+                <input type="radio" id="previous-yes" name="Model.HasPreviousWorkExperienceStudents" value="true" checked="@(Model?.HasPreviousWorkExperienceStudents == true)" style="display:none" />
+                <input type="radio" id="previous-no" name="Model.HasPreviousWorkExperienceStudents" value="false" checked="@(Model?.HasPreviousWorkExperienceStudents == false)" style="display:none" />
+            </div>
+        </FormSection>
+
+        @if (!string.IsNullOrEmpty(ValidationError))
+        {
+            <div class="alert alert-danger mt-3">
+                @ValidationError
+            </div>
+        }
+
+        <div class="wizard-navigation">
+            <a href="/employer/form/@Token/step2" class="btn-wizard btn-previous">
+                &larr; Previous
+            </a>
+            <button type="submit" class="btn-wizard btn-next">
+                Next &rarr;
+            </button>
+        </div>
+    </form>
+}
+
+@code {
+    [Parameter] public string Token { get; set; } = string.Empty;
+
+    [SupplyParameterFromForm(FormName = "employer-step3")]
+    private InsuranceFormModel? Model { get; set; }
+
+    private EmployerFormDto? FormData { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? ValidationError { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        FormData = await FormService.InitializeFormAsync(Token);
+
+        if (FormData == null)
+        {
+            ErrorMessage = "This form link is invalid, has expired, or has already been used.";
+            return;
+        }
+
+        // Initialize form model with existing data
+        Model ??= new InsuranceFormModel
+        {
+            HasPublicLiabilityInsurance5M = FormData.Insurance.HasPublicLiabilityInsurance5M,
+            InsuranceValue = FormData.Insurance.InsuranceValue,
+            HasPreviousWorkExperienceStudents = FormData.Insurance.HasPreviousWorkExperienceStudents
+        };
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (Model == null) return;
+
+        // Validate required fields
+        if (Model.HasPublicLiabilityInsurance5M == null ||
+            Model.HasPreviousWorkExperienceStudents == null)
+        {
+            ValidationError = "Please complete all required fields before proceeding.";
+            return;
+        }
+
+        var dto = new InsuranceDto
+        {
+            HasPublicLiabilityInsurance5M = Model.HasPublicLiabilityInsurance5M,
+            InsuranceValue = Model.InsuranceValue,
+            HasPreviousWorkExperienceStudents = Model.HasPreviousWorkExperienceStudents
+        };
+
+        var success = await FormService.SaveInsuranceAsync(Token, dto);
+        if (success)
+        {
+            Navigation.NavigateTo($"/employer/form/{Token}/step4", forceLoad: true);
+        }
+        else
+        {
+            ValidationError = "Failed to save. The link may have expired or already been used.";
+        }
+    }
+
+    private class InsuranceFormModel
+    {
+        public bool? HasPublicLiabilityInsurance5M { get; set; }
+        public string? InsuranceValue { get; set; }
+        public bool? HasPreviousWorkExperienceStudents { get; set; }
+    }
+}

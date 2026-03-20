@@ -1,0 +1,200 @@
+@page "/Placements"
+@attribute [Authorize(Roles = Roles.TeacherOrStudent)]
+@attribute [StreamRendering]
+@inject IPlacementService PlacementService
+@inject IStudentAuthorizationService StudentAuthService
+@inject ITenantProvider TenantProvider
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Placements - Apiary</PageTitle>
+
+<div class="list-header">
+    <div class="list-header-content">
+        <h1>Placements</h1>
+        <p>Manage student work experience placements</p>
+    </div>
+    <div class="list-header-actions">
+        <div class="search-input">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" id="searchInput" placeholder="Search placements..." onkeyup="filterTable()">
+        </div>
+        @if (IsTeacher)
+        {
+            <a href="/Placements/Create" class="btn-add">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+                Add Placement
+            </a>
+        }
+    </div>
+</div>
+
+<div class="list-table">
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>Role</th>
+                <th>Company</th>
+                <th>Supervisor</th>
+                <th>Year</th>
+                <th>Dates</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @if (Placements != null)
+        {
+            @foreach (var item in Placements)
+            {
+                var statusClass = item.Status switch
+                {
+                    "confirmed" => "status-success",
+                    "pending_employer" => "status-warning",
+                    "pending_parent" => "status-info",
+                    "pending_parents" => "status-info",
+                    "partial" => "status-info",
+                    _ => "status-neutral"
+                };
+                var statusText = item.Status switch
+                {
+                    "confirmed" => "Confirmed",
+                    "pending_employer" => "Pending Employer",
+                    "pending_parent" => "Pending Parent",
+                    "pending_parents" => "Pending Parents",
+                    "partial" => "Partial",
+                    _ => item.Status ?? "Draft"
+                };
+
+                var placementStudents = item.PlacementStudents?.Where(ps => !ps.IsDeleted).ToList() ?? new List<PlacementStudent>();
+                var studentCount = placementStudents.Count;
+
+                <tr class="clickable" onclick="window.location='/Placements/Details/@item.Id'">
+                    <td class="cell-primary">
+                        @if (!string.IsNullOrEmpty(item.PlacementRole))
+                        {
+                            <span>@item.PlacementRole</span>
+                        }
+                        else
+                        {
+                            <span class="cell-secondary">No role specified</span>
+                        }
+                        @if (studentCount > 0)
+                        {
+                            <span class="badge bg-secondary ms-1">@studentCount</span>
+                        }
+                    </td>
+                    <td>@(item.Company?.Name ?? "—")</td>
+                    <td class="cell-secondary">
+                        @if (item.Supervisor != null)
+                        {
+                            @($"{item.Supervisor.FirstName} {item.Supervisor.LastName}")
+                        }
+                        else
+                        {
+                            <span>—</span>
+                        }
+                    </td>
+                    <td class="cell-secondary">@(item.Year?.ToString() ?? "—")</td>
+                    <td class="cell-secondary">
+                        @if (item.StartDate.HasValue || item.FinishDate.HasValue)
+                        {
+                            @(item.StartDate?.ToString("d MMM") ?? "?")@(" – ")@(item.FinishDate?.ToString("d MMM") ?? "?")
+                        }
+                        else
+                        {
+                            <span>—</span>
+                        }
+                    </td>
+                    <td>
+                        <span class="status-badge @statusClass">@statusText</span>
+                    </td>
+                    <td>
+                        <div class="row-actions">
+                            <a href="/Placements/Details/@item.Id" class="row-action action-view" title="View" onclick="event.stopPropagation()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                            </a>
+                            @if (IsTeacher)
+                            {
+                                <a href="/Placements/Edit/@item.Id" class="row-action action-edit" title="Edit" onclick="event.stopPropagation()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                                    </svg>
+                                </a>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+        </tbody>
+    </table>
+    @if (Placements != null && !Placements.Any())
+    {
+        <div class="list-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                <rect x="8" y="2" width="8" height="4" rx="1"/>
+            </svg>
+            <p>No placements found. Create your first placement to get started.</p>
+        </div>
+    }
+</div>
+
+<script>
+    function filterTable() {
+        var input = document.getElementById("searchInput");
+        var filter = input.value.toLowerCase();
+        var table = document.getElementById("dataTable");
+        var rows = table.getElementsByTagName("tr");
+
+        for (var i = 1; i < rows.length; i++) {
+            var cells = rows[i].getElementsByTagName("td");
+            var match = false;
+            for (var j = 0; j < cells.length; j++) {
+                if (cells[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                    match = true;
+                    break;
+                }
+            }
+            rows[i].style.display = match ? "" : "none";
+        }
+    }
+</script>
+
+@code {
+    private List<Placement>? Placements { get; set; }
+    private bool IsTeacher { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var context = HttpContextAccessor.HttpContext;
+        IsTeacher = context?.User?.IsInRole(Roles.Teacher) ?? false;
+
+        var tenantId = TenantProvider.GetCurrentTenantId();
+
+        if (context?.User?.IsInRole(Roles.Student) == true)
+        {
+            var studentId = await StudentAuthService.GetCurrentUserStudentIdAsync();
+            if (studentId.HasValue)
+            {
+                Placements = await PlacementService.GetByStudentIdAsync(studentId.Value, tenantId);
+            }
+            else
+            {
+                Placements = new List<Placement>();
+            }
+        }
+        else
+        {
+            Placements = await PlacementService.GetAllAsync(tenantId);
+        }
+    }
+}

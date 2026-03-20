@@ -1,0 +1,148 @@
+@page "/EmergencyContacts/Create"
+@layout MainLayout
+@attribute [Authorize(Roles = Roles.Teacher)]
+@inject IEmergencyContactService EmergencyContactService
+@inject IStudentService StudentService
+@inject ITenantProvider TenantProvider
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Add Emergency Contact - Apiary</PageTitle>
+
+<h1>Add Emergency Contact</h1>
+
+@if (Student != null)
+{
+    <p class="text-muted">For @Student.FullName</p>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form method="post" @formname="create-emergency-contact">
+            <AntiforgeryToken />
+            <input type="hidden" name="FormModel.StudentId" value="@StudentId" />
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+            }
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Contact Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="FirstName" class="form-label">First Name *</label>
+                            <input type="text" id="FirstName" name="FormModel.FirstName" class="form-control" value="@FormModel?.FirstName" required />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="LastName" class="form-label">Last Name *</label>
+                            <input type="text" id="LastName" name="FormModel.LastName" class="form-control" value="@FormModel?.LastName" required />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="MobileNumber" class="form-label">Mobile Number</label>
+                            <input type="text" id="MobileNumber" name="FormModel.MobileNumber" class="form-control" value="@FormModel?.MobileNumber" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="Relationship" class="form-label">Relationship</label>
+                            <input type="text" id="Relationship" name="FormModel.Relationship" class="form-control" value="@FormModel?.Relationship" placeholder="e.g., Mother, Father, Guardian" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" id="IsPrimary" name="FormModel.IsPrimary" class="form-check-input" value="true" checked="@(FormModel?.IsPrimary ?? true)" />
+                            <label for="IsPrimary" class="form-check-label">Primary Contact</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Create</button>
+                <a href="/EmergencyContacts/@StudentId" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public Guid? StudentId { get; set; }
+
+    [SupplyParameterFromForm(FormName = "create-emergency-contact")]
+    public EmergencyContact? FormModel { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private Student? Student { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!StudentId.HasValue)
+        {
+            HttpContextAccessor.HttpContext?.Response.Redirect("/Students");
+            return;
+        }
+
+        var tenantId = TenantProvider.GetCurrentTenantId();
+        Student = await StudentService.GetByIdAsync(StudentId.Value, tenantId);
+
+        if (Student == null)
+        {
+            HttpContextAccessor.HttpContext?.Response.Redirect("/Students");
+            return;
+        }
+
+        var context = HttpContext ?? HttpContextAccessor.HttpContext;
+
+        if (context != null && HttpMethods.IsPost(context.Request.Method))
+        {
+            await HandlePostAsync();
+            return;
+        }
+
+        FormModel ??= new EmergencyContact { StudentId = StudentId.Value, IsPrimary = true };
+    }
+
+    private async Task HandlePostAsync()
+    {
+        if (FormModel == null)
+        {
+            ErrorMessage = "Invalid form data.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.FirstName))
+        {
+            ErrorMessage = "First name is required.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.LastName))
+        {
+            ErrorMessage = "Last name is required.";
+            return;
+        }
+
+        try
+        {
+            await EmergencyContactService.CreateAsync(FormModel);
+
+            var context = HttpContext ?? HttpContextAccessor.HttpContext;
+            context?.Response.Redirect($"/EmergencyContacts/{StudentId}");
+        }
+        catch (InvalidOperationException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "An error occurred while creating the emergency contact.";
+        }
+    }
+}

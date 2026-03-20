@@ -20,7 +20,7 @@ A comprehensive reference for AI assistants working with this codebase.
 
 | Component | Technology |
 |-----------|------------|
-| Framework | .NET 9, ASP.NET Core |
+| Framework | .NET 10, ASP.NET Core |
 | UI | Blazor Server (InteractiveServer), MVC Razor Views |
 | Database | SQL Server via Entity Framework Core 8 |
 | Auth | Cookie-based authentication |

@@ -1,0 +1,129 @@
+@page "/Users"
+@attribute [Authorize(Roles = Roles.SiteAdmin)]
+@attribute [StreamRendering]
+@inject IUserService UserService
+
+<PageTitle>Users - Apiary</PageTitle>
+
+<div class="list-header">
+    <div class="list-header-content">
+        <h1>Users</h1>
+        <p>Manage user accounts</p>
+    </div>
+    <div class="list-header-actions">
+        <div class="search-input">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" id="searchInput" placeholder="Search users..." onkeyup="filterTable()">
+        </div>
+        <a href="/Users/Create" class="btn-add">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Add User
+        </a>
+    </div>
+</div>
+
+<div class="list-table">
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>Display Name</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>School</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @if (Users != null)
+        {
+            @foreach (var item in Users)
+            {
+                <tr class="clickable" onclick="window.location='/Users/Details/@item.Id'">
+                    <td class="cell-primary">@(item.DisplayName ?? item.UserName)</td>
+                    <td class="cell-secondary">@item.UserName</td>
+                    <td class="cell-secondary">@(item.Email ?? "—")</td>
+                    <td class="cell-secondary">@item.RoleName</td>
+                    <td class="cell-secondary">@(item.TenantName ?? "—")</td>
+                    <td>
+                        <span class="indicator">
+                            <span class="indicator-dot @(item.IsActive ? "yes" : "no")"></span>
+                            @(item.IsActive ? "Active" : "Inactive")
+                        </span>
+                    </td>
+                    <td>
+                        <div class="row-actions">
+                            <a href="/Users/Details/@item.Id" class="row-action action-view" title="View" onclick="event.stopPropagation()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                            </a>
+                            <a href="/Users/Edit/@item.Id" class="row-action action-edit" title="Edit" onclick="event.stopPropagation()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                                </svg>
+                            </a>
+                            <a href="/Users/Delete/@item.Id" class="row-action action-delete" title="Delete" onclick="event.stopPropagation()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 6h18"/>
+                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                </svg>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+        </tbody>
+    </table>
+    @if (Users != null && !Users.Any())
+    {
+        <div class="list-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <p>No users found. Add your first user to get started.</p>
+        </div>
+    }
+</div>
+
+<script>
+    function filterTable() {
+        var input = document.getElementById("searchInput");
+        var filter = input.value.toLowerCase();
+        var table = document.getElementById("dataTable");
+        var rows = table.getElementsByTagName("tr");
+
+        for (var i = 1; i < rows.length; i++) {
+            var cells = rows[i].getElementsByTagName("td");
+            var match = false;
+            for (var j = 0; j < cells.length; j++) {
+                if (cells[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                    match = true;
+                    break;
+                }
+            }
+            rows[i].style.display = match ? "" : "none";
+        }
+    }
+</script>
+
+@code {
+    private List<UserViewModel>? Users { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Users = await UserService.GetAllAsync();
+    }
+}
