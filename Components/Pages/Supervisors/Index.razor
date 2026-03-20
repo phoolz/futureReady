@@ -2,6 +2,8 @@
 @layout MainLayout
 @attribute [Authorize(Roles = Roles.Teacher)]
 @attribute [StreamRendering]
+@using Apiary.Models.Tables
+@using Apiary.Components.Shared.Tables
 @inject ISupervisorService SupervisorService
 @inject ITenantProvider TenantProvider
 
@@ -13,13 +15,7 @@
         <p>Manage workplace supervisors</p>
     </div>
     <div class="list-header-actions">
-        <div class="search-input">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"/>
-                <path d="m21 21-4.35-4.35"/>
-            </svg>
-            <input type="text" id="searchInput" placeholder="Search supervisors..." onkeyup="filterTable()">
-        </div>
+        <TableSearch Query="Query" Placeholder="Search supervisors..." />
         <a href="/Supervisors/Create" class="btn-add">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 5v14M5 12h14"/>
@@ -30,21 +26,21 @@
 </div>
 
 <div class="list-table">
-    <table id="dataTable">
+    <table>
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Company</th>
+                <SortableHeader Column="name" Title="Name" Query="Query" />
+                <SortableHeader Column="company" Title="Company" Query="Query" />
                 <th>Job Title</th>
-                <th>Email</th>
+                <SortableHeader Column="email" Title="Email" Query="Query" />
                 <th>Phone</th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
-        @if (Supervisors != null)
+        @if (Result != null)
         {
-            @foreach (var item in Supervisors)
+            @foreach (var item in Result.Items)
             {
                 <tr class="clickable" onclick="window.location='/Supervisors/Details/@item.Id'">
                     <td class="cell-primary">@item.FullName</td>
@@ -86,7 +82,7 @@
         }
         </tbody>
     </table>
-    @if (Supervisors != null && !Supervisors.Any())
+    @if (Result != null && Result.TotalCount == 0)
     {
         <div class="list-empty">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -96,35 +92,31 @@
             <p>No supervisors found. Add your first supervisor to get started.</p>
         </div>
     }
+    <Pagination T="Supervisor" Result="Result" Query="Query" />
 </div>
 
-<script>
-    function filterTable() {
-        var input = document.getElementById("searchInput");
-        var filter = input.value.toLowerCase();
-        var table = document.getElementById("dataTable");
-        var rows = table.getElementsByTagName("tr");
-
-        for (var i = 1; i < rows.length; i++) {
-            var cells = rows[i].getElementsByTagName("td");
-            var match = false;
-            for (var j = 0; j < cells.length; j++) {
-                if (cells[j].textContent.toLowerCase().indexOf(filter) > -1) {
-                    match = true;
-                    break;
-                }
-            }
-            rows[i].style.display = match ? "" : "none";
-        }
-    }
-</script>
-
 @code {
-    private List<Supervisor>? Supervisors { get; set; }
+    [SupplyParameterFromQuery] public string? Search { get; set; }
+    [SupplyParameterFromQuery] public string? Sort { get; set; }
+    [SupplyParameterFromQuery] public string? Dir { get; set; }
+    [SupplyParameterFromQuery] public int? Page { get; set; }
+    [SupplyParameterFromQuery] public int? Size { get; set; }
+
+    private TableQuery Query { get; set; } = new();
+    private PagedResult<Supervisor>? Result { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
+        Query = new TableQuery
+        {
+            Search = Search,
+            Sort = Sort ?? "name",
+            Dir = Dir ?? "asc",
+            Page = Page ?? 1,
+            Size = Size ?? 25
+        };
+
         var tenantId = TenantProvider.GetCurrentTenantId();
-        Supervisors = await SupervisorService.GetAllAsync(tenantId);
+        Result = await SupervisorService.GetPagedAsync(Query, tenantId);
     }
 }

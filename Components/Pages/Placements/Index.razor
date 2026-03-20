@@ -1,6 +1,8 @@
 @page "/Placements"
 @attribute [Authorize(Roles = Roles.TeacherOrStudent)]
 @attribute [StreamRendering]
+@using Apiary.Models.Tables
+@using Apiary.Components.Shared.Tables
 @inject IPlacementService PlacementService
 @inject IStudentAuthorizationService StudentAuthService
 @inject ITenantProvider TenantProvider
@@ -14,13 +16,7 @@
         <p>Manage student work experience placements</p>
     </div>
     <div class="list-header-actions">
-        <div class="search-input">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"/>
-                <path d="m21 21-4.35-4.35"/>
-            </svg>
-            <input type="text" id="searchInput" placeholder="Search placements..." onkeyup="filterTable()">
-        </div>
+        <TableSearch Query="Query" Placeholder="Search placements..." />
         @if (IsTeacher)
         {
             <a href="/Placements/Create" class="btn-add">
@@ -34,22 +30,22 @@
 </div>
 
 <div class="list-table">
-    <table id="dataTable">
+    <table>
         <thead>
             <tr>
-                <th>Role</th>
-                <th>Company</th>
+                <SortableHeader Column="role" Title="Role" Query="Query" />
+                <SortableHeader Column="company" Title="Company" Query="Query" />
                 <th>Supervisor</th>
-                <th>Year</th>
+                <SortableHeader Column="year" Title="Year" Query="Query" />
                 <th>Dates</th>
-                <th>Status</th>
+                <SortableHeader Column="status" Title="Status" Query="Query" />
                 <th></th>
             </tr>
         </thead>
         <tbody>
-        @if (Placements != null)
+        @if (Result != null)
         {
-            @foreach (var item in Placements)
+            @foreach (var item in Result.Items)
             {
                 var statusClass = item.Status switch
                 {
@@ -136,7 +132,7 @@
         }
         </tbody>
     </table>
-    @if (Placements != null && !Placements.Any())
+    @if (Result != null && Result.TotalCount == 0)
     {
         <div class="list-empty">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -146,35 +142,31 @@
             <p>No placements found. Create your first placement to get started.</p>
         </div>
     }
+    <Pagination T="Placement" Result="Result" Query="Query" />
 </div>
 
-<script>
-    function filterTable() {
-        var input = document.getElementById("searchInput");
-        var filter = input.value.toLowerCase();
-        var table = document.getElementById("dataTable");
-        var rows = table.getElementsByTagName("tr");
-
-        for (var i = 1; i < rows.length; i++) {
-            var cells = rows[i].getElementsByTagName("td");
-            var match = false;
-            for (var j = 0; j < cells.length; j++) {
-                if (cells[j].textContent.toLowerCase().indexOf(filter) > -1) {
-                    match = true;
-                    break;
-                }
-            }
-            rows[i].style.display = match ? "" : "none";
-        }
-    }
-</script>
-
 @code {
-    private List<Placement>? Placements { get; set; }
+    [SupplyParameterFromQuery] public string? Search { get; set; }
+    [SupplyParameterFromQuery] public string? Sort { get; set; }
+    [SupplyParameterFromQuery] public string? Dir { get; set; }
+    [SupplyParameterFromQuery] public int? Page { get; set; }
+    [SupplyParameterFromQuery] public int? Size { get; set; }
+
+    private TableQuery Query { get; set; } = new();
+    private PagedResult<Placement>? Result { get; set; }
     private bool IsTeacher { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
+        Query = new TableQuery
+        {
+            Search = Search,
+            Sort = Sort ?? "role",
+            Dir = Dir ?? "asc",
+            Page = Page ?? 1,
+            Size = Size ?? 25
+        };
+
         var context = HttpContextAccessor.HttpContext;
         IsTeacher = context?.User?.IsInRole(Roles.Teacher) ?? false;
 
@@ -185,16 +177,24 @@
             var studentId = await StudentAuthService.GetCurrentUserStudentIdAsync();
             if (studentId.HasValue)
             {
-                Placements = await PlacementService.GetByStudentIdAsync(studentId.Value, tenantId);
+                // For students, use non-paged results scoped to their placements
+                var placements = await PlacementService.GetByStudentIdAsync(studentId.Value, tenantId);
+                Result = new PagedResult<Placement>
+                {
+                    Items = placements,
+                    TotalCount = placements.Count,
+                    Page = 1,
+                    Size = placements.Count
+                };
             }
             else
             {
-                Placements = new List<Placement>();
+                Result = PagedResult<Placement>.Empty();
             }
         }
         else
         {
-            Placements = await PlacementService.GetAllAsync(tenantId);
+            Result = await PlacementService.GetPagedAsync(Query, tenantId);
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Apiary.Data;
 using Apiary.Models.School;
+using Apiary.Models.Tables;
 using Apiary.Services;
 
 namespace Apiary.Services.Students
@@ -26,6 +27,54 @@ namespace Apiary.Services.Students
             var query = _context.Set<Student>().AsNoTracking().AsQueryable();
             if (tenantId.HasValue) query = query.Where(s => s.TenantId == tenantId.Value);
             return await query.ToListAsync();
+        }
+
+        public async Task<PagedResult<Student>> GetPagedAsync(TableQuery tableQuery, Guid? tenantId = null)
+        {
+            tenantId ??= _tenantProvider?.GetCurrentTenantId();
+            var query = _context.Set<Student>().AsNoTracking().AsQueryable();
+            if (tenantId.HasValue) query = query.Where(s => s.TenantId == tenantId.Value);
+
+            // Search
+            if (!string.IsNullOrWhiteSpace(tableQuery.Search))
+            {
+                var search = tableQuery.Search.ToLower();
+                query = query.Where(s =>
+                    (s.FirstName + " " + s.LastName).ToLower().Contains(search) ||
+                    (s.Email != null && s.Email.ToLower().Contains(search)) ||
+                    (s.StudentNumber != null && s.StudentNumber.ToLower().Contains(search)));
+            }
+
+            // Get total count before paging
+            var totalCount = await query.CountAsync();
+
+            // Sort
+            query = tableQuery.Sort?.ToLower() switch
+            {
+                "year" => tableQuery.IsDescending
+                    ? query.OrderByDescending(s => s.YearLevel)
+                    : query.OrderBy(s => s.YearLevel),
+                "email" => tableQuery.IsDescending
+                    ? query.OrderByDescending(s => s.Email)
+                    : query.OrderBy(s => s.Email),
+                _ => tableQuery.IsDescending
+                    ? query.OrderByDescending(s => s.LastName).ThenByDescending(s => s.FirstName)
+                    : query.OrderBy(s => s.LastName).ThenBy(s => s.FirstName)
+            };
+
+            // Page
+            var items = await query
+                .Skip((tableQuery.Page - 1) * tableQuery.Size)
+                .Take(tableQuery.Size)
+                .ToListAsync();
+
+            return new PagedResult<Student>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = tableQuery.Page,
+                Size = tableQuery.Size
+            };
         }
 
         public async Task<Student?> GetByIdAsync(Guid id, Guid? tenantId = null)
