@@ -76,6 +76,39 @@ using (var scope = app.Services.CreateScope())
     await DatabaseSeeder.SeedAsync(services);
 }
 
+// Handle test data seeding command
+if (args.Contains("--seed-test-data"))
+{
+    if (!app.Environment.IsDevelopment())
+    {
+        Console.WriteLine("ERROR: Test data seeding is only allowed in Development environment.");
+        Console.WriteLine("Current environment: " + app.Environment.EnvironmentName);
+        return;
+    }
+
+    if (!args.Contains("--confirm"))
+    {
+        Console.WriteLine("WARNING: This will clear existing test data and reseed.");
+        Console.WriteLine("The Admin school and admin user will be preserved.");
+        Console.WriteLine();
+        Console.WriteLine("Run with --seed-test-data --confirm to proceed.");
+        return;
+    }
+
+    using var seedScope = app.Services.CreateScope();
+    var db = seedScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var userManager = seedScope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var loggerFactory = seedScope.ServiceProvider.GetRequiredService<ILoggerFactory>();
+    var logger = loggerFactory.CreateLogger<TestDataSeeder>();
+
+    var seeder = new TestDataSeeder(db, userManager, logger);
+    await seeder.SeedAsync();
+
+    Console.WriteLine();
+    Console.WriteLine("Test data seeding completed successfully.");
+    return;
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
