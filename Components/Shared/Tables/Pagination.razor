@@ -1,0 +1,62 @@
+@using Apiary.Models.Tables
+@typeparam T
+
+@if (Result != null && Result.TotalCount > 0)
+{
+    <div class="table-pagination">
+        <div class="pagination-info">
+            Showing @Result.FirstItemIndex to @Result.LastItemIndex of @Result.TotalCount
+        </div>
+        <div class="pagination-controls">
+            @if (Result.HasPrevious)
+            {
+                <a href="@Query.PageUrl(Result.Page - 1)" class="pagination-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m15 18-6-6 6-6"/>
+                    </svg>
+                    Previous
+                </a>
+            }
+            else
+            {
+                <span class="pagination-btn disabled">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m15 18-6-6 6-6"/>
+                    </svg>
+                    Previous
+                </span>
+            }
+
+            <span class="pagination-page">
+                Page @Result.Page of @Result.TotalPages
+            </span>
+
+            @if (Result.HasNext)
+            {
+                <a href="@Query.PageUrl(Result.Page + 1)" class="pagination-btn">
+                    Next
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m9 18 6-6-6-6"/>
+                    </svg>
+                </a>
+            }
+            else
+            {
+                <span class="pagination-btn disabled">
+                    Next
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m9 18 6-6-6-6"/>
+                    </svg>
+                </span>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public PagedResult<T>? Result { get; set; }
+
+    [Parameter, EditorRequired]
+    public TableQuery Query { get; set; } = null!;
+}

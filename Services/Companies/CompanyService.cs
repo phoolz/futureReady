@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Apiary.Data;
 using Apiary.Models.School;
+using Apiary.Models.Tables;
 
 namespace Apiary.Services.Companies
 {
@@ -28,6 +29,54 @@ namespace Apiary.Services.Companies
                 query = query.Where(c => c.TenantId == tenantId.Value);
 
             return await query.OrderBy(c => c.Name).ToListAsync();
+        }
+
+        public async Task<PagedResult<Company>> GetPagedAsync(TableQuery tableQuery, Guid? tenantId = null)
+        {
+            tenantId ??= _tenantProvider?.GetCurrentTenantId();
+            var query = _context.Companies.AsNoTracking().AsQueryable();
+
+            if (tenantId.HasValue)
+                query = query.Where(c => c.TenantId == tenantId.Value);
+
+            // Search
+            if (!string.IsNullOrWhiteSpace(tableQuery.Search))
+            {
+                var search = tableQuery.Search.ToLower();
+                query = query.Where(c =>
+                    c.Name.ToLower().Contains(search) ||
+                    (c.Industry != null && c.Industry.ToLower().Contains(search)) ||
+                    (c.City != null && c.City.ToLower().Contains(search)));
+            }
+
+            var totalCount = await query.CountAsync();
+
+            // Sort
+            query = tableQuery.Sort?.ToLower() switch
+            {
+                "industry" => tableQuery.IsDescending
+                    ? query.OrderByDescending(c => c.Industry)
+                    : query.OrderBy(c => c.Industry),
+                "city" => tableQuery.IsDescending
+                    ? query.OrderByDescending(c => c.City)
+                    : query.OrderBy(c => c.City),
+                _ => tableQuery.IsDescending
+                    ? query.OrderByDescending(c => c.Name)
+                    : query.OrderBy(c => c.Name)
+            };
+
+            var items = await query
+                .Skip((tableQuery.Page - 1) * tableQuery.Size)
+                .Take(tableQuery.Size)
+                .ToListAsync();
+
+            return new PagedResult<Company>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = tableQuery.Page,
+                Size = tableQuery.Size
+            };
         }
 
         public async Task<Company?> GetByIdAsync(Guid id, Guid? tenantId = null)

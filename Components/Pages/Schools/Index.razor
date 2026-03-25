@@ -2,6 +2,8 @@
 @layout MainLayout
 @attribute [Authorize(Roles = Roles.SiteAdmin)]
 @attribute [StreamRendering]
+@using Apiary.Models.Tables
+@using Apiary.Components.Shared.Tables
 @inject ISchoolService SchoolService
 
 <PageTitle>Schools - Apiary</PageTitle>
@@ -12,13 +14,7 @@
         <p>Manage tenant schools</p>
     </div>
     <div class="list-header-actions">
-        <div class="search-input">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"/>
-                <path d="m21 21-4.35-4.35"/>
-            </svg>
-            <input type="text" id="searchInput" placeholder="Search schools..." onkeyup="filterTable()">
-        </div>
+        <TableSearch Query="Query" Placeholder="Search schools..." />
         <a href="/Schools/Create" class="btn-add">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 5v14M5 12h14"/>
@@ -29,11 +25,11 @@
 </div>
 
 <div class="list-table">
-    <table id="dataTable">
+    <table>
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Tenant Key</th>
+                <SortableHeader Column="name" Title="Name" Query="Query" />
+                <SortableHeader Column="tenantkey" Title="Tenant Key" Query="Query" />
                 <th>Timezone</th>
                 <th>Contact Email</th>
                 <th>Contact Phone</th>
@@ -41,9 +37,9 @@
             </tr>
         </thead>
         <tbody>
-        @if (Schools != null)
+        @if (Result != null)
         {
-            @foreach (var item in Schools)
+            @foreach (var item in Result.Items)
             {
                 <tr class="clickable" onclick="window.location='/Schools/Details/@item.Id'">
                     <td class="cell-primary">@item.Name</td>
@@ -78,7 +74,7 @@
         }
         </tbody>
     </table>
-    @if (Schools != null && !Schools.Any())
+    @if (Result != null && Result.TotalCount == 0)
     {
         <div class="list-empty">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -88,34 +84,30 @@
             <p>No schools found. Add your first school to get started.</p>
         </div>
     }
+    <Pagination T="School" Result="Result" Query="Query" />
 </div>
 
-<script>
-    function filterTable() {
-        var input = document.getElementById("searchInput");
-        var filter = input.value.toLowerCase();
-        var table = document.getElementById("dataTable");
-        var rows = table.getElementsByTagName("tr");
-
-        for (var i = 1; i < rows.length; i++) {
-            var cells = rows[i].getElementsByTagName("td");
-            var match = false;
-            for (var j = 0; j < cells.length; j++) {
-                if (cells[j].textContent.toLowerCase().indexOf(filter) > -1) {
-                    match = true;
-                    break;
-                }
-            }
-            rows[i].style.display = match ? "" : "none";
-        }
-    }
-</script>
-
 @code {
-    private List<School>? Schools { get; set; }
+    [SupplyParameterFromQuery] public string? Search { get; set; }
+    [SupplyParameterFromQuery] public string? Sort { get; set; }
+    [SupplyParameterFromQuery] public string? Dir { get; set; }
+    [SupplyParameterFromQuery] public int? Page { get; set; }
+    [SupplyParameterFromQuery] public int? Size { get; set; }
+
+    private TableQuery Query { get; set; } = new();
+    private PagedResult<School>? Result { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        Schools = await SchoolService.GetAllAsync();
+        Query = new TableQuery
+        {
+            Search = Search,
+            Sort = Sort ?? "name",
+            Dir = Dir ?? "asc",
+            Page = Page ?? 1,
+            Size = Size ?? 25
+        };
+
+        Result = await SchoolService.GetPagedAsync(Query);
     }
 }

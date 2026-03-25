@@ -1,10 +1,12 @@
 using Apiary.Models;
+using Apiary.Models.Tables;
 
 namespace Apiary.Services.Users;
 
 public interface IUserService
 {
     Task<List<UserViewModel>> GetAllAsync();
+    Task<PagedResult<UserViewModel>> GetPagedAsync(TableQuery query);
     Task<ApplicationUser?> GetByIdAsync(Guid id);
     Task<string?> GetRoleAsync(Guid userId);
     Task<(bool Success, IEnumerable<string> Errors)> CreateAsync(CreateUserModel model);

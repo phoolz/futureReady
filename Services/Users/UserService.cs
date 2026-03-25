@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Apiary.Data;
 using Apiary.Models;
+using Apiary.Models.Tables;
 
 namespace Apiary.Services.Users;
 
@@ -42,6 +43,52 @@ public class UserService : IUserService
         }
 
         return viewModels;
+    }
+
+    public async Task<PagedResult<UserViewModel>> GetPagedAsync(TableQuery tableQuery)
+    {
+        // Get all users (we need to get roles for each, so fetching all first)
+        var allViewModels = await GetAllAsync();
+
+        // Search
+        if (!string.IsNullOrWhiteSpace(tableQuery.Search))
+        {
+            var search = tableQuery.Search.ToLower();
+            allViewModels = allViewModels.Where(u =>
+                (u.DisplayName != null && u.DisplayName.ToLower().Contains(search)) ||
+                u.UserName.ToLower().Contains(search) ||
+                (u.Email != null && u.Email.ToLower().Contains(search))).ToList();
+        }
+
+        var totalCount = allViewModels.Count;
+
+        // Sort
+        allViewModels = tableQuery.Sort?.ToLower() switch
+        {
+            "email" => tableQuery.IsDescending
+                ? allViewModels.OrderByDescending(u => u.Email).ToList()
+                : allViewModels.OrderBy(u => u.Email).ToList(),
+            "role" => tableQuery.IsDescending
+                ? allViewModels.OrderByDescending(u => u.RoleName).ToList()
+                : allViewModels.OrderBy(u => u.RoleName).ToList(),
+            _ => tableQuery.IsDescending
+                ? allViewModels.OrderByDescending(u => u.DisplayName ?? u.UserName).ToList()
+                : allViewModels.OrderBy(u => u.DisplayName ?? u.UserName).ToList()
+        };
+
+        // Page
+        var items = allViewModels
+            .Skip((tableQuery.Page - 1) * tableQuery.Size)
+            .Take(tableQuery.Size)
+            .ToList();
+
+        return new PagedResult<UserViewModel>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = tableQuery.Page,
+            Size = tableQuery.Size
+        };
     }
 
     public async Task<ApplicationUser?> GetByIdAsync(Guid id)

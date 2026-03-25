@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Apiary.Models.School;
+using Apiary.Models.Tables;
 
 namespace Apiary.Services.Placements
 {
     public interface IPlacementService
     {
         Task<List<Placement>> GetAllAsync(Guid? tenantId = null);
+        Task<PagedResult<Placement>> GetPagedAsync(TableQuery query, Guid? tenantId = null);
         Task<List<Placement>> GetByStudentIdAsync(Guid studentId, Guid? tenantId = null);
         Task<List<Placement>> GetByCompanyIdAsync(Guid companyId, Guid? tenantId = null);
         Task<Placement?> GetByIdAsync(Guid id, Guid? tenantId = null);

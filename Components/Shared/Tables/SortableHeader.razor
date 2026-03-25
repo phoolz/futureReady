@@ -1,0 +1,35 @@
+@using Apiary.Models.Tables
+
+<th class="sort-header">
+    <a href="@Query.SortUrl(Column)" class="sort-link @(Query.IsSortedBy(Column) ? "active" : "")">
+        @Title
+        @if (Query.IsSortedBy(Column))
+        {
+            <span class="sort-icon">
+                @if (Query.IsDescending)
+                {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m6 9 6 6 6-6"/>
+                    </svg>
+                }
+                else
+                {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m18 15-6-6-6 6"/>
+                    </svg>
+                }
+            </span>
+        }
+    </a>
+</th>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Column { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public TableQuery Query { get; set; } = null!;
+}

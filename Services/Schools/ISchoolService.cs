@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Apiary.Models.School;
+using Apiary.Models.Tables;
 
 namespace Apiary.Services.Schools
 {
     public interface ISchoolService
     {
         Task<List<School>> GetAllAsync();
+        Task<PagedResult<School>> GetPagedAsync(TableQuery query);
         Task<School?> GetByIdAsync(Guid id);
         Task CreateAsync(School school);
         Task UpdateAsync(School school, byte[]? rowVersion = null);

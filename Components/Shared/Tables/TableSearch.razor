@@ -1,0 +1,25 @@
+@using Apiary.Models.Tables
+
+<form method="get" class="search-input">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input type="text" name="search" value="@Query.Search" placeholder="@Placeholder">
+    @* Preserve sort params, reset to page 1 on search *@
+    <input type="hidden" name="sort" value="@Query.Sort" />
+    <input type="hidden" name="dir" value="@Query.Dir" />
+    <input type="hidden" name="page" value="1" />
+    @if (Query.Size != 25)
+    {
+        <input type="hidden" name="size" value="@Query.Size" />
+    }
+</form>
+
+@code {
+    [Parameter, EditorRequired]
+    public TableQuery Query { get; set; } = null!;
+
+    [Parameter]
+    public string Placeholder { get; set; } = "Search...";
+}

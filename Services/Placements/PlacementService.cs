@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Apiary.Data;
 using Apiary.Models.School;
+using Apiary.Models.Tables;
 
 namespace Apiary.Services.Placements
 {
@@ -34,6 +35,63 @@ namespace Apiary.Services.Placements
                 query = query.Where(p => p.TenantId == tenantId.Value);
 
             return await query.OrderByDescending(p => p.CreatedAt).ToListAsync();
+        }
+
+        public async Task<PagedResult<Placement>> GetPagedAsync(TableQuery tableQuery, Guid? tenantId = null)
+        {
+            tenantId ??= _tenantProvider?.GetCurrentTenantId();
+            var query = _context.Placements
+                .AsNoTracking()
+                .Include(p => p.PlacementStudents)
+                    .ThenInclude(ps => ps.Student)
+                .Include(p => p.Company)
+                .Include(p => p.Supervisor)
+                .AsQueryable();
+
+            if (tenantId.HasValue)
+                query = query.Where(p => p.TenantId == tenantId.Value);
+
+            // Search
+            if (!string.IsNullOrWhiteSpace(tableQuery.Search))
+            {
+                var search = tableQuery.Search.ToLower();
+                query = query.Where(p =>
+                    (p.PlacementRole != null && p.PlacementRole.ToLower().Contains(search)) ||
+                    (p.Company != null && p.Company.Name.ToLower().Contains(search)) ||
+                    p.PlacementStudents.Any(ps => ps.Student != null && (ps.Student.FirstName + " " + ps.Student.LastName).ToLower().Contains(search)));
+            }
+
+            var totalCount = await query.CountAsync();
+
+            // Sort
+            query = tableQuery.Sort?.ToLower() switch
+            {
+                "company" => tableQuery.IsDescending
+                    ? query.OrderByDescending(p => p.Company != null ? p.Company.Name : "")
+                    : query.OrderBy(p => p.Company != null ? p.Company.Name : ""),
+                "year" => tableQuery.IsDescending
+                    ? query.OrderByDescending(p => p.Year)
+                    : query.OrderBy(p => p.Year),
+                "status" => tableQuery.IsDescending
+                    ? query.OrderByDescending(p => p.Status)
+                    : query.OrderBy(p => p.Status),
+                _ => tableQuery.IsDescending
+                    ? query.OrderByDescending(p => p.PlacementRole)
+                    : query.OrderBy(p => p.PlacementRole)
+            };
+
+            var items = await query
+                .Skip((tableQuery.Page - 1) * tableQuery.Size)
+                .Take(tableQuery.Size)
+                .ToListAsync();
+
+            return new PagedResult<Placement>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = tableQuery.Page,
+                Size = tableQuery.Size
+            };
         }
 
         public async Task<List<Placement>> GetByStudentIdAsync(Guid studentId, Guid? tenantId = null)
